@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lf.dao.SysPinglunMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.lf.entity.SysPinglun">
+        <id column="id" property="id" />
+        <result column="wzids" property="wzids" />
+        <result column="plname" property="plname" />
+        <result column="pldate" property="pldate" />
+        <result column="content" property="content" />
+        <result column="plpanids" property="plpanids" />
+        <result column="avatar" property="avatar" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, wzids, plname, pldate, content, plpanids, avatar
+    </sql>
+
+</mapper>
