@@ -1,7 +1,7 @@
 <template>
   <main role="main" class="home-root">
     <section class="hero-section">
-      <div class="hero-glow"></div>
+      <div class="hero-glow" />
       <div class="container hero-inner">
         <p class="hero-eyebrow">COMMISSION · 画师橱窗</p>
         <h1 class="hero-title">把灵感，落成一笔一画</h1>
@@ -9,7 +9,7 @@
           精选上架稿位、接稿攻略与画师动态，下单前先看例图与说明，沟通更省心。
         </p>
         <router-link to="/theList" class="explore-btn">
-          <i class="fa fa-paint-brush"></i> 逛橱窗
+          <i class="fa fa-paint-brush" /> 逛橱窗
         </router-link>
       </div>
     </section>
@@ -20,7 +20,7 @@
           <el-carousel :interval="5000" arrow="always" height="420px" class="custom-carousel">
             <el-carousel-item v-for="(item, index) in carouselItems" :key="index">
               <div class="carousel-image" :style="{ backgroundImage: `url(${item.lunbo})` }">
-                <div class="carousel-overlay"></div>
+                <div class="carousel-overlay" />
               </div>
             </el-carousel-item>
           </el-carousel>
@@ -28,26 +28,26 @@
 
         <section class="section-container">
           <h2 class="section-title">
-            <span class="title-bar"></span>
-            <i class="fa fa-lightbulb-o"></i> 接稿攻略
+            <span class="title-bar" />
+            <i class="fa fa-lightbulb-o" /> 接稿攻略
           </h2>
           <p class="section-desc">流程、排期、修改次数——先看帖再开口，效率翻倍。</p>
           <div class="row">
-            <div v-for="o in news1" class="col-md-4">
-              <the-coursetiezi v-bind:course="o"></the-coursetiezi>
+            <div v-for="o in news1" :key="o.id" class="col-md-4">
+              <the-coursetiezi :course="o" />
             </div>
           </div>
         </section>
 
         <section class="section-container">
           <h2 class="section-title">
-            <span class="title-bar accent"></span>
-            <i class="fa fa-fire"></i> 热门稿位
+            <span class="title-bar accent" />
+            <i class="fa fa-fire" /> 热门稿位
           </h2>
           <p class="section-desc">近期咨询多、反馈好的橱窗，库存与价格以详情页为准。</p>
           <div class="row">
-            <div v-for="o in news" class="col-md-4">
-              <the-course v-bind:course="o"></the-course>
+            <div v-for="o in news" :key="o.id" class="col-md-4">
+              <the-course :course="o" />
             </div>
           </div>
         </section>
@@ -56,11 +56,11 @@
 
     <aside class="recommendation-sidebar">
       <div class="sidebar-header">
-        <i class="fa fa-star"></i> 为你推荐
+        <i class="fa fa-star" /> 为你推荐
       </div>
       <div class="sidebar-content">
         <div v-for="o in tuijian11" :key="o.id" class="sidebar-item">
-          <the-course v-bind:course="o"></the-course>
+          <the-course :course="o" />
         </div>
       </div>
     </aside>
@@ -69,8 +69,8 @@
 
 <script>
 
-import TheCourse from "@/views/about/the-course";
-import TheCoursetiezi from "@/views/about/the-coursetiezi";
+import TheCourse from '@/views/about/the-course'
+import TheCoursetiezi from '@/views/about/the-coursetiezi'
 import api from '@/api/huagao.js'
 import tiezipi from '@/api/fenxiang.js'
 import LunboApi from '@/api/lunbo.js'
@@ -78,9 +78,9 @@ import TuijianApi from '@/api/tuijian.js'
 import { mapGetters } from 'vuex'
 import userApi from '@/api/userManage'
 export default {
-  name: 'theIndex',
-  components: {TheCourse, TheCoursetiezi},
-  data: function () {
+  name: 'TheIndex',
+  components: { TheCourse, TheCoursetiezi },
+  data: function() {
     return {
       news: [],
       news1: [],
@@ -88,83 +88,81 @@ export default {
       searchModel: {
         pageNo: 1,
         pageSize: 6,
-        title: '',
+        title: ''
       },
-      Form:{},
-      Tuijian:{},
-      tuijian11:[],
+      Form: {},
+      Tuijian: {},
+      tuijian11: []
     }
   },
   mounted() {
-    this.listNew();
-    this.listNew1();
-    this.listNew2();
-
-
+    this.listNew()
+    this.listNew1()
+    this.listNew2()
+  },
+  created() {
+    console.log(this.token, 'tokthistokenen')
+    if (this.token === undefined || this.token === null || this.token === '') {
+      this.getzuixin()
+    } else {
+      this.getInfo(this.token)
+    }
   },
 
   methods: {
     gettuijian() {
-      let userid = this.searchModel.userids
+      const userid = this.searchModel.userids
       TuijianApi.recommendations(userid).then(response => {
-        this.Tuijian = response.data;
-        console.log(this.Tuijian,"tuijiasn1")
-        this.gettuijianjieguo();
+        this.Tuijian = response.data
+        console.log(this.Tuijian, 'tuijiasn1')
+        this.gettuijianjieguo()
       })
     },
     gettuijianjieguo() {
-      this.searchModel.type = "上架";
-      this.searchModel.status = "审核成功";
-      this.searchModel.tuijian  = this.Tuijian
+      this.searchModel.type = '上架'
+      this.searchModel.status = '审核成功'
+      this.searchModel.tuijian = this.Tuijian
       api.getListtuijian(this.searchModel).then(response => {
-        this.tuijian11 = response.data.rows;
-        console.log(this.tuijian11,"this.tuijian11")
-      });
+        this.tuijian11 = response.data.rows
+        console.log(this.tuijian11, 'this.tuijian11')
+      })
     },
     getzuixin() {
       api.getzuixin(this.searchModel).then(response => {
-        this.tuijian11 = response.data.rows;
-      });
+        this.tuijian11 = response.data.rows
+      })
     },
     listNew() {
-      this.searchModel.type = "上架";
-      this.searchModel.status = "审核成功";
+      this.searchModel.type = '上架'
+      this.searchModel.status = '审核成功'
       api.getList(this.searchModel).then(response => {
-        this.news = response.data.rows;
-      });
+        this.news = response.data.rows
+      })
     },
     listNew1() {
       tiezipi.getList(this.searchModel).then(response => {
-        this.news1 = response.data.rows;
-      });
+        this.news1 = response.data.rows
+      })
     },
     listNew2() {
       LunboApi.getList(this.searchModel).then(response => {
-        this.carouselItems = response.data.rows;
-      });
+        this.carouselItems = response.data.rows
+      })
     },
     getInfo(token) {
-            userApi.getInfo(token).then(response => {
-                this.forms = response.data.userList
-                this.searchModel.userids = this.forms.id
-                this.gettuijian();
-                console.log(response, "response")
-            })
-        },
-  },
-  created() {
-    console.log(this.token, "tokthistokenen");
-    if (this.token === undefined || this.token === null || this.token === '') {
-       this.getzuixin()
-    } else {
-        this.getInfo(this.token);
+      userApi.getInfo(token).then(response => {
+        this.forms = response.data.userList
+        this.searchModel.userids = this.forms.id
+        this.gettuijian()
+        console.log(response, 'response')
+      })
     }
-    },
+  },
   computed: {
-        ...mapGetters([
-            'token'
-        ])
-    },
+    ...mapGetters([
+      'token'
+    ])
+  }
 }
 </script>
 

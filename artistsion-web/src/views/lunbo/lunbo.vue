@@ -1,77 +1,93 @@
 <template>
   <div>
-      <!-- 搜索栏 -->
-      <el-card id="search">
-          <el-row>
-              <el-col :span="20">
-                  <el-input v-model="searchModel.name" placeholder="轮播图姓名" clearable></el-input>
-                  <el-button type="primary" round icon="el-icon-search" @click="getList">查询</el-button>
-              </el-col>
-              <el-col :span="4" align="right">
-                  <el-button @click="openEditUI(null)" type="primary" circle icon="el-icon-plus"></el-button>
-              </el-col>
-          </el-row>
-      </el-card>
-      <!-- 结果列表 -->
-      <el-card>
-          <el-table :data="List" stripe style="width: 100%">
-              <el-table-column label="#" width="80">
-                  <template slot-scope="scope">
-                      {{ (searchModel.pageNo - 1) * searchModel.pageSize + scope.$index + 1 }}
-                  </template>
-              </el-table-column>
-              <el-table-column prop="id" label="ID" width="180">
-              </el-table-column>
-              <el-table-column prop="name" label="轮播图姓名" width="180">
-              </el-table-column>
-             
-              <el-table-column label="轮播图" >
-                  <template slot-scope="scope">
-                      <el-popover placement="top-start" title="" trigger="hover">
-                      <img :src="scope.row.lunbo" alt="" style="width: 150px;height: 150px">
-                      <img slot="reference" :src="scope.row.lunbo" style="width: 50px;height: 50px">
-                      </el-popover>
-                  </template>
-                  </el-table-column>
+    <!-- 搜索栏 -->
+    <el-card id="search">
+      <el-row>
+        <el-col :span="20">
+          <el-input v-model="searchModel.name" placeholder="轮播图姓名" clearable />
+          <el-button type="primary" round icon="el-icon-search" @click="getList">查询</el-button>
+        </el-col>
+        <el-col :span="4" align="right">
+          <el-button type="primary" circle icon="el-icon-plus" @click="openEditUI(null)" />
+        </el-col>
+      </el-row>
+    </el-card>
+    <!-- 结果列表 -->
+    <el-card>
+      <el-table :data="List" stripe style="width: 100%">
+        <el-table-column label="#" width="80">
+          <template slot-scope="scope">
+            {{ (searchModel.pageNo - 1) * searchModel.pageSize + scope.$index + 1 }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="id" label="ID" width="180" />
+        <el-table-column prop="name" label="轮播图姓名" width="180" />
 
-              <el-table-column label="操作" width="180">
-                  <template slot-scope="scope">
-                      <el-button type="primary" icon="el-icon-edit" @click="openEditUI(scope.row.id)" circle
-                          size="mini"></el-button>
-                      <el-button type="danger" icon="el-icon-delete" @click="deleteUser(scope.row)" circle
-                          size="mini"></el-button>
-                  </template>
-              </el-table-column>
-          </el-table>
-      </el-card>
+        <el-table-column label="轮播图">
+          <template slot-scope="scope">
+            <el-popover placement="top-start" title="" trigger="hover">
+              <img :src="scope.row.lunbo" alt="" style="width: 150px;height: 150px">
+              <img slot="reference" :src="scope.row.lunbo" style="width: 50px;height: 50px">
+            </el-popover>
+          </template>
+        </el-table-column>
 
-      <!-- 分页组件 -->
-      <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
-          :current-page="searchModel.pageNo" :page-sizes="[5, 10, 20, 50]" :page-size="searchModel.pageSize"
-          layout="total, sizes, prev, pager, next, jumper" :total="total">
-      </el-pagination>
+        <el-table-column label="操作" width="180">
+          <template slot-scope="scope">
+            <el-button
+              type="primary"
+              icon="el-icon-edit"
+              circle
+              size="mini"
+              @click="openEditUI(scope.row.id)"
+            />
+            <el-button
+              type="danger"
+              icon="el-icon-delete"
+              circle
+              size="mini"
+              @click="deleteUser(scope.row)"
+            />
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
 
-      <!-- 用户信息编辑对话框 -->
-      <el-dialog @close="clearForm" :title="title" :visible.sync="dialogFormVisible">
-          <el-form :model="Form" :rules="rules" ref="FormRef">
-              <el-form-item label="轮播图姓名" :label-width="formLabelWidth" >
-                  <el-input v-model="Form.name" autocomplete="off"></el-input>
-              </el-form-item>
-        
-              <el-form-item label="轮播图" :label-width="formLabelWidth">
-                          <el-upload class="avatar-uploader" 
-                          action="http://localhost:9999/oss/file/upload?module=lunbo"
-                              :show-file-list="false" :on-success="handleAvatarSuccess">
-                              <img v-if="Form.lunbo"  :src="Form.lunbo" class="avatar" />
-                              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-                          </el-upload>
-                      </el-form-item>
-          </el-form>
-          <div slot="footer" class="dialog-footer">
-              <el-button @click="dialogFormVisible = false">取 消</el-button>
-              <el-button type="primary" @click="saveOrUpdate">确 定</el-button>
-          </div>
-      </el-dialog>
+    <!-- 分页组件 -->
+    <el-pagination
+      :current-page="searchModel.pageNo"
+      :page-sizes="[5, 10, 20, 50]"
+      :page-size="searchModel.pageSize"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total"
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+    />
+
+    <!-- 用户信息编辑对话框 -->
+    <el-dialog :title="title" :visible.sync="dialogFormVisible" @close="clearForm">
+      <el-form ref="FormRef" :model="Form" :rules="rules">
+        <el-form-item label="轮播图姓名" :label-width="formLabelWidth">
+          <el-input v-model="Form.name" autocomplete="off" />
+        </el-form-item>
+
+        <el-form-item label="轮播图" :label-width="formLabelWidth">
+          <el-upload
+            class="avatar-uploader"
+            action="http://localhost:9999/oss/file/upload?module=lunbo"
+            :show-file-list="false"
+            :on-success="handleAvatarSuccess"
+          >
+            <img v-if="Form.lunbo" :src="Form.lunbo" class="avatar">
+            <i v-else class="el-icon-plus avatar-uploader-icon" />
+          </el-upload>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button type="primary" @click="saveOrUpdate">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -81,137 +97,135 @@ import userApi from '@/api/userManage'
 
 export default {
   data() {
-      return {
-          title: "",
-          total: 0,
-          dialogFormVisible: false,
-          searchModel: {
-              pageNo: 1,
-              pageSize: 5
-          },
-          List: [],
-          Form: {
-          },
-          allForm: [{}],
-          formLabelWidth: '130px',
-          rules: {
-              title: [
-                  { required: true, message: '请输入名字', trigger: 'blur' },
-                  { min: 3, max: 50, message: '长度在 3 到 50 个字符', trigger: 'blur' }
-              ],
-          }
+    return {
+      title: '',
+      total: 0,
+      dialogFormVisible: false,
+      searchModel: {
+        pageNo: 1,
+        pageSize: 5
+      },
+      List: [],
+      Form: {
+      },
+      allForm: [{}],
+      formLabelWidth: '130px',
+      rules: {
+        title: [
+          { required: true, message: '请输入名字', trigger: 'blur' },
+          { min: 3, max: 50, message: '长度在 3 到 50 个字符', trigger: 'blur' }
+        ]
       }
+    }
+  },
+  created() {
+    this.getList()
+    // this.getInfo(this.token);
   },
   methods: {
 
-  handleAvatarSuccess(res,file){
-      console.log(res,"oss1")
-      this.Form.lunbo = `http://localhost:9999/oss/file/download?name=${res.data}`;
-      console.log(this.Form.lunbo,"oss12312")
+    handleAvatarSuccess(res, file) {
+      console.log(res, 'oss1')
+      this.Form.lunbo = `http://localhost:9999/oss/file/download?name=${res.data}`
+      console.log(this.Form.lunbo, 'oss12312')
 
       // 强制重新渲染
-      this.$forceUpdate();
-  },
-      deleteUser(content) {
-          this.$confirm(`您确认删除名字 ${content.name} ?`, '提示', {
-              confirmButtonText: '确定',
-              cancelButtonText: '取消',
-              type: 'warning'
-          }).then(() => {
-
-                  api.deleteById(content.id).then(response => {
-                      this.$message({
-                          type: 'success',
-                          message: response.message
-                      });
-                      this.getList();
-                  })
-
-          }).catch(() => {
-              this.$message({
-                  type: 'info',
-                  message: '已取消删除'
-              });
-          });
-      },
-      saveOrUpdate() {
-          // 触发表单验证
-          this.$refs.FormRef.validate((valid) => {
-              if (valid) {
-                  // 再提交请求给后台
-                  api.saveOrUpdate(this.Form).then(response => {
-                      //成功提示
-                      this.$message({
-                          message: response.message,
-                          type: 'success'
-                      });
-                      //关闭对话框
-                      this.dialogFormVisible = false;
-                      //刷新表格
-                      this.getList();
-                  })
-              } else {
-                  console.log('error submit!!');
-                  return false;
-              }
-          });
-      },
-      clearForm() {
-          this.Form = {
-             
-          };
-          this.$refs.FormRef.clearValidate();
-      },
-      openEditUI(id) {
-          if (id == null) {
-              this.title = "新增";
-          } else {
-              this.title = "修改";
-              api.getById(id).then(response => {
-                  this.Form = response.data;
-              })
-          }
-          this.dialogFormVisible = true;
-      },
-      handleSizeChange(pageSize) {
-          this.searchModel.pageSize = pageSize
-          this.getList();
-      },
-      handleCurrentChange(pageNo) {
-          this.searchModel.pageNo = pageNo
-          this.getList();
-      },
-      getList() {
-          api.getList(this.searchModel).then(response => {
-              this.List = response.data.rows;
-              this.total = response.data.total;
-          });
-      },
-      getGuanliyuan() {
-          api.getGuanliyuan().then(response => {
-              this.allForm = response.data;
-          });
-      },  getInfo(token) {
-          userApi.getInfo(token).then(response => {
-              this.forms = response.data.userList
-              this.Form.userids =this.forms.id
-              this.searchModel.userids = this.forms.id
-              console.log(this.forms, "this.form")
-              console.log(this.Form.userids, "this.fthis.Form.useridsorm")
-              this.getList();
-              console.log(response, "response")
+      this.$forceUpdate()
+    },
+    deleteUser(content) {
+      this.$confirm(`您确认删除名字 ${content.name} ?`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        api.deleteById(content.id).then(response => {
+          this.$message({
+            type: 'success',
+            message: response.message
           })
-      },
-  },
-  created() {
-      this.getList();
-      // this.getInfo(this.token);
+          this.getList()
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
+    },
+    saveOrUpdate() {
+      // 触发表单验证
+      this.$refs.FormRef.validate((valid) => {
+        if (valid) {
+          // 再提交请求给后台
+          api.saveOrUpdate(this.Form).then(response => {
+            // 成功提示
+            this.$message({
+              message: response.message,
+              type: 'success'
+            })
+            // 关闭对话框
+            this.dialogFormVisible = false
+            // 刷新表格
+            this.getList()
+          })
+        } else {
+          console.log('error submit!!')
+          return false
+        }
+      })
+    },
+    clearForm() {
+      this.Form = {
+
+      }
+      this.$refs.FormRef.clearValidate()
+    },
+    openEditUI(id) {
+      if (id == null) {
+        this.title = '新增'
+      } else {
+        this.title = '修改'
+        api.getById(id).then(response => {
+          this.Form = response.data
+        })
+      }
+      this.dialogFormVisible = true
+    },
+    handleSizeChange(pageSize) {
+      this.searchModel.pageSize = pageSize
+      this.getList()
+    },
+    handleCurrentChange(pageNo) {
+      this.searchModel.pageNo = pageNo
+      this.getList()
+    },
+    getList() {
+      api.getList(this.searchModel).then(response => {
+        this.List = response.data.rows
+        this.total = response.data.total
+      })
+    },
+    getGuanliyuan() {
+      api.getGuanliyuan().then(response => {
+        this.allForm = response.data
+      })
+    }, getInfo(token) {
+      userApi.getInfo(token).then(response => {
+        this.forms = response.data.userList
+        this.Form.userids = this.forms.id
+        this.searchModel.userids = this.forms.id
+        console.log(this.forms, 'this.form')
+        console.log(this.Form.userids, 'this.fthis.Form.useridsorm')
+        this.getList()
+        console.log(response, 'response')
+      })
+    }
   },
   computed: {
-      ...mapGetters([
-          'token'
-      ])
-  },
+    ...mapGetters([
+      'token'
+    ])
+  }
 }
 </script>
 

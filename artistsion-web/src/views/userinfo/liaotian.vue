@@ -3,7 +3,7 @@
     <div class="chat-shell">
       <div class="chat-title">{{ richtexttitle }}</div>
       <div class="chat-hint">支持文字、图片预览与附件下载（如 zip 压缩包）。附件通过服务端存储，点击下载即可。</div>
-      <div class="messages" ref="msgBox">
+      <div ref="msgBox" class="messages">
         <div
           v-for="message in messages"
           :key="message.id"

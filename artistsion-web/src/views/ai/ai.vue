@@ -11,13 +11,13 @@
       <div class="qa-container">
         <div v-if="aiResponse" class="ai-response">
           <div class="response-title">回复</div>
-          <div class="response-content" v-html="formatMessage(aiResponse)"></div>
+          <div class="response-content" v-html="formatMessage(aiResponse)" />
         </div>
 
         <div class="question-input">
           <el-input
-            type="textarea"
             v-model="userInput"
+            type="textarea"
             :rows="4"
             placeholder="例如：头像稿如何报价？定金比例怎么约定？如何避免跑单？"
             :disabled="isLoading"
@@ -25,9 +25,9 @@
           <el-button
             type="primary"
             class="send-btn"
-            @click="sendMessage"
             :loading="isLoading"
             :disabled="!userInput.trim()"
+            @click="sendMessage"
           >
             发送
           </el-button>

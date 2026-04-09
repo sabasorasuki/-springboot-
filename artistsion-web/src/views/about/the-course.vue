@@ -1,33 +1,37 @@
 <template>
   <div class="commission-card">
     <div class="card-image">
-      <img v-bind:src="course.photo" :alt="course.title">
+      <img :src="course.photo" :alt="course.title">
       <div class="card-badge">橱窗</div>
-      <div class="card-overlay"></div>
+      <div class="card-overlay" />
     </div>
 
     <div class="card-body">
       <div class="card-head">
-        <h3 class="card-title">{{course.name}}</h3>
+        <h3 class="card-title">{{ course.name }}</h3>
         <div class="card-artist">
-          <i class="fa fa-user-circle"></i> {{course.jingdian}}
+          <i class="fa fa-user-circle" /> {{ course.jingdian }}
         </div>
       </div>
 
       <div class="card-meta">
-        <span class="price">¥{{course.price}}</span>
+        <span class="price">¥{{ course.price }}</span>
         <span class="price-hint">起</span>
       </div>
 
       <div class="card-actions">
-        <el-button v-if="this.formInline.zhi == 'meiYouZhi'"
-                  class="login-hint-btn">
-          <i class="fa fa-lock"></i> 登录后查看详情
+        <el-button
+          v-if="this.formInline.zhi == 'meiYouZhi'"
+          class="login-hint-btn"
+        >
+          <i class="fa fa-lock" /> 登录后查看详情
         </el-button>
-        <router-link v-if="this.formInline.zhi == 'youZhi'"
-                     v-bind:to="'/detail?id=' + course.id"
-                     class="details-btn">
-          <i class="fa fa-arrow-right"></i> 查看详情
+        <router-link
+          v-if="this.formInline.zhi == 'youZhi'"
+          :to="'/detail?id=' + course.id"
+          class="details-btn"
+        >
+          <i class="fa fa-arrow-right" /> 查看详情
         </router-link>
       </div>
     </div>
@@ -38,7 +42,7 @@
 import { mapGetters } from 'vuex'
 
 export default {
-  name: 'the-course',
+  name: 'TheCourse',
   props: {
     course: {}
   },
@@ -48,23 +52,23 @@ export default {
     ])
   },
   created() {
-    let zhi = this.token;
-    if(typeof(zhi) == 'undefined'){
-      this.formInline.zhi = "meiYouZhi";
-    }else {
-      this.formInline.zhi = "youZhi";
+    const zhi = this.token
+    if (typeof (zhi) === 'undefined') {
+      this.formInline.zhi = 'meiYouZhi'
+    } else {
+      this.formInline.zhi = 'youZhi'
     }
   },
-  data: function () {
+  data: function() {
     return {
       formInline: {
-        username:"",
+        username: '',
         content: '',
-        zhi:"",
-        label:""
-      },
+        zhi: '',
+        label: ''
+      }
     }
-  },
+  }
 }
 </script>
 

@@ -30,7 +30,7 @@ import Layout from '@/layout'
  * a base page that does not have permission requirements
  * all roles can be accessed
  */
- export const constantRoutes = [
+export const constantRoutes = [
   {
     path: '/login',
     component: () => import('@/views/login/index'),
@@ -45,7 +45,7 @@ import Layout from '@/layout'
     path: '/register',
     component: () => import('@/views/login/register'),
     hidden: true
-  },{
+  }, {
     path: '/theList',
     name: 'theList',
     component: () => import('@/views/about/the-list'),
@@ -57,7 +57,7 @@ import Layout from '@/layout'
     component: () => import('@/views/about/the-community'),
     hidden: true
   },
-   {
+  {
     path: '/detail',
     name: 'detail',
     component: () => import('@/views/about/detail'),
@@ -69,7 +69,7 @@ import Layout from '@/layout'
     component: () => import('@/views/about/details'),
     hidden: true
   },
-   {
+  {
     path: '/mas',
     name: 'about',
     component: () => import('@/views/AboutView'),
@@ -83,7 +83,7 @@ import Layout from '@/layout'
       path: 'dashboard',
       name: 'Dashboard',
       component: () => import('@/views/dashboard/index'),
-      meta: { title: '首页', icon: 'dashboard', affix:true ,noCache: false}
+      meta: { title: '首页', icon: 'dashboard', affix: true, noCache: false }
     },
     // 个人中心
     {
@@ -91,12 +91,12 @@ import Layout from '@/layout'
       component: () => import('@/views/userinfo/index'),
       hidden: true
     },
-{
+    {
       path: '/fabusp',
       name: 'fabusp',
       component: () => import('@/views/userinfo/fabusp'),
       hidden: true
-    },{
+    }, {
       path: '/myfenxiang',
       name: 'myfenxiang',
       component: () => import('@/views/userinfo/myfenxiang'),
@@ -107,10 +107,10 @@ import Layout from '@/layout'
       name: 'liaotian',
       component: () => import('@/views/userinfo/liaotian'),
       hidden: true
-    },
-  
-  ]
-  },  
+    }
+
+    ]
+  }
 ]
 
 const createRouter = () => new Router({

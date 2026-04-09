@@ -7,12 +7,11 @@ import { getToken } from '@/utils/auth' // get token from cookie
 import getPageTitle from '@/utils/get-page-title'
 import Layout from '@/layout'
 
-
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
-const whiteList = ['/login','/register','/mas','/theList','/community'] // no redirect whitelist
+const whiteList = ['/login', '/register', '/mas', '/theList', '/community'] // no redirect whitelist
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async(to, from, next) => {
   // start progress bar
   NProgress.start()
 
@@ -37,19 +36,19 @@ router.beforeEach(async (to, from, next) => {
           await store.dispatch('user/getInfo')
 
           // 路由转换
-          let myRoutes = myFilterAsyncRoutes(store.getters.menuList);
+          const myRoutes = myFilterAsyncRoutes(store.getters.menuList)
           // 404
           myRoutes.push({
             path: '*',
             redirect: '/404',
             hidden: true
-          });
+          })
           // 动态添加路由
-          router.addRoutes(myRoutes);
+          router.addRoutes(myRoutes)
           // 存至全局变量
-          global.myRoutes = myRoutes;
+          global.myRoutes = myRoutes
 
-          next({ ...to, replace: true })  // 防止刷新后页面空白
+          next({ ...to, replace: true }) // 防止刷新后页面空白
 
           // next()
         } catch (error) {
@@ -80,12 +79,11 @@ router.afterEach(() => {
   NProgress.done()
 })
 
-
 function myFilterAsyncRoutes(menuList) {
   menuList.filter(menu => {
     if (menu.component === 'Layout') {
       menu.component = Layout
-      console.log(menu.component);
+      console.log(menu.component)
     } else {
       menu.component = require(`@/views/${menu.component}.vue`).default
     }
@@ -95,5 +93,5 @@ function myFilterAsyncRoutes(menuList) {
     }
     return true
   })
-  return menuList;
+  return menuList
 }

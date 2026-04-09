@@ -1,9 +1,17 @@
 <template>
   <div id="tags-view-container" class="tags-view-container">
     <scroll-pane ref="scrollPane" class="tags-view-wrapper">
-      <router-link v-for="tag in visitedViews" ref="tag" :key="tag.path" :class="isActive(tag) ? 'active' : ''"
-        :to="{ path: tag.path, query: tag.query, fullPath: tag.fullPath }" tag="span" class="tags-view-item"
-        @click.middle.native="closeSelectedTag(tag)" @contextmenu.prevent.native="openMenu(tag, $event)">
+      <router-link
+        v-for="tag in visitedViews"
+        ref="tag"
+        :key="tag.path"
+        :class="isActive(tag) ? 'active' : ''"
+        :to="{ path: tag.path, query: tag.query, fullPath: tag.fullPath }"
+        tag="span"
+        class="tags-view-item"
+        @click.middle.native="closeSelectedTag(tag)"
+        @contextmenu.prevent.native="openMenu(tag, $event)"
+      >
         {{ tag.title }}
         <span v-if="!tag.meta.affix" class="el-icon-close" @click.prevent.stop="closeSelectedTag(tag)" />
       </router-link>
@@ -35,7 +43,7 @@ export default {
   computed: {
     visitedViews() {
       return this.$store.state.tagsView.visitedViews
-    },
+    }
     /* routes() {
       return this.$store.state.permission.routes
     } */
@@ -60,8 +68,8 @@ export default {
   },
   methods: {
     tagsViewCache() {
-      window.addEventListener("beforeunload", () => {
-        let tabViews = this.visitedViews.map(item => {
+      window.addEventListener('beforeunload', () => {
+        const tabViews = this.visitedViews.map(item => {
           return {
             fullPath: item.fullPath,
             hash: item.hash,
@@ -71,13 +79,13 @@ export default {
             path: item.path,
             query: { ...item.query },
             title: item.title
-          };
-        });
-        sessionStorage.setItem("tabViews", JSON.stringify(tabViews));
-      });
-      let oldViews = JSON.parse(sessionStorage.getItem("tabViews")) || [];
+          }
+        })
+        sessionStorage.setItem('tabViews', JSON.stringify(tabViews))
+      })
+      const oldViews = JSON.parse(sessionStorage.getItem('tabViews')) || []
       if (oldViews.length > 0) {
-        this.$store.state.tagsView.visitedViews = oldViews;
+        this.$store.state.tagsView.visitedViews = oldViews
       }
     },
 

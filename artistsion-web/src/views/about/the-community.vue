@@ -12,17 +12,21 @@
               v-model="searchModel.title"
               placeholder="搜索帖子标题…"
               class="search-input"
-              prefix-icon="el-icon-search">
-            </el-input>
-            <el-button type="primary"
-                      @click="listPosts"
-                      class="search-btn">
-              <i class="fa fa-search"></i> 搜索
+              prefix-icon="el-icon-search"
+            />
+            <el-button
+              type="primary"
+              class="search-btn"
+              @click="listPosts"
+            >
+              <i class="fa fa-search" /> 搜索
             </el-button>
-            <el-button type="info"
-                      @click="qiantai()"
-                      class="back-btn">
-              <i class="fa fa-arrow-left"></i> 回首页
+            <el-button
+              type="info"
+              class="back-btn"
+              @click="qiantai()"
+            >
+              <i class="fa fa-arrow-left" /> 回首页
             </el-button>
           </div>
         </div>
@@ -33,23 +37,23 @@
       <div class="container">
         <div class="pagination-wrapper">
           <el-pagination
-              @size-change="handleSizeChange"
-              @current-change="handleCurrentChange"
-              :current-page="searchModel.pageNo"
-              :page-sizes="[6, 12, 24, 36]"
-              :page-size="searchModel.pageSize"
-              layout="total, sizes, prev, pager, next, jumper"
-              :total="total"
-              background>
-          </el-pagination>
+            :current-page="searchModel.pageNo"
+            :page-sizes="[6, 12, 24, 36]"
+            :page-size="searchModel.pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+            background
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+          />
         </div>
 
         <div class="spots-grid">
           <div v-for="o in posts" :key="o.id" class="spot-item">
-            <the-coursetiezi :course="o"></the-coursetiezi>
+            <the-coursetiezi :course="o" />
           </div>
           <div v-show="posts.length === 0" class="no-data">
-            <i class="fa fa-comments fa-3x"></i>
+            <i class="fa fa-comments fa-3x" />
             <h3>暂无相关帖子</h3>
             <p>换个关键词，或稍后再来刷新</p>
           </div>
@@ -60,12 +64,12 @@
 </template>
 
 <script>
-import TheCoursetiezi from "@/views/about/the-coursetiezi";
+import TheCoursetiezi from '@/views/about/the-coursetiezi'
 import tiezipi from '@/api/fenxiang.js'
 
 export default {
+  name: 'TheCommunity',
   components: { TheCoursetiezi },
-  name: 'the-community',
   data() {
     return {
       posts: [],
@@ -73,31 +77,31 @@ export default {
       searchModel: {
         pageNo: 1,
         pageSize: 6,
-        title: '',
-      },
+        title: ''
+      }
     }
   },
   mounted() {
-    this.listPosts();
+    this.listPosts()
   },
   methods: {
     listPosts() {
       tiezipi.getList(this.searchModel).then(response => {
-        this.posts = response.data.rows || [];
-        this.total = response.data.total || 0;
-      });
+        this.posts = response.data.rows || []
+        this.total = response.data.total || 0
+      })
     },
     qiantai() {
-      this.$router.push('/mas');
+      this.$router.push('/mas')
     },
     handleSizeChange(val) {
-      this.searchModel.pageSize = val;
-      this.listPosts();
+      this.searchModel.pageSize = val
+      this.listPosts()
     },
     handleCurrentChange(val) {
-      this.searchModel.pageNo = val;
-      this.listPosts();
-    },
+      this.searchModel.pageNo = val
+      this.listPosts()
+    }
   }
 }
 </script>

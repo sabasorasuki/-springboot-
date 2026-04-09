@@ -39,7 +39,10 @@ public class SwaggerConfig {
     private SecurityContext securityContext() {
         return SecurityContext.builder()
                 .securityReferences(defaultAuth())
-                .forPaths(PathSelectors.regex("^(?!auth).*$"))
+                .operationSelector(operationContext -> {
+                    String path = operationContext.requestMappingPattern();
+                    return path != null && PathSelectors.regex("^(?!auth).*$").test(path);
+                })
                 .build();
     }
 

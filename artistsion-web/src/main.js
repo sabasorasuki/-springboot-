@@ -35,13 +35,11 @@ Vue.use(ElementUI, { locale })
 
 Vue.config.productionTip = false
 
-
-
 // 引入echarts
-//npm install echarts --save
-import * as echarts from 'echarts';
+// npm install echarts --save
+import * as echarts from 'echarts'
 Vue.prototype.$echarts = echarts
-//npm i wangeditor --save
+// npm i wangeditor --save
 
 new Vue({
   el: '#app',

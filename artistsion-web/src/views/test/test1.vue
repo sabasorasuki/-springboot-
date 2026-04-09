@@ -1,78 +1,83 @@
-<template>
+﻿<template>
   <div id="map-page">
-    <div id="container"></div> <!-- 地图容器 -->
-    <div id="panel"></div> <!-- 路线面板 -->
+    <div id="container" /> <!-- 鍦板浘瀹瑰櫒 -->
+    <div id="panel" /> <!-- 璺嚎闈㈡澘 -->
   </div>
 </template>
 
 <script>
 export default {
-  name: "DrivingRoute",
+  name: 'DrivingRoute',
   props: {
     startCity: {
       type: String,
-      default: "南阳", // 默认值可以是一个假数据
+      default: '鍗楅槼' // 榛樿鍊煎彲浠ユ槸涓€涓亣鏁版嵁
     },
     startAddress: {
       type: String,
-      default: "桐柏县", // 默认值可以是一个假数据
+      default: 'Tongbai'
     },
     endCity: {
       type: String,
-      default: "北京", // 默认值可以是一个假数据
+      default: '鍖椾含' // 榛樿鍊煎彲浠ユ槸涓€涓亣鏁版嵁
     },
     endAddress: {
       type: String,
-      default: "亦庄文化园(地铁站)", // 默认值可以是一个假数据
-    },
+      default: 'Yizhuang'
+    }
   },
   mounted() {
-    this.initMap();
+    this.initMap()
   },
   methods: {
     initMap() {
-      // 在加载地图脚本前配置安全密钥
+      // 鍦ㄥ姞杞藉湴鍥捐剼鏈墠閰嶇疆瀹夊叏瀵嗛挜
       window._AMapSecurityConfig = {
-        securityJsCode: "284e729f7e248b7d86e1f3cebf3f3a3f" // 安全密钥
-      };
+        securityJsCode: '284e729f7e248b7d86e1f3cebf3f3a3f' // 瀹夊叏瀵嗛挜
+      }
 
-      // 加载高德地图脚本
-      const script = document.createElement("script");
+      // 鍔犺浇楂樺痉鍦板浘鑴氭湰
+      const script = document.createElement('script')
       script.src =
-        "https://webapi.amap.com/maps?v=2.0&key=da1a0e47269d639dbb1defbca80501e5&plugin=AMap.Driving"; // API Key
+        'https://webapi.amap.com/maps?v=2.0&key=da1a0e47269d639dbb1defbca80501e5&plugin=AMap.Driving' // API Key
       script.onload = () => {
-        // 初始化地图
-        const map = new AMap.Map("container", {
+        const AMap = window.AMap
+        if (!AMap) {
+          console.error('AMap SDK failed to load')
+          return
+        }
+        // 鍒濆鍖栧湴鍥?
+        const map = new AMap.Map('container', {
           resizeEnable: true,
-          center: [116.397428, 39.90923], // 地图中心点
-          zoom: 13, // 地图显示的缩放级别
-        });
+          center: [116.397428, 39.90923], // 鍦板浘涓績鐐?
+          zoom: 13 // 鍦板浘鏄剧ず鐨勭缉鏀剧骇鍒?
+        })
 
-        // 构造路线导航类
+        // 鏋勯€犺矾绾垮鑸被
         const driving = new AMap.Driving({
           map: map,
-          panel: "panel",
-        });
+          panel: 'panel'
+        })
 
-        // 使用传递的值进行驾车路线规划
+        // 浣跨敤浼犻€掔殑鍊艰繘琛岄┚杞﹁矾绾胯鍒?
         driving.search(
           [
             { keyword: this.startAddress, city: this.startCity },
-            { keyword: this.endAddress, city: this.endCity },
+            { keyword: this.endAddress, city: this.endCity }
           ],
           (status, result) => {
-            if (status === "complete") {
-              console.log("绘制驾车路线完成");
+            if (status === 'complete') {
+              console.log('缁樺埗椹捐溅璺嚎瀹屾垚')
             } else {
-              console.error("获取驾车数据失败：", result);
+              console.error('Failed to fetch driving route data', result)
             }
           }
-        );
-      };
-      document.head.appendChild(script);
-    },
-  },
-};
+        )
+      }
+      document.head.appendChild(script)
+    }
+  }
+}
 </script>
 
 <style scoped>
@@ -84,7 +89,7 @@ export default {
 
 #container {
   width: 100%;
-  height: 100vh; /* 设置为视口高度 */
+  height: 100vh; /* 璁剧疆涓鸿鍙ｉ珮搴?*/
 }
 
 #panel {
@@ -98,3 +103,4 @@ export default {
   border-radius: 4px;
 }
 </style>
+

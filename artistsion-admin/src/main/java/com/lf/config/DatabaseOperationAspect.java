@@ -34,11 +34,6 @@ public class DatabaseOperationAspect {
 
     @Before("execution(* com.lf.controller.*.*(..))")
     public void logBefore(JoinPoint joinPoint) {
-        String methodName = joinPoint.getSignature().getName();
-        Object[] args = joinPoint.getArgs(); // 获取方法参数
-        long startTime = System.currentTimeMillis(); // 获取当前时间作为方法开始时间
-
-
         Integer userId = null;
 
         String userName = null;
@@ -106,17 +101,10 @@ public class DatabaseOperationAspect {
 
         }
 
-
-
-        //databaseLogger.logBeforeOperation(methodName, args, startTime);
     }
 
 
     @After("execution(* com.lf.service.*.*(..))")
-    public void logAfter(JoinPoint joinPoint) {
-        String methodName = joinPoint.getSignature().getName();
-        long endTime = System.currentTimeMillis(); // 获取当前时间作为方法结束时间
-        Object[] args = joinPoint.getArgs(); // 获取方法参数
-        //databaseLogger.logAfterOperation(methodName, args, endTime);
+    public void logAfter() {
     }
 }

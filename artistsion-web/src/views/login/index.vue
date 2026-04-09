@@ -45,13 +45,12 @@
 </template>
 
 <script>
-import { validUsername } from '@/utils/validate'
-
 export default {
   name: 'Login',
   data() {
     const validateUsername = (rule, value, callback) => {
-      if (!validUsername(value)) {
+      const username = typeof value === 'string' ? value.trim() : ''
+      if (!username) {
         callback(new Error('请输入正确的账号'))
       } else {
         callback()
@@ -111,6 +110,7 @@ export default {
         this.$notify.error({ title: '错误', message: '验证码错误' })
         return
       }
+      this.loginForm.username = typeof this.loginForm.username === 'string' ? this.loginForm.username.trim() : ''
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true

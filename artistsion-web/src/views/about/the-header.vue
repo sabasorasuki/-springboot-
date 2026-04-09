@@ -6,38 +6,45 @@
           <span class="brand-mark">绘</span>
           <span class="brand-text">画师接稿</span>
         </router-link>
-        <button class="navbar-toggler nav-toggle" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
+        <button
+          class="navbar-toggler nav-toggle"
+          type="button"
+          data-toggle="collapse"
+          data-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon" />
         </button>
 
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <div id="navbarSupportedContent" class="collapse navbar-collapse">
           <ul class="navbar-nav mr-auto nav-main">
             <li class="nav-item">
               <router-link class="nav-link" to="/mas">
-                <i class="fa fa-home"></i> 首页
+                <i class="fa fa-home" /> 首页
               </router-link>
             </li>
             <li class="nav-item">
               <router-link class="nav-link" to="/theList">
-                <i class="fa fa-paint-brush"></i> 橱窗稿位
+                <i class="fa fa-paint-brush" /> 橱窗稿位
               </router-link>
             </li>
             <li class="nav-item">
               <router-link class="nav-link" to="/community">
-                <i class="fa fa-comments"></i> 交流区
+                <i class="fa fa-comments" /> 交流区
               </router-link>
             </li>
           </ul>
           <div class="user-section">
             <span v-if="this.formInline.zhi == 'youZhi'" class="welcome-text">
-              <i class="fa fa-user-circle"></i> {{ formInline.username }}
+              <i class="fa fa-user-circle" /> {{ formInline.username }}
             </span>
-            <el-button type="primary" @click="gotohome()" v-if="this.formInline.zhi == 'youZhi'" class="admin-btn">
-              <i class="fa fa-cog"></i> 后台
+            <el-button v-if="this.formInline.zhi == 'youZhi'" type="primary" class="admin-btn" @click="gotohome()">
+              <i class="fa fa-cog" /> 后台
             </el-button>
-            <button v-if="this.formInline.zhi == 'meiYouZhi'" v-on:click="openLoginModal()" class="login-btn">
-              <i class="fa fa-sign-in"></i> 登录 / 注册
+            <button v-if="this.formInline.zhi == 'meiYouZhi'" class="login-btn" @click="openLoginModal()">
+              <i class="fa fa-sign-in" /> 登录 / 注册
             </button>
           </div>
         </div>
@@ -52,50 +59,47 @@ import { mapGetters } from 'vuex'
 import userApi from '@/api/userManage'
 
 export default {
-  name: 'theHeader',
-  data: function () {
+  name: 'TheHeader',
+  data: function() {
     return {
       formInline: {
-        username:"",
+        username: '',
         content: '',
-        zhi:"",
-      },
+        zhi: ''
+      }
     }
   },
   computed: {
-        ...mapGetters([
-            'token'
-        ])
-    },
+    ...mapGetters([
+      'token'
+    ])
+  },
   mounted() {
-    let zhi = this.token;
-    let username = SessionStorage.get("USERNAME");
-    this.formInline.username = username;
-    if(typeof(zhi)== 'undefined'){
-      this.formInline.zhi = "meiYouZhi";
-    }else{
-      this.formInline.zhi = "youZhi";
+    const zhi = this.token
+    const username = window.sessionStorage.getItem('USERNAME')
+    this.formInline.username = username
+    if (typeof (zhi) === 'undefined') {
+      this.formInline.zhi = 'meiYouZhi'
+    } else {
+      this.formInline.zhi = 'youZhi'
       this.getInfo(this.token)
     }
-
   },
   methods: {
     getInfo(token) {
-            userApi.getInfo(token).then(response => {
-                this.forms = response.data.userList
-                this.formInline.username =this.forms.name
-                console.log(this.forms, "this.formsforms")
-            })
-        },
+      userApi.getInfo(token).then(response => {
+        this.forms = response.data.userList
+        this.formInline.username = this.forms.name
+        console.log(this.forms, 'this.formsforms')
+      })
+    },
 
-    gotohome(){
-      this.$router.push({path: '/'});
+    gotohome() {
+      this.$router.push({ path: '/' })
     },
     openLoginModal() {
-      this.$router.push({path: '/login'});
+      this.$router.push({ path: '/login' })
     }
-
-
 
   }
 }

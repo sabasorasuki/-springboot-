@@ -7,7 +7,7 @@ const getDefaultState = () => {
     token: getToken(),
     name: '',
     avatar: '',
-    menuList:[]
+    menuList: []
   }
 }
 
@@ -57,7 +57,7 @@ const actions = {
           reject('Verification failed, please Login again.')
         }
 
-        const { name, avatar ,menuList } = data
+        const { name, avatar, menuList } = data
 
         commit('SET_NAME', name)
         commit('SET_AVATAR', avatar)

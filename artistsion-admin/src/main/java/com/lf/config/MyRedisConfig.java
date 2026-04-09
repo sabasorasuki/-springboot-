@@ -27,7 +27,8 @@ public class MyRedisConfig {
     private RedisConnectionFactory factory;
 
     @Bean
-    public RedisTemplate redisTemplate(){
+    @SuppressWarnings("deprecation")
+    public RedisTemplate<String, Object> redisTemplate(){
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(factory);
         redisTemplate.setKeySerializer(new StringRedisSerializer());

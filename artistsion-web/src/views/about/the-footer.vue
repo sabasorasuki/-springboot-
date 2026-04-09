@@ -12,19 +12,19 @@
           <div class="link-group">
             <h4>平台</h4>
             <ul>
-              <li><router-link to="/theList"><i class="fa fa-angle-right"></i> 浏览稿位</router-link></li>
-              <li><router-link to="/community"><i class="fa fa-angle-right"></i> 交流区</router-link></li>
-              <li><a href="#"><i class="fa fa-angle-right"></i> 约稿须知</a></li>
-              <li><a href="#"><i class="fa fa-angle-right"></i> 隐私说明</a></li>
+              <li><router-link to="/theList"><i class="fa fa-angle-right" /> 浏览稿位</router-link></li>
+              <li><router-link to="/community"><i class="fa fa-angle-right" /> 交流区</router-link></li>
+              <li><a href="#"><i class="fa fa-angle-right" /> 约稿须知</a></li>
+              <li><a href="#"><i class="fa fa-angle-right" /> 隐私说明</a></li>
             </ul>
           </div>
 
           <div class="link-group">
             <h4>联系</h4>
             <div class="social-links">
-              <a href="#" title="微信"><i class="fa fa-weixin"></i></a>
-              <a href="#" title="微博"><i class="fa fa-weibo"></i></a>
-              <a href="#" title="QQ"><i class="fa fa-qq"></i></a>
+              <a href="#" title="微信"><i class="fa fa-weixin" /></a>
+              <a href="#" title="微博"><i class="fa fa-weibo" /></a>
+              <a href="#" title="QQ"><i class="fa fa-qq" /></a>
             </div>
           </div>
         </div>
@@ -32,7 +32,7 @@
 
       <div class="back-to-top">
         <a href="#" title="回顶部" @click.prevent="scrollTop">
-          <i class="fa fa-chevron-up"></i>
+          <i class="fa fa-chevron-up" />
         </a>
       </div>
     </div>
@@ -41,7 +41,7 @@
 
 <script>
 export default {
-  name: 'theFooter',
+  name: 'TheFooter',
   data() {
     return {
       year: new Date().getFullYear()

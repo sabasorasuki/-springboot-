@@ -1,13 +1,13 @@
 <template>
-    <div>
-        功能三
-    </div>
+  <div>
+    功能三
+  </div>
 </template>
 
 <script>
-    export default{
+export default {
 
-    }
+}
 </script>
 
 <style>

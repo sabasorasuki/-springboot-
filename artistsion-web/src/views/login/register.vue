@@ -20,13 +20,30 @@
         <p class="auth-sub">填写以下信息完成开户</p>
         <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="auth-form" label-position="top">
           <el-form-item prop="username" label="账号">
-            <el-input ref="username" v-model="loginForm.username" placeholder="登录账号" name="username" type="text"
-              tabindex="1" auto-complete="on" prefix-icon="el-icon-user" />
+            <el-input
+              ref="username"
+              v-model="loginForm.username"
+              placeholder="登录账号"
+              name="username"
+              type="text"
+              tabindex="1"
+              auto-complete="on"
+              prefix-icon="el-icon-user"
+            />
           </el-form-item>
           <el-form-item prop="password" label="密码">
-            <el-input :key="passwordType" ref="password" v-model="loginForm.password" :type="passwordType"
-              placeholder="不少于 6 位" name="password" tabindex="2" auto-complete="on" prefix-icon="el-icon-lock"
-              @keyup.enter.native="handleLogin">
+            <el-input
+              :key="passwordType"
+              ref="password"
+              v-model="loginForm.password"
+              :type="passwordType"
+              placeholder="不少于 6 位"
+              name="password"
+              tabindex="2"
+              auto-complete="on"
+              prefix-icon="el-icon-lock"
+              @keyup.enter.native="handleLogin"
+            >
               <i slot="suffix" class="el-input__icon el-icon-view pwd-toggle" @click="showPwd" />
             </el-input>
           </el-form-item>
@@ -80,13 +97,13 @@ export default {
         username: '',
         password: '',
         name: '',
-        role: '',
+        role: ''
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
         password: [{ required: true, trigger: 'blur', validator: validatePassword }],
         name: [{ required: true, trigger: 'blur', validator: validateRequired }],
-        role: [{ required: true, trigger: 'change', validator: validateRequired }],
+        role: [{ required: true, trigger: 'change', validator: validateRequired }]
       },
       loading: false,
       passwordType: 'password',
@@ -95,7 +112,7 @@ export default {
   },
   watch: {
     $route: {
-      handler: function (route) {
+      handler: function(route) {
         this.redirect = route.query && route.query.redirect
       },
       immediate: true

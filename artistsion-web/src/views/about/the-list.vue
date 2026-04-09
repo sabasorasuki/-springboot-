@@ -8,17 +8,21 @@
         </div>
         <div class="search-wrapper">
           <div class="category-tabs">
-            <a v-on:click="listCourse()"
-               :class="{'active': !searchModel.fenlei}"
-               class="category-tab">
-              <i class="fa fa-th-large"></i> 全部
+            <a
+              :class="{'active': !searchModel.fenlei}"
+              class="category-tab"
+              @click="listCourse()"
+            >
+              <i class="fa fa-th-large" /> 全部
             </a>
-            <a v-for="o in level1"
-               @click="listCourse(o.fenlei)"
-               :key="o.fenlei"
-               :class="{'active': searchModel.fenlei === o.fenlei}"
-               class="category-tab">
-              <i class="fa fa-tag"></i> {{o.fenlei}}
+            <a
+              v-for="o in level1"
+              :key="o.fenlei"
+              :class="{'active': searchModel.fenlei === o.fenlei}"
+              class="category-tab"
+              @click="listCourse(o.fenlei)"
+            >
+              <i class="fa fa-tag" /> {{ o.fenlei }}
             </a>
           </div>
 
@@ -27,17 +31,21 @@
               v-model="searchModel.name"
               placeholder="搜索稿位名称…"
               class="search-input"
-              prefix-icon="el-icon-search">
-            </el-input>
-            <el-button type="primary"
-                      @click="listCourse"
-                      class="search-btn">
-              <i class="fa fa-search"></i> 搜索
+              prefix-icon="el-icon-search"
+            />
+            <el-button
+              type="primary"
+              class="search-btn"
+              @click="listCourse"
+            >
+              <i class="fa fa-search" /> 搜索
             </el-button>
-            <el-button type="info"
-                      @click="qiantai()"
-                      class="back-btn">
-              <i class="fa fa-arrow-left"></i> 回首页
+            <el-button
+              type="info"
+              class="back-btn"
+              @click="qiantai()"
+            >
+              <i class="fa fa-arrow-left" /> 回首页
             </el-button>
           </div>
         </div>
@@ -48,23 +56,23 @@
       <div class="container">
         <div class="pagination-wrapper">
           <el-pagination
-              @size-change="handleSizeChange"
-              @current-change="handleCurrentChange"
-              :current-page="searchModel.pageNo"
-              :page-sizes="[6, 12, 24, 36]"
-              :page-size="searchModel.pageSize"
-              layout="total, sizes, prev, pager, next, jumper"
-              :total="total"
-              background>
-          </el-pagination>
+            :current-page="searchModel.pageNo"
+            :page-sizes="[6, 12, 24, 36]"
+            :page-size="searchModel.pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+            background
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+          />
         </div>
 
         <div class="spots-grid">
           <div v-for="o in courses" :key="o.id" class="spot-item">
-            <the-course :course="o"></the-course>
+            <the-course :course="o" />
           </div>
           <div v-show="courses.length === 0" class="no-data">
-            <i class="fa fa-picture-o fa-3x"></i>
+            <i class="fa fa-picture-o fa-3x" />
             <h3>暂无符合条件的稿位</h3>
             <p>换个关键词或分类试试</p>
           </div>
@@ -75,71 +83,71 @@
 </template>
 
 <script>
-import TheCourse from "@/views/about/the-course";
+import TheCourse from '@/views/about/the-course'
 import api from '@/api/huagao.js'
 import fenleiApi from '@/api/fenlei.js'
 
 export default {
+  name: 'TheList',
   components: { TheCourse },
-  name: 'the-list',
   data() {
     return {
       courses: [],
       level1: [],
       level2: [],
       categorys: [],
-      level1Id: "",
-      level2Id: "",
+      level1Id: '',
+      level2Id: '',
       total: 0,
       searchModel: {
         pageNo: 1,
         pageSize: 6,
         title: '',
-        fenlei: null,
-      },
+        fenlei: null
+      }
     }
   },
   mounted() {
-    this.listCourse();
-    this.listCourselevel();
+    this.listCourse()
+    this.listCourselevel()
   },
   methods: {
     listCourselevel() {
       fenleiApi.getList(this.searchModel).then(response => {
-        this.level1 = response.data.rows;
-        console.log(this.level1);
-      });
+        this.level1 = response.data.rows
+        console.log(this.level1)
+      })
     },
     listCourse(fenlei) {
       if (fenlei === undefined) {
-        this.searchModel.fenlei = null;
+        this.searchModel.fenlei = null
       } else {
-        this.searchModel.fenlei = fenlei;
+        this.searchModel.fenlei = fenlei
       }
 
-      console.log(fenlei, "fenlei");
+      console.log(fenlei, 'fenlei')
 
-      this.searchModel.type = "上架";
-      this.searchModel.status = "审核成功";
+      this.searchModel.type = '上架'
+      this.searchModel.status = '审核成功'
       api.getList(this.searchModel).then(response => {
-        this.courses = response.data.rows;
-        console.log(this.courses);
-        this.total = response.data.total;
-      });
+        this.courses = response.data.rows
+        console.log(this.courses)
+        this.total = response.data.total
+      })
     },
     qiantai() {
       this.$router.push('/mas')
     },
     handleSizeChange(val) {
-      console.log(`每页 ${val} 条`);
-      this.searchModel.pageSize = val;
-      this.listCourse();
+      console.log(`每页 ${val} 条`)
+      this.searchModel.pageSize = val
+      this.listCourse()
     },
     handleCurrentChange(val) {
-      console.log(`当前页: ${val}`);
-      this.searchModel.pageNo = val;
-      this.listCourse();
-    },
+      console.log(`当前页: ${val}`)
+      this.searchModel.pageNo = val
+      this.listCourse()
+    }
   }
 }
 </script>

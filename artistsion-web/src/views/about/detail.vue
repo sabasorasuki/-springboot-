@@ -1,6 +1,6 @@
 <template>
   <div class="page-container">
-    <the-header></the-header>
+    <the-header />
 
     <div class="detail-wrap">
       <div class="detail-hero">
@@ -13,7 +13,7 @@
           <el-col :xs="24" :md="12">
             <div class="info-card">
               <h2 class="card-title">
-                <i class="fa fa-info-circle"></i> 基本信息
+                <i class="fa fa-info-circle" /> 基本信息
               </h2>
               <el-descriptions direction="vertical" :column="2" border>
                 <el-descriptions-item label="稿位名称">
@@ -33,16 +33,16 @@
                   </div>
                 </el-descriptions-item>
                 <el-descriptions-item label="补充说明" :span="2">
-                  <i class="fa fa-sticky-note-o"></i> {{ course.fujin }}
+                  <i class="fa fa-sticky-note-o" /> {{ course.fujin }}
                 </el-descriptions-item>
               </el-descriptions>
 
-              <div class="action-buttons" v-if="this.roles ==='用户角色'">
-                <el-button type="primary" @click="dialogVisible=true" class="order-btn">
-                  <i class="fa fa-shopping-cart"></i> 加入购物车
+              <div v-if="this.roles ==='用户角色'" class="action-buttons">
+                <el-button type="primary" class="order-btn" @click="dialogVisible=true">
+                  <i class="fa fa-shopping-cart" /> 加入购物车
                 </el-button>
-                <el-button @click="shoucang()" class="favorite-btn">
-                  <i class="fa fa-heart"></i> 收藏稿位
+                <el-button class="favorite-btn" @click="shoucang()">
+                  <i class="fa fa-heart" /> 收藏稿位
                 </el-button>
               </div>
             </div>
@@ -60,9 +60,9 @@
 
       <div class="spot-introduction">
         <h2 class="section-title">
-          <i class="fa fa-align-left"></i> 稿位说明
+          <i class="fa fa-align-left" /> 稿位说明
         </h2>
-        <div class="content-card" v-html="course.content"></div>
+        <div class="content-card" v-html="course.content" />
       </div>
     </div>
 
@@ -70,7 +70,8 @@
       title="确认下单信息"
       :visible.sync="dialogVisible"
       custom-class="booking-dialog"
-      width="520px">
+      width="520px"
+    >
       <div class="booking-summary">
         <h3>{{ course.name }}</h3>
         <div class="price-summary">
@@ -91,20 +92,20 @@
 
       <el-form :model="Form" label-position="top">
         <el-form-item label="联系人">
-          <el-input v-model="Form.username" placeholder="怎么称呼您"></el-input>
+          <el-input v-model="Form.username" placeholder="怎么称呼您" />
         </el-form-item>
         <el-form-item label="联系电话">
-          <el-input v-model="Form.phone" placeholder="便于画师核对订单"></el-input>
+          <el-input v-model="Form.phone" placeholder="便于画师核对订单" />
         </el-form-item>
         <el-form-item label="邮箱地址">
-          <el-input v-model="Form.address" type="textarea" :rows="2" placeholder="如邮箱、常用社交账号、截稿日等"></el-input>
+          <el-input v-model="Form.address" type="textarea" :rows="2" placeholder="如邮箱、常用社交账号、截稿日等" />
         </el-form-item>
       </el-form>
 
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="onSubmit()">
-          <i class="fa fa-shopping-cart"></i> 加入购物车
+          <i class="fa fa-shopping-cart" /> 加入购物车
         </el-button>
       </div>
     </el-dialog>
@@ -112,7 +113,7 @@
 </template>
 
 <script>
-import TheHeader from "@/views/about/the-header";
+import TheHeader from '@/views/about/the-header'
 import api from '@/api/huagao.js'
 import Orderapi from '@/api/order.js'
 import shouCangApi from '@/api/shoucang'
@@ -120,59 +121,57 @@ import shouCangApi from '@/api/shoucang'
 import { mapGetters } from 'vuex'
 import userApi from '@/api/userManage'
 export default {
+  name: 'Detail',
   components: { TheHeader },
-  name: 'detail',
-  data: function () {
+  data: function() {
     return {
       dialogVisible: false,
       dialogVisible1: false,
       formLabelWidth: '80px',
       forms: {
-        username: "",
+        username: '',
         content: '',
-        mediaid: '',
+        mediaid: ''
       },
-      Form:{},
+      Form: {},
       total: 0,
       query: {
         page: 1,
         size: 6,
-        id: '',
+        id: ''
       },
       commentData: [],
-      id: "",
+      id: '',
       course: {},
-      download: "",
+      download: '',
       searchModel: {},
       form: {},
       newComment: {
-        sender: "",
-        content: "",
+        sender: '',
+        content: ''
       },
-      roles:""
+      roles: ''
     }
   },
   mounted() {
-    this.query.id = this.$route.query.id;
+    this.query.id = this.$route.query.id
 
     console.log(this.token)
-    this.getInfo(this.token);
+    this.getInfo(this.token)
   },
   methods: {
     shoucang() {
-
       this.searchModel.wzids = this.course.id
       this.searchModel.userids = this.forms.id
       shouCangApi.getList1(this.searchModel).then(response => {
-        console.log(response, "response.data.rows.length")
-        console.log(response.data.rows.length, "response")
+        console.log(response, 'response.data.rows.length')
+        console.log(response.data.rows.length, 'response')
         if (response.data.rows.length > 0) {
           this.$message({
             type: 'info',
             message: '已在收藏夹中'
-          });
+          })
         } else {
-
           this.Form.title = this.course.name
           this.Form.wzids = this.course.id
           this.Form.userids = this.forms.id
@@ -183,70 +182,63 @@ export default {
             this.$message({
               message: response.message,
               type: 'success'
-            });
-            this.dialogFormVisible = false;
-            this.getList();
+            })
+            this.dialogFormVisible = false
+            this.getList()
           })
-
-
         }
       })
-
     },
     listNew() {
       this.searchModel.id = this.query.id
-      this.searchModel.pageNo = "1"
-      this.searchModel.pageSize = "6"
+      this.searchModel.pageNo = '1'
+      this.searchModel.pageSize = '6'
       api.getList(this.searchModel).then(response => {
-        this.course = response.data.rows[0];
-      });
+        this.course = response.data.rows[0]
+      })
     },
-    onSubmit(){
-        this.Form.name = this.course.name
-        this.Form.city = this.course.city
-        this.Form.jingdian = this.course.jingdian
-        this.Form.fujin = this.course.fujin
-        this.Form.spids = this.course.id
-        this.Form.photo = this.course.photo
-        this.Form.fenlei = this.course.fenlei
-        this.Form.rydate = this.course.rydate
-        this.Form.shangjiaids = this.course.shangjiaids
-        this.Form.price = this.course.price - this.course.zhekou
-        this.Form.zhekou = this.course.zhekou
-        this.Form.userids = this.forms.id
-        this.Form.username = this.forms.name
-        this.Form.status = "购物车"
-        Orderapi.add(this.Form).then(response => {
-                this.$message({
-                    message: "已加入购物车",
-                    type: 'success'
-                });
-                this.$router.push({ name: 'gouwuche'})
-
-            })
-
-
-
-      },
+    onSubmit() {
+      this.Form.name = this.course.name
+      this.Form.city = this.course.city
+      this.Form.jingdian = this.course.jingdian
+      this.Form.fujin = this.course.fujin
+      this.Form.spids = this.course.id
+      this.Form.photo = this.course.photo
+      this.Form.fenlei = this.course.fenlei
+      this.Form.rydate = this.course.rydate
+      this.Form.shangjiaids = this.course.shangjiaids
+      this.Form.price = this.course.price - this.course.zhekou
+      this.Form.zhekou = this.course.zhekou
+      this.Form.userids = this.forms.id
+      this.Form.username = this.forms.name
+      this.Form.status = '购物车'
+      Orderapi.add(this.Form).then(response => {
+        this.$message({
+          message: '已加入购物车',
+          type: 'success'
+        })
+        this.$router.push({ name: 'gouwuche' })
+      })
+    },
 
     getInfo(token) {
-            userApi.getInfo(token).then(response => {
-                this.forms = response.data.userList
+      userApi.getInfo(token).then(response => {
+        this.forms = response.data.userList
 
-                console.log(this.forms, "1212313")
-                console.log(response, "response123123")
-                console.log(response.data.roles[0], "response123123")
-                this.roles = response.data.roles[0]
-                this.listNew();
-            })
-        },
+        console.log(this.forms, '1212313')
+        console.log(response, 'response123123')
+        console.log(response.data.roles[0], 'response123123')
+        this.roles = response.data.roles[0]
+        this.listNew()
+      })
+    }
 
   },
   computed: {
-        ...mapGetters([
-            'token'
-        ])
-    }
+    ...mapGetters([
+      'token'
+    ])
+  }
 }
 </script>
 
