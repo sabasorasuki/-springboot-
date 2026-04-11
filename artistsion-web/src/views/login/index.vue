@@ -18,25 +18,64 @@
       <div class="auth-card">
         <h2 class="auth-title">登录</h2>
         <p class="auth-sub">使用账号登录管理后台</p>
-        <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="auth-form" label-position="top">
+        <el-form
+          ref="loginForm"
+          :model="loginForm"
+          :rules="loginRules"
+          class="auth-form"
+          label-position="top"
+        >
           <el-form-item prop="username" label="账号">
-            <el-input ref="username" v-model="loginForm.username" placeholder="请输入账号" name="username" type="text"
-              tabindex="1" auto-complete="on" prefix-icon="el-icon-user" />
+            <el-input
+              ref="username"
+              v-model="loginForm.username"
+              placeholder="请输入账号"
+              name="username"
+              type="text"
+              tabindex="1"
+              auto-complete="on"
+              prefix-icon="el-icon-user"
+            />
           </el-form-item>
           <el-form-item prop="password" label="密码">
-            <el-input :key="passwordType" ref="password" v-model="loginForm.password" :type="passwordType"
-              placeholder="请输入密码" name="password" tabindex="2" auto-complete="on" prefix-icon="el-icon-lock"
-              @keyup.enter.native="handleLogin">
-              <i slot="suffix" class="el-input__icon el-icon-view pwd-toggle" @click="showPwd" />
+            <el-input
+              :key="passwordType"
+              ref="password"
+              v-model="loginForm.password"
+              :type="passwordType"
+              placeholder="请输入密码"
+              name="password"
+              tabindex="2"
+              auto-complete="on"
+              prefix-icon="el-icon-lock"
+              @keyup.enter.native="handleLogin"
+            >
+              <i
+                slot="suffix"
+                class="el-input__icon el-icon-view pwd-toggle"
+                @click="showPwd"
+              />
             </el-input>
           </el-form-item>
           <el-form-item label="验证码">
             <div class="captcha-row">
               <el-input v-model="loginForm.captcha" placeholder="请输入右侧字符" />
-              <img class="captcha-img" :src="captchaImageUrl" alt="captcha" @click="refreshCaptcha" />
+              <img
+                class="captcha-img"
+                :src="captchaImageUrl"
+                alt="captcha"
+                @click="refreshCaptcha"
+              >
             </div>
           </el-form-item>
-          <el-button :loading="loading" type="primary" class="auth-primary" @click.native.prevent="handleLogin">登 录</el-button>
+          <el-button
+            :loading="loading"
+            type="primary"
+            class="auth-primary"
+            @click.native.prevent="handleLogin"
+          >
+            登 录
+          </el-button>
           <el-button class="auth-secondary" @click="too">没有账号？去注册</el-button>
         </el-form>
       </div>
@@ -82,7 +121,7 @@ export default {
   },
   watch: {
     $route: {
-      handler: function (route) {
+      handler: function(route) {
         this.redirect = route.query && route.query.redirect
       },
       immediate: true
