@@ -118,5 +118,5 @@ This means:
   - `src/store/modules/user.js`
   - `src/permission.js`
   - `src/router/index.js`
-- Be careful with broad formatting rewrites. Many files are actively modified and the worktree is not clean.
+- Broad refactors, component splits, route cleanup, and structural frontend changes are acceptable when the task calls for them. Avoid noise-only formatting churn, but do not feel constrained to keep changes artificially small.
 - Do not replace project behavior with upstream `vue-admin-template` assumptions.

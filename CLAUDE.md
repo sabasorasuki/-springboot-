@@ -79,6 +79,7 @@ npm run dev
 
 ## Preferred Working Style In This Repo
 
+- Substantial refactors are allowed when the task calls for them. It is fine to reorganize modules, update contracts, or replace legacy structure as long as the change is carried through consistently across affected frontend/backend layers.
 - When changing frontend business pages, trace the matching API file in `artistsion-web/src/api` first.
 - When changing backend behavior, check the controller, service impl, entity, and corresponding mapper XML together.
 - When changing menus or permissions, inspect both frontend dynamic routing and the `x_menu` / role tables.

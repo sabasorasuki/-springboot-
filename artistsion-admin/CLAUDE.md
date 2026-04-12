@@ -112,4 +112,4 @@ Schema bootstrap:
 - For backend behavior changes, inspect controller + service impl + entity + mapper XML together.
 - Do not assume all validation lives in controllers. Some important checks are in service impls, for example username uniqueness in `UserServiceImpl`.
 - Some strings/comments may render as mojibake in terminal output. Avoid mass re-encoding unless that is the task.
-- Preserve existing endpoint contracts because frontend pages are tightly coupled to field names and response shapes.
+- Existing endpoint contracts are tightly coupled to the frontend, so check consumers carefully. Contract changes and backend restructures are allowed when intentional, but they should be completed end-to-end instead of half-migrated.

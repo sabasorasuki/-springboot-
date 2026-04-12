@@ -257,7 +257,7 @@ Many list endpoints return:
 - Current tracked config contains sensitive credentials and keys. Avoid copying them around.
 - Existing subproject READMEs are mostly template leftovers and should not be treated as the source of truth.
 - Some legacy Chinese text/comments display incorrectly in terminal output; do not do broad encoding cleanup unless asked.
-- The repo already has active uncommitted changes, so edits should stay narrowly scoped.
+- The repo may have active uncommitted changes, so avoid overwriting unrelated work. Large refactors and broad architectural changes are still acceptable when they are intentional and completed consistently.
 
 ## 8. Recommended Claude Workflow For Future Tasks
 
