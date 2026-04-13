@@ -113,11 +113,32 @@ spring.mail.password=${MAIL_PASSWORD:}
 
 ---
 
+## 阶段 3：新前台导航完善 ✅ 已完成
+
+### 已完成内容
+
+- `MainLayout.vue` TopBar 区分登录/未登录状态：
+  - 已登录：显示头像 + 用户名 + 下拉菜单（个人中心、订单中心、切换身份、退出登录）
+  - 未登录：显示「登录/注册」按钮跳 `/auth`
+- TopBar 头像菜单接入真实 Vuex 数据：`token`、`name`、`avatar`、`roles`、`activeRole`
+- 切换身份功能：调 `switchRole` API + `SET_ACTIVE_ROLE` mutation，下拉菜单显示当前身份标签
+- 身份切换仅在用户拥有多个角色时显示
+- 退出登录调 `store.dispatch('user/logout')` → 跳 `/auth`
+- 个人中心跳 `/userinfo`，订单中心跳 `/order/ordergl`
+- SiteNav 路由高亮已在阶段 1 实现（`isNavActive` 方法）
+
+### 改动文件
+
+| 文件 | 操作 |
+|---|---|
+| `artistsion-web/src/layout/MainLayout.vue` | 修改 |
+
+---
+
 ## 后续阶段
 
 | 阶段 | 内容 |
 |---|---|
-| 阶段 3 | 新前台导航完善：TopBar 头像菜单接入真实用户信息、SiteNav 路由高亮、搜索框初步 |
 | 阶段 4 | 首页 / 画师 / 企划页面内容完善 |
 | 阶段 5 | 对接真实数据 |
 | 阶段 6 | 个人中心与双身份闭环 |

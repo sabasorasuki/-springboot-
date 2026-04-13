@@ -20,30 +20,46 @@
           </div>
 
           <div class="topbar-actions">
-            <el-badge :value="0" :hidden="true" class="action-item">
-              <i class="el-icon-chat-dot-round" title="消息" />
-            </el-badge>
-            <el-badge :value="0" :hidden="true" class="action-item">
-              <i class="el-icon-bell" title="通知" />
-            </el-badge>
+            <template v-if="token">
+              <el-badge :value="0" :hidden="true" class="action-item">
+                <i class="el-icon-chat-dot-round" title="消息" />
+              </el-badge>
+              <el-badge :value="0" :hidden="true" class="action-item">
+                <i class="el-icon-bell" title="通知" />
+              </el-badge>
 
-            <el-dropdown trigger="click" @command="handleAvatarCommand">
-              <div class="avatar-wrapper">
-                <img
-                  :src="avatar || defaultAvatar"
-                  class="avatar-img"
-                  alt="avatar"
-                >
-                <i class="el-icon-arrow-down" />
-              </div>
-              <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item command="center">个人中心</el-dropdown-item>
-                <el-dropdown-item command="orders">订单中心</el-dropdown-item>
-                <el-dropdown-item command="messages">消息中心</el-dropdown-item>
-                <el-dropdown-item divided command="switchRole">身份切换</el-dropdown-item>
-                <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
-              </el-dropdown-menu>
-            </el-dropdown>
+              <el-dropdown trigger="click" @command="handleAvatarCommand">
+                <div class="avatar-wrapper">
+                  <img
+                    :src="avatar || defaultAvatar"
+                    class="avatar-img"
+                    alt="avatar"
+                  >
+                  <span class="avatar-name">{{ name || '用户' }}</span>
+                  <i class="el-icon-arrow-down" />
+                </div>
+                <el-dropdown-menu slot="dropdown">
+                  <el-dropdown-item command="center">
+                    <i class="el-icon-user" /> 个人中心
+                  </el-dropdown-item>
+                  <el-dropdown-item command="orders">
+                    <i class="el-icon-document" /> 订单中心
+                  </el-dropdown-item>
+                  <el-dropdown-item v-if="roles.length > 1" divided command="switchRole">
+                    <i class="el-icon-sort" /> 切换身份
+                    <span class="role-badge">{{ activeRoleLabel }}</span>
+                  </el-dropdown-item>
+                  <el-dropdown-item divided command="logout">
+                    <i class="el-icon-switch-button" /> 退出登录
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </el-dropdown>
+            </template>
+            <template v-else>
+              <router-link to="/auth" class="topbar-login-btn">
+                登录 / 注册
+              </router-link>
+            </template>
           </div>
         </div>
       </div>
@@ -73,8 +89,15 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import { switchRole } from '@/api/auth'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
+
+const ROLE_LABELS = {
+  '用户角色': '客户',
+  '画师角色': '画师',
+  'admin': '管理员'
+}
 
 export default {
   name: 'MainLayout',
@@ -90,7 +113,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['avatar', 'name'])
+    ...mapGetters(['avatar', 'name', 'token', 'roles', 'activeRole']),
+    activeRoleLabel() {
+      return ROLE_LABELS[this.activeRole] || this.activeRole || ''
+    }
   },
   methods: {
     isNavActive(path) {
@@ -98,30 +124,56 @@ export default {
     },
     handleSearch() {
       if (this.searchQuery.trim()) {
-        // 后续接搜索页
         this.$message.info('搜索功能即将上线')
       }
     },
-    handleAvatarCommand(command) {
+    async handleAvatarCommand(command) {
       switch (command) {
         case 'center':
-          this.$message.info('个人中心即将上线')
+          this.$router.push('/userinfo')
           break
         case 'orders':
-          this.$message.info('订单中心即将上线')
-          break
-        case 'messages':
-          this.$message.info('消息中心即将上线')
+          this.$router.push('/order/ordergl')
           break
         case 'switchRole':
-          this.$message.info('身份切换即将上线')
+          await this.doSwitchRole()
           break
         case 'logout':
-          this.$store.dispatch('user/logout').then(() => {
-            this.$router.push('/auth')
-          })
+          await this.$store.dispatch('user/logout')
+          this.$router.push('/auth')
           break
       }
+    },
+    async doSwitchRole() {
+      const otherRoles = this.roles.filter(r => r !== this.activeRole)
+      if (otherRoles.length === 0) {
+        this.$message.warning('您当前只有一个身份')
+        return
+      }
+      // 如果只有一个可切换身份，直接切换；否则弹选择
+      const targetRole = otherRoles.length === 1
+        ? otherRoles[0]
+        : await this.promptRoleSelection(otherRoles)
+      if (!targetRole) return
+
+      try {
+        await switchRole({ role: targetRole })
+        this.$store.commit('user/SET_ACTIVE_ROLE', targetRole)
+        const label = ROLE_LABELS[targetRole] || targetRole
+        this.$message.success(`已切换为${label}`)
+      } catch (err) {
+        this.$message.error(err.message || '切换失败')
+      }
+    },
+    promptRoleSelection(availableRoles) {
+      const labels = availableRoles.map(r => ROLE_LABELS[r] || r)
+      return this.$msgbox({
+        title: '切换身份',
+        message: `请选择目标身份：${labels.join('、')}`,
+        showCancelButton: true,
+        confirmButtonText: labels[0],
+        cancelButtonText: '取消'
+      }).then(() => availableRoles[0]).catch(() => null)
     }
   }
 }
@@ -214,6 +266,41 @@ export default {
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
+}
+
+.avatar-name {
+  font-size: 14px;
+  color: #333;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-login-btn {
+  display: inline-block;
+  padding: 6px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  background: #6c5ce7;
+  border-radius: 20px;
+  text-decoration: none;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #5a4bd1;
+  }
+}
+
+.role-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  font-size: 11px;
+  color: #6c5ce7;
+  background: #f0ecff;
+  border-radius: 8px;
 }
 
 /* ── 第二排 ── */

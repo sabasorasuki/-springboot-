@@ -2,7 +2,7 @@
 
 ## 当前所处阶段
 
-阶段 1 ✅ 已完成，阶段 2 ✅ 已完成，准备进入阶段 3。
+阶段 1 ✅ 已完成，阶段 2 ✅ 已完成，阶段 3 ✅ 已完成，准备进入阶段 4。
 
 ---
 
@@ -18,30 +18,29 @@
 
 ---
 
-## 阶段 3 目标：新前台导航完善
+## 阶段 3 已完成内容
 
-### 核心任务
+- `MainLayout.vue` TopBar 区分登录/未登录状态
+- 已登录：头像 + 用户名 + 下拉菜单（个人中心、订单中心、切换身份、退出）
+- 未登录：「登录/注册」按钮
+- 身份切换调 `switchRole` API，仅多角色时显示
+- 退出登录调 `store.dispatch('user/logout')` → `/auth`
 
-1. **TopBar 头像菜单接入真实用户信息**
-   - 登录后显示 `name`/`avatar`
-   - 下拉菜单：个人中心、切换身份、退出
-   - 未登录显示「登录/注册」按钮
+---
 
-2. **SiteNav 当前路由高亮**
-   - 首页/画师/企划三个导航项，根据 `$route.path` 高亮
+## 下一步：阶段 4
 
-3. **搜索框初步**（可选）
-   - TopBar 搜索输入框 UI，暂不接入后端
+### 主要任务
 
-4. **新前台路由完全由前端静态驱动**
-   - 不依赖 `menuList`，`/home`、`/artists`、`/projects` 已在 `constantRoutes` 中
-   - `menuList` 仍由 `getInfo` 拿取，仅供旧管理端动态路由使用
+1. **首页 `/home`** — 作品推荐网格、热门标签、轮播图
+2. **画师页 `/artists`** — 画师卡片列表、筛选/搜索
+3. **企划页 `/projects`** — 企划大厅列表（需评估是否新建表）
 
 ### 需要注意
 
-- `MainLayout.vue` 中 TopBar 已有骨架，需要从 Vuex store 读取 `name`/`avatar`/`roles`/`activeRole`
-- 退出登录需调 `store.dispatch('user/logout')`，跳转 `/auth`
-- 切换身份可调 `switchRole` API + `SET_ACTIVE_ROLE` mutation
+- 首页和画师页可复用已有后端接口（`/sysHuagao/list`、`/sysZuopin/list`）
+- 企划是全新模块，数据库无企划表，需评估是否阶段 4 建表或先用静态占位
+- 页面样式应遵循 `docs/FRONTEND_STYLE_SPEC.md`
 
 ---
 
