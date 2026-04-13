@@ -1,38 +1,226 @@
 <template>
   <div class="home-page">
-    <section class="hero-section">
-      <h1 class="hero-title">发现优秀画作</h1>
-      <p class="hero-desc">浏览来自全球画师的精彩作品，找到你心仪的创作者</p>
+    <!-- 顶部轮播推荐区 -->
+    <section v-if="carouselItems.length" class="hero-carousel">
+      <el-carousel height="320px" :interval="5000" arrow="hover" indicator-position="outside">
+        <el-carousel-item v-for="item in carouselItems" :key="item.id">
+          <div class="carousel-slide">
+            <img :src="item.lunbo" class="carousel-img" alt="">
+            <div class="carousel-overlay">
+              <span class="carousel-label">{{ item.name }}</span>
+            </div>
+          </div>
+        </el-carousel-item>
+      </el-carousel>
     </section>
 
+    <!-- 推荐作品 / 最新作品 -->
     <section class="section">
-      <h2 class="section-title">推荐作品</h2>
-      <div class="card-grid">
-        <div v-for="i in 8" :key="i" class="work-card placeholder-card">
-          <div class="card-cover" />
+      <div class="section-header">
+        <h2 class="section-title">{{ isLoggedIn ? '为你推荐' : '最新作品' }}</h2>
+      </div>
+      <div v-if="recommendLoading" class="loading-placeholder">
+        <i class="el-icon-loading" /> 加载中…
+      </div>
+      <div v-else-if="recommendWorks.length" class="card-grid">
+        <div
+          v-for="work in recommendWorks"
+          :key="work.id"
+          class="work-card"
+          @click="goWorkDetail(work.id)"
+        >
+          <div class="card-cover">
+            <img v-if="work.photo" :src="work.photo" alt="" class="cover-img">
+            <div v-else class="cover-placeholder" />
+          </div>
           <div class="card-body">
-            <div class="placeholder-line w60" />
-            <div class="placeholder-line w40" />
+            <div class="card-title">{{ work.name }}</div>
+            <div class="card-meta">
+              <span v-if="work.fenlei" class="card-tag">{{ work.fenlei }}</span>
+              <span v-if="work.price" class="card-price">¥{{ work.price }}</span>
+            </div>
           </div>
         </div>
       </div>
+      <el-empty v-else description="暂无作品" :image-size="120" />
     </section>
 
-    <section class="section">
-      <h2 class="section-title">热门标签</h2>
+    <!-- 热门分类 -->
+    <section v-if="categories.length" class="section">
+      <div class="section-header">
+        <h2 class="section-title">热门分类</h2>
+      </div>
       <div class="tag-group">
-        <el-tag v-for="tag in placeholderTags" :key="tag" size="medium" effect="plain">{{ tag }}</el-tag>
+        <span
+          v-for="cat in categories"
+          :key="cat.id"
+          class="category-tag"
+          @click="goCategory(cat.fenlei)"
+        >{{ cat.fenlei }}</span>
+      </div>
+    </section>
+
+    <!-- 全部作品浏览 -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">浏览全部</h2>
+      </div>
+      <div v-if="allWorks.length" class="card-grid">
+        <div
+          v-for="work in allWorks"
+          :key="work.id"
+          class="work-card"
+          @click="goWorkDetail(work.id)"
+        >
+          <div class="card-cover">
+            <img v-if="work.photo" :src="work.photo" alt="" class="cover-img">
+            <div v-else class="cover-placeholder" />
+          </div>
+          <div class="card-body">
+            <div class="card-title">{{ work.name }}</div>
+            <div class="card-meta">
+              <span v-if="work.fenlei" class="card-tag">{{ work.fenlei }}</span>
+              <span v-if="work.price" class="card-price">¥{{ work.price }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-if="allWorks.length && allWorksTotal > allWorks.length" class="load-more">
+        <el-button :loading="allWorksLoading" type="text" @click="loadMoreWorks">
+          加载更多
+        </el-button>
       </div>
     </section>
   </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+import huagaoApi from '@/api/huagao'
+import fenleiApi from '@/api/fenlei'
+import lunboApi from '@/api/lunbo'
+import tuijianApi from '@/api/tuijian'
+import userManageApi from '@/api/userManage'
+
 export default {
   name: 'HomePage',
   data() {
     return {
-      placeholderTags: ['插画', '立绘', '头像', '同人', '原创', 'Q版', '场景', '人设']
+      carouselItems: [],
+      recommendWorks: [],
+      recommendLoading: false,
+      categories: [],
+      allWorks: [],
+      allWorksTotal: 0,
+      allWorksPage: 1,
+      allWorksLoading: false
+    }
+  },
+  computed: {
+    ...mapGetters(['token']),
+    isLoggedIn() {
+      return !!this.token
+    }
+  },
+  created() {
+    this.fetchCarousel()
+    this.fetchCategories()
+    this.fetchAllWorks()
+    this.fetchRecommend()
+  },
+  methods: {
+    /** 轮播图 */
+    fetchCarousel() {
+      lunboApi.getList1().then(res => {
+        this.carouselItems = res.data.rows || []
+      }).catch(() => {})
+    },
+
+    /** 分类标签 */
+    fetchCategories() {
+      fenleiApi.getList1().then(res => {
+        this.categories = res.data.rows || []
+      }).catch(() => {})
+    },
+
+    /** 推荐或最新作品 */
+    fetchRecommend() {
+      this.recommendLoading = true
+      if (this.isLoggedIn) {
+        // 登录用户：通过 /user/info 拿 userId → 推荐链路
+        userManageApi.getInfo(this.token).then(res => {
+          const userId = res.data && res.data.userList && res.data.userList.id
+          if (userId) {
+            return this.fetchRecommendByUser(userId)
+          }
+          return this.fetchLatest()
+        }).catch(() => {
+          return this.fetchLatest()
+        }).finally(() => {
+          this.recommendLoading = false
+        })
+      } else {
+        this.fetchLatest().finally(() => {
+          this.recommendLoading = false
+        })
+      }
+    },
+
+    fetchRecommendByUser(userId) {
+      return tuijianApi.recommendations(userId).then(res => {
+        const ids = res.data
+        if (ids && ids.length) {
+          return huagaoApi.getListtuijian({
+            pageNo: 1,
+            pageSize: 12,
+            type: '上架',
+            status: '审核成功',
+            tuijian: ids
+          }).then(r => {
+            this.recommendWorks = r.data.rows || []
+          })
+        }
+        // 推荐为空时降级到最新
+        return this.fetchLatest()
+      })
+    },
+
+    fetchLatest() {
+      return huagaoApi.getzuixin({ pageNo: 1, pageSize: 12 }).then(res => {
+        this.recommendWorks = res.data.rows || []
+      })
+    },
+
+    /** 全部作品 */
+    fetchAllWorks() {
+      this.allWorksLoading = true
+      huagaoApi.getList({
+        pageNo: this.allWorksPage,
+        pageSize: 12,
+        type: '上架',
+        status: '审核成功'
+      }).then(res => {
+        const rows = res.data.rows || []
+        this.allWorks = this.allWorksPage === 1 ? rows : this.allWorks.concat(rows)
+        this.allWorksTotal = res.data.total || 0
+      }).catch(() => {}).finally(() => {
+        this.allWorksLoading = false
+      })
+    },
+
+    loadMoreWorks() {
+      this.allWorksPage++
+      this.fetchAllWorks()
+    },
+
+    goWorkDetail(id) {
+      // TODO: Phase 5 — 跳转作品详情页 /work/:id
+      this.$message.info('作品详情页即将上线')
+    },
+
+    goCategory(fenlei) {
+      // TODO: Phase 5 — 按分类筛选
+      this.$message.info(`"${fenlei}"分类筛选即将上线`)
     }
   }
 }
@@ -40,38 +228,67 @@ export default {
 
 <style lang="scss" scoped>
 .home-page {
-  padding-bottom: 48px;
+  padding-bottom: 60px;
 }
 
-.hero-section {
-  text-align: center;
-  padding: 48px 0 32px;
+/* ── 轮播区 ── */
+.hero-carousel {
+  margin-bottom: 8px;
+
+  ::v-deep .el-carousel__indicators--outside {
+    text-align: center;
+  }
 }
 
-.hero-title {
-  font-size: 32px;
-  font-weight: 700;
-  color: #333;
-  margin: 0 0 12px;
+.carousel-slide {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #e8e0f0 0%, #f0e8f5 100%);
 }
 
-.hero-desc {
+.carousel-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.carousel-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 20px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.45));
+}
+
+.carousel-label {
+  color: #fff;
   font-size: 16px;
-  color: #888;
-  margin: 0;
+  font-weight: 600;
 }
 
+/* ── 通用区块 ── */
 .section {
   margin-top: 40px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
 .section-title {
   font-size: 20px;
   font-weight: 600;
   color: #333;
-  margin: 0 0 20px;
+  margin: 0;
 }
 
+/* ── 作品网格 ── */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -83,17 +300,38 @@ export default {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
   }
 }
 
 .card-cover {
   width: 100%;
-  padding-top: 100%;
+  padding-top: 100%; /* 1:1 */
+  position: relative;
+  overflow: hidden;
+  background: #f5f5f5;
+}
+
+.cover-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cover-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: linear-gradient(135deg, #e8e0f0 0%, #f0e8f5 100%);
 }
 
@@ -101,22 +339,75 @@ export default {
   padding: 12px 14px;
 }
 
-.placeholder-line {
-  height: 14px;
-  border-radius: 7px;
-  background: #eee;
-  margin-bottom: 8px;
-
-  &.w60 { width: 60%; }
-  &.w40 { width: 40%; }
+.card-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-tag {
+  font-size: 12px;
+  color: #6c5ce7;
+  background: rgba(108, 92, 231, 0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.card-price {
+  font-size: 13px;
+  color: #e17055;
+  font-weight: 500;
+}
+
+/* ── 分类标签 ── */
 .tag-group {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
 
+.category-tag {
+  display: inline-block;
+  padding: 8px 18px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 20px;
+  font-size: 14px;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    color: #6c5ce7;
+    border-color: #6c5ce7;
+    background: rgba(108, 92, 231, 0.04);
+  }
+}
+
+/* ── 加载更多 ── */
+.load-more {
+  text-align: center;
+  margin-top: 24px;
+}
+
+.loading-placeholder {
+  text-align: center;
+  padding: 40px 0;
+  color: #999;
+  font-size: 14px;
+}
+
+/* ── 响应式 ── */
 @media (max-width: 900px) {
   .card-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -126,6 +417,17 @@ export default {
 @media (max-width: 600px) {
   .card-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .carousel-slide {
+    height: 200px;
+    border-radius: 8px;
+  }
+
+  .hero-carousel {
+    ::v-deep .el-carousel {
+      height: 200px !important;
+    }
   }
 }
 </style>

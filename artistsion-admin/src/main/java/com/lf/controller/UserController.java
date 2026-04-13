@@ -4,19 +4,21 @@ package com.lf.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lf.common.Result;
+import com.lf.entity.SysHuagao;
 import com.lf.entity.User;
 import com.lf.entity.UserRole;
+import com.lf.service.SysHuagaoService;
 import com.lf.service.UserRoleService;
 import com.lf.service.UserService;
+import com.lf.vo.ArtistVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -38,7 +40,84 @@ public class UserController {
     private UserRoleService userRoleService;
 
     @Resource
+    private SysHuagaoService sysHuagaoService;
+
+    @Resource
     private PasswordEncoder passwordEncoder;
+
+    private static final int ARTIST_ROLE_ID = 7;
+
+    @ApiOperation("公开画师列表（安全投影，匿名可访问）")
+    @GetMapping("/artists")
+    public Result<Map<String, Object>> getArtistList(
+            @RequestParam(value = "pageNo", defaultValue = "1") Long pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "12") Long pageSize,
+            @RequestParam(value = "fenlei", required = false) String fenlei) {
+
+        // 1. 查出所有拥有画师角色的 userId
+        LambdaQueryWrapper<UserRole> urWrapper = new LambdaQueryWrapper<>();
+        urWrapper.eq(UserRole::getRoleId, ARTIST_ROLE_ID);
+        List<Integer> artistUserIds = userRoleService.list(urWrapper)
+                .stream()
+                .map(UserRole::getUserId)
+                .collect(Collectors.toList());
+
+        if (artistUserIds.isEmpty()) {
+            Map<String, Object> empty = new HashMap<>();
+            empty.put("total", 0);
+            empty.put("rows", Collections.emptyList());
+            return Result.success(empty);
+        }
+
+        // 2. 分页查用户（只查启用的、未删除的）
+        LambdaQueryWrapper<User> userWrapper = new LambdaQueryWrapper<>();
+        userWrapper.in(User::getId, artistUserIds);
+        userWrapper.eq(User::getStatus, 1);
+        userWrapper.orderByDesc(User::getId);
+        Page<User> page = new Page<>(pageNo, pageSize);
+        userService.page(page, userWrapper);
+
+        // 3. 批量查这些画师的画稿（上架+审核成功）用于缩略图和计数
+        List<Integer> pageUserIds = page.getRecords().stream()
+                .map(User::getId).collect(Collectors.toList());
+
+        Map<Integer, List<SysHuagao>> worksMap = new HashMap<>();
+        if (!pageUserIds.isEmpty()) {
+            LambdaQueryWrapper<SysHuagao> hgWrapper = new LambdaQueryWrapper<>();
+            hgWrapper.in(SysHuagao::getShangjiaids, pageUserIds);
+            hgWrapper.eq(SysHuagao::getType, "上架");
+            hgWrapper.eq(SysHuagao::getStatus, "审核成功");
+            hgWrapper.orderByDesc(SysHuagao::getId);
+            List<SysHuagao> allWorks = sysHuagaoService.list(hgWrapper);
+            worksMap = allWorks.stream()
+                    .collect(Collectors.groupingBy(
+                            h -> Integer.parseInt(h.getShangjiaids())));
+        }
+
+        // 4. 组装 VO
+        List<ArtistVO> voList = new ArrayList<>();
+        for (User u : page.getRecords()) {
+            ArtistVO vo = new ArtistVO();
+            vo.setId(u.getId());
+            vo.setUsername(u.getUsername());
+            vo.setName(u.getName());
+            vo.setAvatar(u.getAvatar());
+            vo.setStatus(u.getStatus());
+
+            List<SysHuagao> works = worksMap.getOrDefault(u.getId(), Collections.emptyList());
+            vo.setWorkCount((long) works.size());
+            vo.setRecentCovers(works.stream()
+                    .limit(3)
+                    .map(SysHuagao::getPhoto)
+                    .collect(Collectors.toList()));
+            voList.add(vo);
+        }
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("total", page.getTotal());
+        data.put("rows", voList);
+        return Result.success(data);
+    }
 
     @GetMapping("/all")
     public Result<List<User>> getAllUser() {

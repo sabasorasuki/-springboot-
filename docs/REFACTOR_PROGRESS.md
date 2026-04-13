@@ -139,6 +139,59 @@ spring.mail.password=${MAIL_PASSWORD:}
 
 | 阶段 | 内容 |
 |---|---|
-| 阶段 4 | 首页 / 画师 / 企划页面内容完善 |
-| 阶段 5 | 对接真实数据 |
-| 阶段 6 | 个人中心与双身份闭环 |
+| 阶段 5 | 详情页、个人中心、双身份闭环 |
+| 阶段 6 | 轮换密钥、生产部署 |
+
+---
+
+## 阶段 4：首页 / 画师 / 企划页面内容 ✅ 已完成
+
+### 首页 `/home`
+
+- 顶部轮播区：接 `/sysLunbo/list` 真实数据，`el-carousel` 展示
+- 推荐作品网格：已登录走推荐链路（`/userArticleOperation/recommendations/{userId}` → `/sysHuagao/tuijianlist`），未登录降级 `/sysHuagao/getzuixin`
+- 热门分类标签：接 `/sysFenlei/list` 真实数据，点击预留筛选入口
+- 全部作品浏览：接 `/sysHuagao/list`（上架 + 审核成功），支持分页加载更多
+- 卡片展示：封面图 + 标题 + 分类标签 + 价格，4 列网格 + 响应式
+
+### 画师页 `/artists`
+
+- 后端新增 `/user/artists` 安全公开接口（`ArtistVO`：id/username/name/avatar/status/workCount/recentCovers）
+- 不暴露 email/phone/password，不复用 `/user/list`
+- 分类筛选栏：接 `/sysFenlei/list` 真实分类数据
+- 画师卡片：头像 + 名字 + 作品数 + 3 张作品缩略图 + 简介占位
+- 分页组件支持翻页
+- 简介/风格标签字段待后续 Phase 5 补充用户资料表字段
+
+### 企划页 `/projects`
+
+- 使用前端静态 mock 数据（6 条示例企划）
+- 卡片结构按目标 `sys_project` 表 schema 设计：标题、描述、分类、风格、预算区间、截止日期、状态、发布者信息
+- 分类筛选功能可用
+- 状态标签样式（招募中/进行中/已完成/已关闭）
+- 代码注释中记录了完整目标表结构，后续建表后替换数据源
+
+### 后端改动
+
+| 文件 | 操作 | 说明 |
+|---|---|---|
+| `MyWebConfig.java` | 修改 | 白名单补 `/sysHuagao/tuijianlist`、`/user/artists` |
+| `UserController.java` | 修改 | 新增 `/user/artists` 端点（分页、按画师角色过滤、聚合作品数和缩略图） |
+| `vo/ArtistVO.java` | 新增 | 画师安全投影 VO |
+
+### 前端改动
+
+| 文件 | 操作 | 说明 |
+|---|---|---|
+| `views/home/index.vue` | 重写 | 轮播 + 推荐/最新 + 分类 + 全部作品 |
+| `views/artists/index.vue` | 重写 | 真实画师数据 + 筛选 + 缩略图 |
+| `views/projects/index.vue` | 重写 | 静态 mock + 目标 schema 注释 |
+| `api/artist.js` | 新增 | `/user/artists` 前端封装 |
+
+### 已知过渡态
+
+1. **角色切换弹框**：当前 `$confirm` 仅适配双角色，角色 ≥3 时需改为可选列表
+2. **个人中心/订单中心**：仍跳旧页面 `/userinfo`、`/order/ordergl`，后续阶段改造
+3. **画师简介/风格标签**：User 表无 bio/style 字段，当前占位显示"暂无简介"
+4. **作品/画师详情页**：点击卡片目前仅弹 toast，详情页在后续阶段实现
+5. **企划后端**：无 `sys_project` 表，当前纯前端 mock

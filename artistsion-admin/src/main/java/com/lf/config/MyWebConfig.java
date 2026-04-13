@@ -28,6 +28,8 @@ public class MyWebConfig implements WebMvcConfigurer {
                         "/sysFenlei/list",
                         "/sysLunbo/list",
                         "/sysHuagao/getzuixin",
+                        "/sysHuagao/tuijianlist",
+                        "/user/artists",
                         "/user/info",
                         "/user/logout",
                         "/oss/file/**",
