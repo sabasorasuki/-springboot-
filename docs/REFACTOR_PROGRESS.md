@@ -76,7 +76,7 @@
 1. 旧管理端依赖 `/user/login` + `/user/info` → `menuList` → 动态路由，不能断
 2. 双 Layout 共存——`MainLayout`（新前台）与 `Layout`（旧管理），路由不要搞混
 3. 企划模块是全新业务——当前无企划表/接口，后续阶段再建
-4. JWT 密钥仍为硬编码 `"123456"`——后续应提取到配置
+4. ~~JWT 密钥仍为硬编码 `"123456"`~~ → 阶段 6A 已外部化为 `jwt.secret=${JWT_SECRET:123456}`（`JwtUtil` 通过 `@Value` 读取）。当前测试环境默认回退值 `123456` 可接受，但仍属于后续应继续收口的安全技术债——生产部署前必须替换为强随机密钥
 
 ---
 
@@ -309,8 +309,59 @@ spring.mail.password=${MAIL_PASSWORD:}
 
 ---
 
+## 阶段 6A：技术收口 ✅ 已完成
+
+### JWT 密钥外部化
+
+- `JwtUtil.java`：`private static final String JWT_KEY = "123456"` → `@Value("${jwt.secret:123456}") private String jwtKey`
+- `application.properties`：新增 `jwt.secret=${JWT_SECRET:123456}`
+- `application-local.properties`：新增 `JWT_SECRET=123456`（注释提醒生产环境替换）
+- 签发（`createToken`）和解析（`parseToken`）全部切换为实例字段 `jwtKey`
+
+> **安全技术债**：JWT 密钥已支持外部化配置，但默认回退值仍为 `123456`。当前测试环境可接受，生产部署前必须替换为强随机密钥。
+
+### 作品详情页接线
+
+- `SysHuagao.java`：新增 `@TableField(exist=false) private String artistName` 瞬态字段
+- `SysHuagaoController.getById()`：通过 `userMapper.selectById(shangjiaids)` 填充画师名
+- `work/detail.vue`：
+  - 显示画师名链接
+  - 收藏按钮：对接 `shoucangApi`（查重 + 添加/取消收藏）
+  - 加入购物车：对接 `orderApi.add(status="购物车")`
+
+### 3+ 角色切换修复
+
+- `MainLayout.vue`：`promptRoleSelection()` 从 `$msgbox` 纯文本改为 `el-radio-group` 可选列表，支持任意数量角色
+
+### OSS URL 集中化
+
+- 新建 `src/utils/oss.js`：导出 `ossDownloadUrl(name)`、`ossUploadAction(module)`、`ossUploadImgServer`、`ossBase`
+- 19 个视图文件共 28 处 `http://localhost:9999` 硬编码全部替换为集中化调用
+- URL 基础来源统一为 `process.env.VUE_APP_BASE_API`
+
+### /detail 路由评估
+
+- 结论：**保留**。`the-course.vue` 仍在使用 `:to="'/detail?id=' + course.id"`，且遵循"不批量删旧入口"原则
+
+### 改动文件汇总
+
+| 文件 | 操作 |
+|---|---|
+| `JwtUtil.java` | 修改 |
+| `application.properties` | 修改 |
+| `application-local.properties` | 修改 |
+| `SysHuagao.java` | 修改 |
+| `SysHuagaoController.java` | 修改 |
+| `work/detail.vue` | 修改 |
+| `MainLayout.vue` | 修改 |
+| `src/utils/oss.js` | 新增 |
+| 19 个旧视图文件 | 修改（OSS URL 替换） |
+
+---
+
 ## 后续阶段
 
 | 阶段 | 内容 |
 |---|---|
-| 阶段 6 | 双身份闭环、作品收藏/购物车接线、旧后台独立入口、轮换密钥、生产部署 |
+| 阶段 6B | 产品策略决策：主站登录规则、旧前台入口处置 |
+| 阶段 7+ | 双身份闭环、旧后台独立入口、生产部署 |

@@ -16,7 +16,7 @@
               个人信息
             </el-dropdown-item>
           </router-link>
-          <router-link to="/mas">
+          <router-link to="/home">
             <el-dropdown-item>前台</el-dropdown-item>
           </router-link>
           <el-dropdown-item divided @click.native="logout">
@@ -53,7 +53,7 @@ export default {
       // 注销时删除所有tagview
       await this.$store.dispatch('tagsView/delAllViews')
       sessionStorage.removeItem('tabViews')
-      this.$router.push(`/mas`)
+      this.$router.push(`/home`)
     }
   }
 }
