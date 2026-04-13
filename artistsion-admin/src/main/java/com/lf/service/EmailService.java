@@ -22,7 +22,7 @@ public class EmailService {
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
 
-    @Resource(name = "javaMailSender")
+    @Resource
     private JavaMailSender mailSender;
 
     @Value("${spring.mail.username:}")

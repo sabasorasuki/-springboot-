@@ -241,9 +241,76 @@ spring.mail.password=${MAIL_PASSWORD:}
 
 ---
 
+## 阶段 5B：后端数据扩展 + 旧页面替换 ✅ 已完成
+
+### SQL 迁移
+
+- `sql/2026-04-13-phase5b-project-and-user-fields.sql` 已执行
+- `sys_project` 表已创建（id/title/description/category/style/budget_min/budget_max/deadline/status/user_id/username/user_avatar/created_at/updated_at）
+- `x_user` 表新增 `bio`（VARCHAR 500）和 `style_tags`（VARCHAR 200）列
+
+### 后端新增
+
+| 文件 | 说明 |
+|---|---|
+| `entity/SysProject.java` | 企划实体，MyBatis-Plus 映射 |
+| `dao/SysProjectMapper.java` | 继承 `BaseMapper<SysProject>` |
+| `service/SysProjectService.java` | 继承 `IService<SysProject>` |
+| `service/impl/SysProjectServiceImpl.java` | 继承 `ServiceImpl` |
+| `controller/SysProjectController.java` | 企划 CRUD：list（分页+分类+状态过滤）、getById、add、update、deleteById |
+
+### 后端修改
+
+| 文件 | 变更 |
+|---|---|
+| `entity/User.java` | 新增 `bio`、`styleTags` 字段 |
+| `vo/ArtistVO.java` | 新增 `bio`、`styleTags` 字段 |
+| `controller/UserController.java` | ARTIST_ROLE_ID 去硬编码 → `@PostConstruct` 查 `x_role.role_name='画师角色'`（fallback 7）；`/user/artists` 和 `/user/artist/{id}` VO 组装加 bio/styleTags |
+| `controller/SysOrderController.java` | 新增 `GET /sysOrder/mine`：从 `X-Token` 解析用户、DB 验证角色、画师→按 `shangjiaids` 过滤 / 用户→按 `userids` 过滤、排除"购物车"状态 |
+| `service/EmailService.java` | 修复 `@Resource(name="javaMailSender")` → `@Resource`（bean 名不匹配导致启动失败） |
+
+### 前端新增
+
+| 文件 | 说明 |
+|---|---|
+| `api/project.js` | `getList`、`getById`、`add` |
+| `api/order.js` | 新增 `getMine(params)` → `GET /sysOrder/mine` |
+
+### 前端修改
+
+| 文件 | 变更 |
+|---|---|
+| `views/projects/index.vue` | mock → 真实 `projectApi.getList()`，服务端分类过滤 + 分页加载更多 |
+| `views/projects/detail.vue` | mock → 真实 `projectApi.getById()` |
+| `views/center/orders.vue` | 空壳 → 双视角订单列表（买家/画师 radio 切换），接 `orderApi.getMine()` |
+| `views/center/profile.vue` | 编辑表单新增 `bio` textarea + `styleTags` input，fetchProfile 回填 |
+| `views/artists/index.vue` | 卡片 footer "暂无简介" → `artist.bio \|\| '暂无简介'` |
+| `views/artists/detail.vue` | 头部新增 bio 段落 + styleTags 标签组（逗号分割为 chip） |
+| `layout/components/Navbar.vue` | "个人信息" 链接 `/userinfo` → `/center/profile` |
+
+### 运行时验证
+
+- 后端 `clean compile` ✅ BUILD SUCCESS
+- 后端 `spring-boot:run` ✅ 启动成功，9999 端口
+- `@PostConstruct` 画师角色查库 ✅ `Total: 1`
+- `GET /user/artists` ✅ 返回 bio/styleTags 字段
+- `GET /sysProject/list` ✅ JWT 拦截正确生效
+- `javaMailSender` bug 修复 ✅ 启动不再报错
+- 前端 `build:prod` ✅ 构建成功
+
+### 已解决的技术债
+
+1. ~~`ARTIST_ROLE_ID = 7` 硬编码~~ → `@PostConstruct` 查库 + fallback
+2. ~~画师 bio/style 字段缺失~~ → `x_user.bio` + `x_user.style_tags`
+3. ~~企划无后端~~ → `sys_project` 全栈 CRUD
+4. ~~订单前台无查询~~ → `/sysOrder/mine` 安全端点（token 鉴权 + 角色双视角）
+5. ~~Navbar 指向旧 `/userinfo`~~ → `/center/profile`
+6. ~~`javaMailSender` bean 名不匹配~~ → `@Resource` 无指定 name
+
+---
+
 ## 后续阶段
 
 | 阶段 | 内容 |
 |---|---|
-| 阶段 5B | 后端数据扩展（企划建表、User 资料字段、订单前台查询）、旧页面替换 |
-| 阶段 6 | 双身份闭环、轮换密钥、生产部署 |
+| 阶段 6 | 双身份闭环、作品收藏/购物车接线、旧后台独立入口、轮换密钥、生产部署 |
