@@ -19,6 +19,9 @@ public class MyWebConfig implements WebMvcConfigurer {
                 .excludePathPatterns(
                         "/user/login",
                         "/user/register",
+                        "/auth/login",
+                        "/auth/register",
+                        "/auth/send-email-code",
                         "/sysZuopin/list",
                         "/sysHuagao/list",
                         "/userArticleOperation/**",

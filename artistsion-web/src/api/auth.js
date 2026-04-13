@@ -1,8 +1,7 @@
 import request from '@/utils/request'
 
 /**
- * 新认证接口签名（阶段 1 仅定义，不实际调用）
- * 后端实现后再启用
+ * 新认证接口
  */
 
 export function authLogin(data) {

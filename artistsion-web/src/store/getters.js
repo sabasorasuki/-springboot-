@@ -5,6 +5,8 @@ const getters = {
   avatar: state => state.user.avatar,
   name: state => state.user.name,
   menuList: state => state.user.menuList,
+  roles: state => state.user.roles,
+  activeRole: state => state.user.activeRole,
 
   visitedViews: state => state.tagsView.visitedViews,
   cachedViews: state => state.tagsView.cachedViews,

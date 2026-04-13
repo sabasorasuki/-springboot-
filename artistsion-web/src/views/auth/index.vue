@@ -85,6 +85,8 @@
 </template>
 
 <script>
+import { authRegister, sendEmailCode } from '@/api/auth'
+
 export default {
   name: 'AuthPage',
   data() {
@@ -92,6 +94,7 @@ export default {
       mode: 'login',
       loading: false,
       codeCooldown: 0,
+      codeCooldownTimer: null,
       loginForm: {
         account: '',
         password: ''
@@ -107,18 +110,79 @@ export default {
       }
     }
   },
+  beforeDestroy() {
+    if (this.codeCooldownTimer) {
+      clearInterval(this.codeCooldownTimer)
+    }
+  },
   methods: {
-    handleLogin() {
-      // 阶段 1 占位：后续接 /auth/login 或复用旧 /user/login
-      this.$message.info('登录功能将在阶段 2 接入')
+    async handleLogin() {
+      if (!this.loginForm.account || !this.loginForm.password) {
+        this.$message.warning('请输入账号和密码')
+        return
+      }
+      this.loading = true
+      try {
+        await this.$store.dispatch('user/authLogin', {
+          account: this.loginForm.account,
+          password: this.loginForm.password
+        })
+        const redirect = this.$route.query.redirect || '/home'
+        this.$router.push({ path: redirect })
+      } catch (err) {
+        this.$message.error(err.message || '登录失败')
+      } finally {
+        this.loading = false
+      }
     },
-    handleRegister() {
-      // 阶段 1 占位：后续接 /auth/register
-      this.$message.info('注册功能将在阶段 2 接入')
+    async handleRegister() {
+      const f = this.registerForm
+      if (!f.username || !f.email || !f.emailCode || !f.password) {
+        this.$message.warning('请填写所有必填项')
+        return
+      }
+      if (f.password !== f.confirmPassword) {
+        this.$message.warning('两次输入的密码不一致')
+        return
+      }
+      this.loading = true
+      try {
+        await authRegister({
+          username: f.username,
+          email: f.email,
+          emailCode: f.emailCode,
+          password: f.password,
+          nickname: f.nickname,
+          initialRole: f.initialRole
+        })
+        this.$message.success('注册成功，请登录')
+        this.mode = 'login'
+        this.loginForm.account = f.username
+      } catch (err) {
+        this.$message.error(err.message || '注册失败')
+      } finally {
+        this.loading = false
+      }
     },
-    handleSendCode() {
-      // 阶段 1 占位：后续接 /auth/send-email-code
-      this.$message.info('邮箱验证码将在阶段 2 接入')
+    async handleSendCode() {
+      if (!this.registerForm.email || !this.registerForm.email.includes('@')) {
+        this.$message.warning('请输入有效邮箱')
+        return
+      }
+      try {
+        await sendEmailCode({ email: this.registerForm.email })
+        this.$message.success('验证码已发送，请查收邮箱')
+        this.codeCooldown = 60
+        this.codeCooldownTimer = setInterval(() => {
+          this.codeCooldown--
+          if (this.codeCooldown <= 0) {
+            clearInterval(this.codeCooldownTimer)
+            this.codeCooldownTimer = null
+          }
+        }, 1000)
+      } catch (err) {
+        this.$message.error(err.message || '发送失败')
+      }
     }
   }
 }
