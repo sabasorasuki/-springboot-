@@ -130,10 +130,10 @@ export default {
     async handleAvatarCommand(command) {
       switch (command) {
         case 'center':
-          this.$router.push('/userinfo')
+          this.$router.push('/center/profile')
           break
         case 'orders':
-          this.$router.push('/order/ordergl')
+          this.$router.push('/center/orders')
           break
         case 'switchRole':
           await this.doSwitchRole()

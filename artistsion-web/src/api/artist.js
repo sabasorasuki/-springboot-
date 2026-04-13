@@ -15,5 +15,11 @@ export default {
         fenlei: searchModel.fenlei || undefined
       }
     })
+  },
+  getById(id) {
+    return request({
+      url: `/user/artist/${id}`,
+      method: 'get'
+    })
   }
 }

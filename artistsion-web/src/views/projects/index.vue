@@ -208,8 +208,7 @@ export default {
       return map[status] || 'open'
     },
     goDetail(id) {
-      // TODO: Phase 5 — /project/:id 详情页
-      this.$message.info('企划详情页即将上线')
+      this.$router.push('/project/' + id)
     },
     onApply(id) {
       // TODO: Phase 5 — 应征流程

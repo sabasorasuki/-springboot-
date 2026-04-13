@@ -118,6 +118,62 @@ export const constantRoutes = [
       }
     ]
   },
+  // ── 详情页 & 个人中心（MainLayout） ──
+  {
+    path: '/work/:id',
+    component: MainLayout,
+    children: [
+      {
+        path: '',
+        name: 'WorkDetail',
+        component: () => import('@/views/work/detail'),
+        meta: { title: '作品详情' }
+      }
+    ]
+  },
+  {
+    path: '/artist/:id',
+    component: MainLayout,
+    children: [
+      {
+        path: '',
+        name: 'ArtistDetail',
+        component: () => import('@/views/artists/detail'),
+        meta: { title: '画师详情' }
+      }
+    ]
+  },
+  {
+    path: '/project/:id',
+    component: MainLayout,
+    children: [
+      {
+        path: '',
+        name: 'ProjectDetail',
+        component: () => import('@/views/projects/detail'),
+        meta: { title: '企划详情' }
+      }
+    ]
+  },
+  {
+    path: '/center',
+    component: MainLayout,
+    redirect: '/center/profile',
+    children: [
+      {
+        path: 'profile',
+        name: 'CenterProfile',
+        component: () => import('@/views/center/profile'),
+        meta: { title: '个人中心' }
+      },
+      {
+        path: 'orders',
+        name: 'CenterOrders',
+        component: () => import('@/views/center/orders'),
+        meta: { title: '我的订单' }
+      }
+    ]
+  },
   // ── 旧后台管理路由（保留原 Layout） ──
   {
     path: '/',

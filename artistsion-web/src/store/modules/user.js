@@ -6,6 +6,7 @@ import { resetRouter } from '@/router'
 const getDefaultState = () => {
   return {
     token: getToken(),
+    userId: null,
     name: '',
     avatar: '',
     menuList: [],
@@ -34,6 +35,9 @@ const mutations = {
   },
   SET_ROLES: (state, roles) => {
     state.roles = roles
+  },
+  SET_USER_ID: (state, userId) => {
+    state.userId = userId
   },
   SET_ACTIVE_ROLE: (state, activeRole) => {
     state.activeRole = activeRole
@@ -89,6 +93,9 @@ const actions = {
 
         const { name, avatar, menuList, roles, activeRole } = data
 
+        if (data.userList && data.userList.id) {
+          commit('SET_USER_ID', data.userList.id)
+        }
         commit('SET_NAME', name)
         commit('SET_AVATAR', avatar)
         commit('SET_MENU_LIST', menuList)

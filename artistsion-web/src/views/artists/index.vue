@@ -143,8 +143,7 @@ export default {
     },
 
     goArtistDetail(id) {
-      // TODO: Phase 5 — 跳转画师详情页 /artist/:id
-      this.$message.info('画师详情页即将上线')
+      this.$router.push('/artist/' + id)
     }
   }
 }

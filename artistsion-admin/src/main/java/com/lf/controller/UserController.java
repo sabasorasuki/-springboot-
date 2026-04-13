@@ -119,6 +119,41 @@ public class UserController {
         return Result.success(data);
     }
 
+    @ApiOperation("单个画师详情（安全投影）")
+    @GetMapping("/artist/{id}")
+    public Result<ArtistVO> getArtistById(@PathVariable Integer id) {
+        User u = userService.getById(id);
+        if (u == null || u.getStatus() != 1) {
+            return Result.fail(20001, "画师不存在");
+        }
+        // 校验是否拥有画师角色
+        LambdaQueryWrapper<UserRole> urWrapper = new LambdaQueryWrapper<>();
+        urWrapper.eq(UserRole::getUserId, id).eq(UserRole::getRoleId, ARTIST_ROLE_ID);
+        if (userRoleService.count(urWrapper) == 0) {
+            return Result.fail(20001, "画师不存在");
+        }
+        // 查画稿统计
+        LambdaQueryWrapper<SysHuagao> hgWrapper = new LambdaQueryWrapper<>();
+        hgWrapper.eq(SysHuagao::getShangjiaids, String.valueOf(id));
+        hgWrapper.eq(SysHuagao::getType, "上架");
+        hgWrapper.eq(SysHuagao::getStatus, "审核成功");
+        hgWrapper.orderByDesc(SysHuagao::getId);
+        List<SysHuagao> works = sysHuagaoService.list(hgWrapper);
+
+        ArtistVO vo = new ArtistVO();
+        vo.setId(u.getId());
+        vo.setUsername(u.getUsername());
+        vo.setName(u.getName());
+        vo.setAvatar(u.getAvatar());
+        vo.setStatus(u.getStatus());
+        vo.setWorkCount((long) works.size());
+        vo.setRecentCovers(works.stream()
+                .limit(3)
+                .map(SysHuagao::getPhoto)
+                .collect(Collectors.toList()));
+        return Result.success(vo);
+    }
+
     @GetMapping("/all")
     public Result<List<User>> getAllUser() {
         List<User> list = userService.list();

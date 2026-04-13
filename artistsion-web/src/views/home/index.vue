@@ -214,8 +214,7 @@ export default {
     },
 
     goWorkDetail(id) {
-      // TODO: Phase 5 — 跳转作品详情页 /work/:id
-      this.$message.info('作品详情页即将上线')
+      this.$router.push('/work/' + id)
     },
 
     goCategory(fenlei) {
