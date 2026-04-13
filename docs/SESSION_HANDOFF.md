@@ -2,65 +2,56 @@
 
 ## 当前所处阶段
 
-阶段 1 ✅ 已完成，阶段 2 ✅ 已完成（本地代码完整，尚未推送到 GitHub main）。
+阶段 1 ✅ 已完成，阶段 2 ✅ 已完成，准备进入阶段 3。
 
 ---
 
-## 阶段 2 已完成内容
+## 阶段 2 收尾事项（本轮已完成）
 
-### 前端改动
-
-| 文件 | 改动 |
+| 事项 | 状态 |
 |---|---|
-| `router/index.js` | 根路径 `/` redirect → `/home` |
-| `store/modules/user.js` | 新增 `authLogin` action、`roles`/`activeRole` state + mutations |
-| `store/getters.js` | 新增 `roles`/`activeRole` getters |
-| `permission.js` | catch 块 redirect → `/auth` |
-| `views/auth/index.vue` | 登录调 `store.dispatch('user/authLogin')`，注册调 `authRegister`，验证码调 `sendEmailCode` |
-| `api/auth.js` | 5 个接口函数：`authLogin`、`authRegister`、`sendEmailCode`、`getAuthMe`、`switchRole` |
-
-### 后端改动
-
-| 文件 | 改动 |
-|---|---|
-| `AuthController.java` | 新建：`/auth/login`、`/auth/register`、`/auth/send-email-code`、`/auth/me`、`/auth/switch-role` |
-| `EmailService.java` | 新建：Redis 验证码（5min TTL）+ 邮件 fallback |
-| `MyWebConfig.java` | 白名单加 `/auth/login`、`/auth/register`、`/auth/send-email-code` |
-| `pom.xml` | 加 `spring-boot-starter-mail` |
-| `application.properties` | 加 `spring.mail.*` 占位配置 |
-| `sql/2026-04-13-add-nickname-active-role.sql` | 可选字段变更脚本 |
-
-### 关键设计决策
-
-- 登录 `account` 含 `@` 按邮箱查，否则按用户名查
-- `nickname` 复用 `User.name`，未新增列
-- `activeRole` 不落库，登录时返回首个角色
-- 邮件 fallback：发送失败不报错，验证码打控制台
-- 旧 `/user/login`、`/user/info`、`/user/register` 全部保留
+| `resolveRoleId()` 硬编码 → 查库 | ✅ 改为 `LambdaQueryWrapper<Role>` 按 `role_name` 查 |
+| 配置脱敏 | ✅ 密钥替换为 `${ENV_VAR:}` 占位，真实值移至 `application-local.properties` |
+| `.gitignore` 加 `application-local.properties` | ✅ |
+| `/auth/me` 返回 `menuList` 定性 | ✅ 过渡方案，新前台不依赖，详见 REFACTOR_PROGRESS.md |
+| 文档清理 | ✅ 去掉重复和"本地未推送"标记 |
 
 ---
 
-## 下一步：阶段 3
+## 阶段 3 目标：新前台导航完善
 
-### 主要任务
+### 核心任务
 
-- 新前台主站导航与头像菜单完善
-- `MainLayout` 的 TopBar 头像下拉菜单接入真实用户信息
-- SiteNav 高亮当前路由
-- 可选：首页搜索框初步接入
+1. **TopBar 头像菜单接入真实用户信息**
+   - 登录后显示 `name`/`avatar`
+   - 下拉菜单：个人中心、切换身份、退出
+   - 未登录显示「登录/注册」按钮
 
-### 前置条件
+2. **SiteNav 当前路由高亮**
+   - 首页/画师/企划三个导航项，根据 `$route.path` 高亮
 
-- 阶段 2 代码推送到 main 并确认后端可启动
+3. **搜索框初步**（可选）
+   - TopBar 搜索输入框 UI，暂不接入后端
+
+4. **新前台路由完全由前端静态驱动**
+   - 不依赖 `menuList`，`/home`、`/artists`、`/projects` 已在 `constantRoutes` 中
+   - `menuList` 仍由 `getInfo` 拿取，仅供旧管理端动态路由使用
+
+### 需要注意
+
+- `MainLayout.vue` 中 TopBar 已有骨架，需要从 Vuex store 读取 `name`/`avatar`/`roles`/`activeRole`
+- 退出登录需调 `store.dispatch('user/logout')`，跳转 `/auth`
+- 切换身份可调 `switchRole` API + `SET_ACTIVE_ROLE` mutation
 
 ---
 
-## 当前风险
+## 已泄露密钥处理建议（需手动操作）
 
-1. `application.properties` 邮件配置为占位值
-2. `AuthController.resolveRoleId()` 硬编码角色 ID（artist=2, client=1）
-3. 旧管理端 `/user/login` + `/user/info` → `menuList` → 动态路由不能断
-4. 企划模块无表无接口，阶段 4+ 再建
+详见 `docs/REFACTOR_PROGRESS.md` 的「配置脱敏说明」章节：
+- 支付宝沙箱密钥：重新生成
+- DashScope API Key：吊销旧 key + 创建新 key
+- MySQL 密码：ALTER USER 修改
+- 更新 `application-local.properties` 中的新值
 
 ---
 

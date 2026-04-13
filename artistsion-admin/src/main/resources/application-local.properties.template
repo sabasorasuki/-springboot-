@@ -1,0 +1,19 @@
+# ── 本地密钥模板 ──
+# 复制此文件为 application-local.properties，填入你的真实密钥。
+# application-local.properties 已加入 .gitignore，不会被提交。
+
+# 数据库
+DB_USERNAME=root
+DB_PASSWORD=<你的数据库密码>
+
+# 支付宝沙箱
+ALIPAY_APP_ID=<你的 appId>
+ALIPAY_PRIVATE_KEY=<你的私钥>
+ALIPAY_PUBLIC_KEY=<你的公钥>
+
+# AI (DashScope)
+AI_API_KEY=<你的 API Key>
+
+# 邮箱 SMTP
+MAIL_USERNAME=<你的邮箱>
+MAIL_PASSWORD=<你的 SMTP 授权码>

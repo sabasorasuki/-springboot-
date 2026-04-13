@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.lf.common.Result;
 import com.lf.common.exception.BusinessException;
 import com.lf.common.utils.JwtUtil;
+import com.lf.dao.RoleMapper;
 import com.lf.dao.UserMapper;
 import com.lf.dao.UserRoleMapper;
 import com.lf.entity.Menu;
+import com.lf.entity.Role;
 import com.lf.entity.User;
 import com.lf.entity.UserRole;
 import com.lf.service.EmailService;
@@ -36,6 +38,9 @@ public class AuthController {
 
     @Resource
     private UserRoleMapper userRoleMapper;
+
+    @Resource
+    private RoleMapper roleMapper;
 
     @Resource
     private PasswordEncoder passwordEncoder;
@@ -269,15 +274,15 @@ public class AuthController {
     }
 
     /**
-     * 根据前端传的 initialRole 字符串解析数据库 roleId
+     * 根据前端传的 initialRole 字符串解析数据库 roleId。
+     * 前端传 "artist" → 查 role_name = "画师角色"，
+     * 前端传 "client" 或其他 → 查 role_name = "用户角色"。
      */
     private Integer resolveRoleId(String initialRole) {
-        // 当前数据库 x_role 表的已知映射
-        // 由于没有 RoleMapper.getByName，先用简单映射
-        // 如果后续角色体系变化，这里需要改为查库
-        if ("artist".equals(initialRole)) {
-            return 2; // 画师角色 ID（需要与数据库一致）
-        }
-        return 1; // 默认客户/用户 角色 ID
+        String roleName = "artist".equals(initialRole) ? "画师角色" : "用户角色";
+        LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Role::getRoleName, roleName);
+        Role role = roleMapper.selectOne(wrapper);
+        return role != null ? role.getRoleId() : null;
     }
 }
