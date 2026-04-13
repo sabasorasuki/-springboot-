@@ -35,6 +35,7 @@
 | 画师简介/风格标签 | User 表无 bio/style 字段，当前占位 "暂无简介" | 5 |
 | 作品/画师详情页 | 点击卡片仅弹 toast，无详情页 | 5 |
 | 企划后端 | 无 `sys_project` 表，纯前端 mock | 5 |
+| `ARTIST_ROLE_ID = 7` 硬编码 | `UserController` 画师角色 ID 写死，应改为按角色名查库 | 5/6 |
 
 ---
 
