@@ -48,16 +48,9 @@
 </template>
 
 <script>
-const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
+import projectApi from '@/api/project'
 
-const mockProjects = [
-  { id: 1, title: '原创小说封面插画', description: '需要一张竖版小说封面，古风仙侠题材，主角为一男一女，画面需有仙鹤和云海元素。', category: '插画', style: '国风', budgetMin: 800, budgetMax: 1500, deadline: '2026-05-15', status: '招募中', userId: 10, username: '云中书客', userAvatar: defaultAvatar },
-  { id: 2, title: 'VTuber 形象立绘', description: '需要 Live2D 可用的全身立绘，日系风格，角色为猫耳少女，需要三套表情差分。', category: '立绘', style: '日系', budgetMin: 2000, budgetMax: 4000, deadline: '2026-05-01', status: '招募中', userId: 11, username: 'NekoChannel', userAvatar: defaultAvatar },
-  { id: 3, title: '情侣头像定制一对', description: 'Q版情侣头像，背景可爱简洁，希望能体现两人的性格差异。', category: '头像', style: 'Q版', budgetMin: 200, budgetMax: 500, deadline: '2026-04-28', status: '招募中', userId: 12, username: '甜筒酱', userAvatar: defaultAvatar },
-  { id: 4, title: '桌游卡牌原画 (10 张)', description: '独立桌游项目需要10张角色卡牌原画，欧美奇幻风格，含简单场景背景。', category: '插画', style: '欧美', budgetMin: 5000, budgetMax: 10000, deadline: '2026-06-30', status: '招募中', userId: 13, username: 'BoardCraft', userAvatar: defaultAvatar },
-  { id: 5, title: '个人 IP 吉祥物设计', description: '品牌吉祥物设计，需要一个可爱的柴犬形象，包含三视图和配色方案。', category: '立绘', style: 'Q版', budgetMin: 1000, budgetMax: 2000, deadline: '2026-05-20', status: '进行中', userId: 14, username: 'ShibaLab', userAvatar: defaultAvatar },
-  { id: 6, title: '水彩风游记插图 (5 张)', description: '旅行公众号需要5张水彩风景插图，主题包括海边、古镇、雪山等。', category: '插画', style: '写实', budgetMin: 1500, budgetMax: 3000, deadline: '2026-05-10', status: '招募中', userId: 15, username: '走走停停', userAvatar: defaultAvatar }
-]
+const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
 export default {
   name: 'ProjectDetail',
@@ -78,10 +71,23 @@ export default {
     this.fetchProject()
   },
   methods: {
-    fetchProject() {
-      const id = Number(this.$route.params.id)
-      this.project = mockProjects.find(p => p.id === id) || null
-      this.loading = false
+    async fetchProject() {
+      const id = this.$route.params.id
+      if (!id) { this.loading = false; return }
+      try {
+        const res = await projectApi.getById(id)
+        if (res.data && res.code === 20000) {
+          const p = res.data
+          this.project = {
+            ...p,
+            userAvatar: p.userAvatar || defaultAvatar
+          }
+        }
+      } catch (e) {
+        console.error('获取企划详情失败', e)
+      } finally {
+        this.loading = false
+      }
     }
   }
 }

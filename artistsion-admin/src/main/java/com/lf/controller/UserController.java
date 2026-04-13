@@ -4,6 +4,8 @@ package com.lf.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lf.common.Result;
+import com.lf.dao.RoleMapper;
+import com.lf.entity.Role;
 import com.lf.entity.SysHuagao;
 import com.lf.entity.User;
 import com.lf.entity.UserRole;
@@ -16,6 +18,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -45,7 +48,18 @@ public class UserController {
     @Resource
     private PasswordEncoder passwordEncoder;
 
-    private static final int ARTIST_ROLE_ID = 7;
+    @Resource
+    private RoleMapper roleMapper;
+
+    private int artistRoleId;
+
+    @PostConstruct
+    public void init() {
+        LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Role::getRoleName, "画师角色");
+        Role role = roleMapper.selectOne(wrapper);
+        this.artistRoleId = role != null ? role.getRoleId() : 7; // fallback
+    }
 
     @ApiOperation("公开画师列表（安全投影，匿名可访问）")
     @GetMapping("/artists")
@@ -56,7 +70,7 @@ public class UserController {
 
         // 1. 查出所有拥有画师角色的 userId
         LambdaQueryWrapper<UserRole> urWrapper = new LambdaQueryWrapper<>();
-        urWrapper.eq(UserRole::getRoleId, ARTIST_ROLE_ID);
+        urWrapper.eq(UserRole::getRoleId, artistRoleId);
         List<Integer> artistUserIds = userRoleService.list(urWrapper)
                 .stream()
                 .map(UserRole::getUserId)
@@ -103,6 +117,8 @@ public class UserController {
             vo.setName(u.getName());
             vo.setAvatar(u.getAvatar());
             vo.setStatus(u.getStatus());
+            vo.setBio(u.getBio());
+            vo.setStyleTags(u.getStyleTags());
 
             List<SysHuagao> works = worksMap.getOrDefault(u.getId(), Collections.emptyList());
             vo.setWorkCount((long) works.size());
@@ -128,7 +144,7 @@ public class UserController {
         }
         // 校验是否拥有画师角色
         LambdaQueryWrapper<UserRole> urWrapper = new LambdaQueryWrapper<>();
-        urWrapper.eq(UserRole::getUserId, id).eq(UserRole::getRoleId, ARTIST_ROLE_ID);
+        urWrapper.eq(UserRole::getUserId, id).eq(UserRole::getRoleId, artistRoleId);
         if (userRoleService.count(urWrapper) == 0) {
             return Result.fail(20001, "画师不存在");
         }
@@ -146,6 +162,8 @@ public class UserController {
         vo.setName(u.getName());
         vo.setAvatar(u.getAvatar());
         vo.setStatus(u.getStatus());
+        vo.setBio(u.getBio());
+        vo.setStyleTags(u.getStyleTags());
         vo.setWorkCount((long) works.size());
         vo.setRecentCovers(works.stream()
                 .limit(3)

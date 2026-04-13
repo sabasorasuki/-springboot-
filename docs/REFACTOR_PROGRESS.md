@@ -190,9 +190,60 @@ spring.mail.password=${MAIL_PASSWORD:}
 
 ---
 
+## 阶段 5A：详情页 + 个人中心骨架 ✅ 已完成
+
+### 后端
+
+- `UserController.java` 新增 `GET /user/artist/{id}` 单画师详情端点：
+  - 校验用户存在 + 启用 + 拥有画师角色
+  - 返回 `ArtistVO` 安全投影（id/username/name/avatar/status/workCount/recentCovers）
+  - 聚合上架+审核成功画稿数量及最近 3 张封面
+
+### 前端路由
+
+- `router/index.js` 新增 5 条 MainLayout 路由：`/work/:id`、`/artist/:id`、`/project/:id`、`/center/profile`、`/center/orders`
+
+### 新页面
+
+| 文件 | 说明 |
+|---|---|
+| `views/work/detail.vue` | 作品详情（真实数据，`huagao.getById`）：大图 + 标题 + 分类 + 价格/折扣 + 作者链接 + 富文本介绍 + 附件 |
+| `views/artists/detail.vue` | 画师详情（`artist.getById` + `huagao.getList` by shangjiaids）：头像 + 名称 + 作品数 + 接稿状态 + 作品网格分页 |
+| `views/projects/detail.vue` | 企划详情（从共享 mockProjects 取数据）：标题 + 描述 + 分类/风格 + 预算 + 截止日 + 发布者 + 状态 |
+| `views/center/profile.vue` | 个人中心（卡片式）：头像名片 + 编辑资料表单（`updateMyUser`）+ 快捷入口（订单/发布/分享/消息） |
+| `views/center/orders.vue` | 订单骨架页（`el-empty` 占位） |
+
+### Store / API
+
+- `store/modules/user.js`：新增 `userId` 状态 + `SET_USER_ID` mutation + `getInfo` 中从 `data.userList.id` 提取
+- `store/getters.js`：新增 `userId` getter
+- `api/artist.js`：新增 `getById(id)` 方法（`/user/artist/${id}`）
+
+### 接线更新
+
+- `views/home/index.vue`：`goWorkDetail` 从 toast 改为 `$router.push('/work/' + id)`
+- `views/artists/index.vue`：`goArtistDetail` 从 toast 改为 `$router.push('/artist/' + id)`
+- `views/projects/index.vue`：`goDetail` 从 toast 改为 `$router.push('/project/' + id)`
+- `MainLayout.vue`：头像菜单 center → `/center/profile`，orders → `/center/orders`
+
+### 约束与决策
+
+1. **未修改 `permission.js`** — 所有新页面均需登录后访问，无匿名/公开前缀变更
+2. 企划详情使用前端 mock 数据，后端建表后替换
+3. 订单页为纯骨架，不接旧订单数据
+4. 作品详情的"收藏""加入购物车"按钮已渲染，功能接线留待 5B
+
+### 已知技术债
+
+1. **`ARTIST_ROLE_ID = 7` 硬编码**：`UserController` 中 `/user/artists` 和 `/user/artist/{id}` 均依赖 `private static final int ARTIST_ROLE_ID = 7`。与 `AuthController.resolveRoleId()` 的查库方式不一致。应在阶段 5B 或 6 统一改为按角色名查库（`x_role.role_name = '画师角色'`）
+2. **画师简介/风格标签**：User 表仍无 bio/style 字段，画师详情页暂无简介区
+3. **作品详情缺画师名**：`SysHuagao` 仅存 `shangjiaids`（画师 userId），详情页未关联查出画师昵称
+
+---
+
 ## 后续阶段
 
 | 阶段 | 内容 |
 |---|---|
-| 阶段 5 | 详情页、企划后端、用户资料扩展、个人中心 |
+| 阶段 5B | 后端数据扩展（企划建表、User 资料字段、订单前台查询）、旧页面替换 |
 | 阶段 6 | 双身份闭环、轮换密钥、生产部署 |

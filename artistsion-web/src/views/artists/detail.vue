@@ -13,6 +13,10 @@
             <span class="tag-item works-count">{{ artist.workCount || 0 }} 件作品</span>
             <span v-if="artist.status === 1" class="tag-item status-active">接稿中</span>
           </div>
+          <div v-if="styleTagList.length" class="style-tags">
+            <span v-for="tag in styleTagList" :key="tag" class="style-tag">{{ tag }}</span>
+          </div>
+          <p v-if="artist.bio" class="artist-bio">{{ artist.bio }}</p>
         </div>
       </div>
 
@@ -73,6 +77,12 @@ export default {
   },
   created() {
     this.fetchArtist()
+  },
+  computed: {
+    styleTagList() {
+      if (!this.artist || !this.artist.styleTags) return []
+      return this.artist.styleTags.split(',').map(s => s.trim()).filter(Boolean)
+    }
   },
   methods: {
     async fetchArtist() {
@@ -177,6 +187,28 @@ export default {
 .status-active {
   color: #00b894;
   background: rgba(0, 184, 148, 0.08);
+}
+
+.style-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.style-tag {
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 4px;
+  color: #e17055;
+  background: rgba(225, 112, 85, 0.08);
+}
+
+.artist-bio {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
 }
 
 /* ── 区块 ── */

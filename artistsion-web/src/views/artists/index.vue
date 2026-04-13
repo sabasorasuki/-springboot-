@@ -62,7 +62,7 @@
             <div v-for="n in 3" :key="n" class="gallery-thumb gallery-thumb--empty" />
           </div>
           <div class="artist-card__footer">
-            <span class="footer-label">暂无简介</span>
+            <span class="footer-label">{{ artist.bio || '暂无简介' }}</span>
           </div>
         </div>
       </div>

@@ -13,7 +13,7 @@
           :key="tag"
           class="filter-tag"
           :class="{ 'is-active': activeFilter === tag }"
-          @click="activeFilter = tag"
+          @click="onFilterChange(tag)"
         >{{ tag }}</span>
       </div>
     </section>
@@ -22,7 +22,7 @@
     <section class="section">
       <div class="project-list">
         <div
-          v-for="project in filteredProjects"
+          v-for="project in projects"
           :key="project.id"
           class="project-card"
         >
@@ -62,147 +62,75 @@
       </div>
 
       <el-empty
-        v-if="!filteredProjects.length"
+        v-if="!projects.length && !loading"
         description="暂无匹配企划"
         :image-size="120"
       />
-    </section>
 
-    <!-- 数据说明 -->
-    <section class="section data-note">
-      <p>当前为示例数据，企划发布功能即将上线。</p>
+      <div v-if="total > projects.length" class="load-more">
+        <el-button :loading="loading" type="text" @click="loadMore">加载更多</el-button>
+      </div>
     </section>
   </div>
 </template>
 
 <script>
-/**
- * 企划页 — 本阶段使用静态 mock 数据。
- *
- * 目标后端表结构 (sys_project)：
- *   id          BIGINT AUTO_INCREMENT PRIMARY KEY
- *   title       VARCHAR(200)  NOT NULL  -- 企划标题
- *   description TEXT                    -- 需求描述
- *   category    VARCHAR(50)             -- 分类（插画/立绘/头像等）
- *   style       VARCHAR(50)             -- 风格偏好
- *   budget_min  DECIMAL(10,2)           -- 预算下限
- *   budget_max  DECIMAL(10,2)           -- 预算上限
- *   deadline    DATE                    -- 截稿日期
- *   status      VARCHAR(20) DEFAULT '招募中' -- 招募中/进行中/已完成/已关闭
- *   user_id     BIGINT NOT NULL         -- 发布者ID
- *   username    VARCHAR(50)             -- 发布者名称（冗余）
- *   user_avatar VARCHAR(500)            -- 发布者头像（冗余）
- *   created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
- *   updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
- *
- * TODO: 后端建表后，替换 mockProjects 为 /sysProject/list 接口调用
- */
+import projectApi from '@/api/project'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
-
-const mockProjects = [
-  {
-    id: 1,
-    title: '原创小说封面插画',
-    description: '需要一张竖版小说封面，古风仙侠题材，主角为一男一女，画面需有仙鹤和云海元素。',
-    category: '插画',
-    style: '国风',
-    budgetMin: 800,
-    budgetMax: 1500,
-    deadline: '2026-05-15',
-    status: '招募中',
-    userId: 10,
-    username: '云中书客',
-    userAvatar: defaultAvatar
-  },
-  {
-    id: 2,
-    title: 'VTuber 形象立绘',
-    description: '需要 Live2D 可用的全身立绘，日系风格，角色为猫耳少女，需要三套表情差分。',
-    category: '立绘',
-    style: '日系',
-    budgetMin: 2000,
-    budgetMax: 4000,
-    deadline: '2026-05-01',
-    status: '招募中',
-    userId: 11,
-    username: 'NekoChannel',
-    userAvatar: defaultAvatar
-  },
-  {
-    id: 3,
-    title: '情侣头像定制一对',
-    description: 'Q版情侣头像，背景可爱简洁，希望能体现两人的性格差异。',
-    category: '头像',
-    style: 'Q版',
-    budgetMin: 200,
-    budgetMax: 500,
-    deadline: '2026-04-28',
-    status: '招募中',
-    userId: 12,
-    username: '甜筒酱',
-    userAvatar: defaultAvatar
-  },
-  {
-    id: 4,
-    title: '桌游卡牌原画 (10 张)',
-    description: '独立桌游项目需要10张角色卡牌原画，欧美奇幻风格，含简单场景背景。',
-    category: '插画',
-    style: '欧美',
-    budgetMin: 5000,
-    budgetMax: 10000,
-    deadline: '2026-06-30',
-    status: '招募中',
-    userId: 13,
-    username: 'BoardCraft',
-    userAvatar: defaultAvatar
-  },
-  {
-    id: 5,
-    title: '个人 IP 吉祥物设计',
-    description: '品牌吉祥物设计，需要一个可爱的柴犬形象，包含三视图和配色方案。',
-    category: '立绘',
-    style: 'Q版',
-    budgetMin: 1000,
-    budgetMax: 2000,
-    deadline: '2026-05-20',
-    status: '进行中',
-    userId: 14,
-    username: 'ShibaLab',
-    userAvatar: defaultAvatar
-  },
-  {
-    id: 6,
-    title: '水彩风游记插图 (5 张)',
-    description: '旅行公众号需要5张水彩风景插图，主题包括海边、古镇、雪山等。',
-    category: '插画',
-    style: '写实',
-    budgetMin: 1500,
-    budgetMax: 3000,
-    deadline: '2026-05-10',
-    status: '招募中',
-    userId: 15,
-    username: '走走停停',
-    userAvatar: defaultAvatar
-  }
-]
 
 export default {
   name: 'ProjectsPage',
   data() {
     return {
-      projects: mockProjects,
+      projects: [],
+      total: 0,
+      pageNo: 1,
+      loading: false,
       activeFilter: '全部',
       filterTags: ['全部', '插画', '立绘', '头像']
     }
   },
-  computed: {
-    filteredProjects() {
-      if (this.activeFilter === '全部') return this.projects
-      return this.projects.filter(p => p.category === this.activeFilter)
-    }
+  created() {
+    this.fetchProjects()
   },
   methods: {
+    async fetchProjects() {
+      this.loading = true
+      try {
+        const category = this.activeFilter === '全部' ? undefined : this.activeFilter
+        const res = await projectApi.getList({
+          pageNo: this.pageNo,
+          pageSize: 12,
+          category
+        })
+        if (res.data && res.code === 20000) {
+          const rows = (res.data.rows || []).map(p => ({
+            ...p,
+            userAvatar: p.userAvatar || defaultAvatar
+          }))
+          if (this.pageNo === 1) {
+            this.projects = rows
+          } else {
+            this.projects = this.projects.concat(rows)
+          }
+          this.total = res.data.total || 0
+        }
+      } catch (e) {
+        console.error('获取企划列表失败', e)
+      } finally {
+        this.loading = false
+      }
+    },
+    onFilterChange(tag) {
+      this.activeFilter = tag
+      this.pageNo = 1
+      this.fetchProjects()
+    },
+    loadMore() {
+      this.pageNo++
+      this.fetchProjects()
+    },
     statusClass(status) {
       const map = { '招募中': 'open', '进行中': 'active', '已完成': 'done', '已关闭': 'closed' }
       return map[status] || 'open'
@@ -211,7 +139,6 @@ export default {
       this.$router.push('/project/' + id)
     },
     onApply(id) {
-      // TODO: Phase 5 — 应征流程
       this.$message.info('应征功能即将上线')
     }
   }
@@ -403,14 +330,9 @@ export default {
   gap: 10px;
 }
 
-/* ── 数据说明 ── */
-.data-note {
+.load-more {
   text-align: center;
-  p {
-    font-size: 13px;
-    color: #bbb;
-    margin: 0;
-  }
+  margin-top: 24px;
 }
 
 /* ── 响应式 ── */

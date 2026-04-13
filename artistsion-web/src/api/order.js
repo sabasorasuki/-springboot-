@@ -88,6 +88,18 @@ export default {
       url: `/sysOrder/deleteById/${id}`,
       method: 'delete'
     })
+  },
+
+  getMine(params) {
+    return request({
+      url: '/sysOrder/mine',
+      method: 'get',
+      params: {
+        role: params.role,
+        pageNo: params.pageNo,
+        pageSize: params.pageSize
+      }
+    })
   }
 
 }

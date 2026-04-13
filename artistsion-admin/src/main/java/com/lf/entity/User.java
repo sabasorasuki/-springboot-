@@ -51,6 +51,10 @@ public class User implements Serializable {
 
     private String name;
 
+    private String bio;
+
+    private String styleTags;
+
     @TableField(exist = false)
     private Integer role;
 

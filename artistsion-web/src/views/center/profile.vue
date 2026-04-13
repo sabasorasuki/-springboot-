@@ -32,6 +32,12 @@
         <el-form-item label="地址">
           <el-input v-model="form.address" placeholder="请输入地址" />
         </el-form-item>
+        <el-form-item label="个人简介">
+          <el-input v-model="form.bio" type="textarea" :rows="3" placeholder="介绍一下自己" maxlength="500" show-word-limit />
+        </el-form-item>
+        <el-form-item label="风格标签">
+          <el-input v-model="form.styleTags" placeholder="多个标签用逗号分隔，如：国风,水彩,Q版" />
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" :loading="saving" round @click="handleSave">保存修改</el-button>
         </el-form-item>
@@ -78,7 +84,9 @@ export default {
         name: '',
         email: '',
         phone: '',
-        address: ''
+        address: '',
+        bio: '',
+        styleTags: ''
       },
       saving: false
     }
@@ -102,6 +110,8 @@ export default {
             this.form.email = u.email || ''
             this.form.phone = u.phone || ''
             this.form.address = u.address || ''
+            this.form.bio = u.bio || ''
+            this.form.styleTags = u.styleTags || ''
           }
         }
       } catch (e) {
