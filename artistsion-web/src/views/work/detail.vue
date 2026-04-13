@@ -24,11 +24,12 @@
           </div>
           <div v-if="work.shangjiaids" class="detail-artist">
             <span class="label">画师：</span>
+            <span v-if="work.artistName" class="artist-name-text">{{ work.artistName }}</span>
             <el-button type="text" @click="goArtist(work.shangjiaids)">查看画师主页</el-button>
           </div>
           <div class="detail-actions">
-            <el-button type="primary" icon="el-icon-shopping-cart-2" round>加入购物车</el-button>
-            <el-button icon="el-icon-star-off" round>收藏</el-button>
+            <el-button type="primary" icon="el-icon-shopping-cart-2" round :loading="cartLoading" @click="addToCart">加入购物车</el-button>
+            <el-button :icon="isFav ? 'el-icon-star-on' : 'el-icon-star-off'" :type="isFav ? 'warning' : 'default'" round :loading="favLoading" @click="toggleFav">{{ isFav ? '已收藏' : '收藏' }}</el-button>
           </div>
         </div>
       </div>
@@ -52,15 +53,25 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import huagaoApi from '@/api/huagao'
+import shoucangApi from '@/api/shoucang'
+import orderApi from '@/api/order'
 
 export default {
   name: 'WorkDetail',
   data() {
     return {
       loading: true,
-      work: null
+      work: null,
+      isFav: false,
+      favId: null,
+      favLoading: false,
+      cartLoading: false
     }
+  },
+  computed: {
+    ...mapGetters(['userId'])
   },
   created() {
     this.fetchWork()
@@ -73,11 +84,70 @@ export default {
         const res = await huagaoApi.getById(id)
         if (res.data && res.code === 20000) {
           this.work = res.data
+          this.checkFav()
         }
       } catch (e) {
         console.error('获取作品详情失败', e)
       } finally {
         this.loading = false
+      }
+    },
+    async checkFav() {
+      if (!this.userId || !this.work) return
+      try {
+        const res = await shoucangApi.getList1({ wzids: String(this.work.id), userids: String(this.userId) })
+        const rows = res.data && res.data.rows ? res.data.rows : (Array.isArray(res.data) ? res.data : [])
+        if (rows.length > 0) {
+          this.isFav = true
+          this.favId = rows[0].id
+        }
+      } catch (_) { /* ignore */ }
+    },
+    async toggleFav() {
+      if (!this.userId) { this.$message.warning('请先登录'); return }
+      this.favLoading = true
+      try {
+        if (this.isFav && this.favId) {
+          await shoucangApi.deleteById(this.favId)
+          this.isFav = false
+          this.favId = null
+          this.$message.success('已取消收藏')
+        } else {
+          await shoucangApi.add({
+            title: this.work.name,
+            wzids: String(this.work.id),
+            photo: this.work.photo,
+            fenlei: this.work.fenlei,
+            price: String(this.work.price),
+            userids: String(this.userId)
+          })
+          this.$message.success('收藏成功')
+          this.checkFav()
+        }
+      } catch (e) {
+        this.$message.error('操作失败')
+      } finally {
+        this.favLoading = false
+      }
+    },
+    async addToCart() {
+      if (!this.userId) { this.$message.warning('请先登录'); return }
+      this.cartLoading = true
+      try {
+        await orderApi.add({
+          name: this.work.name,
+          photo: this.work.photo,
+          price: this.work.price,
+          spids: String(this.work.id),
+          shangjiaids: this.work.shangjiaids,
+          userids: String(this.userId),
+          status: '购物车'
+        })
+        this.$message.success('已加入购物车')
+      } catch (e) {
+        this.$message.error('加入购物车失败')
+      } finally {
+        this.cartLoading = false
       }
     },
     goArtist(artistId) {

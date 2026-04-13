@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lf.common.Result;
 import com.lf.entity.SysHuagao;
+import com.lf.entity.User;
+import com.lf.dao.UserMapper;
 import com.lf.service.SysHuagaoService;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +31,9 @@ public class SysHuagaoController {
     
     @Resource
     private SysHuagaoService service;
+
+    @Resource
+    private UserMapper userMapper;
 
 
     @GetMapping("/tuijianlist")
@@ -135,6 +140,14 @@ public class SysHuagaoController {
     @GetMapping("/getById/{id}")
     public Result<SysHuagao> getById(@PathVariable("id") Integer id){
         SysHuagao shetuan = service.getById(id);
+        if (shetuan != null && StringUtils.hasLength(shetuan.getShangjiaids())) {
+            try {
+                User artist = userMapper.selectById(Integer.parseInt(shetuan.getShangjiaids()));
+                if (artist != null) {
+                    shetuan.setArtistName(artist.getName() != null ? artist.getName() : artist.getUsername());
+                }
+            } catch (NumberFormatException ignored) {}
+        }
         return Result.success(shetuan);
     }
 

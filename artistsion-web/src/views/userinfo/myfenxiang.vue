@@ -17,7 +17,7 @@
             <el-form-item label="封面">
               <el-upload
                 class="avatar-uploader"
-                action="http://localhost:9999/oss/file/upload?module=photo"
+                :action="ossUploadAction('photo')"
                 :show-file-list="false"
                 :on-success="handleAvatarSuccess"
               >
@@ -66,6 +66,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import { ossDownloadUrl, ossUploadAction, ossUploadImgServer } from '@/utils/oss'
 import userApi from '@/api/userManage'
 import fenleiApi from '@/api/fenlei.js'
 import api from '@/api/fenxiang'
@@ -147,7 +148,7 @@ export default {
     },
 
     handleAvatarSuccess(res, file) {
-      this.form.photo = `http://localhost:9999/oss/file/download?name=${res.data}`
+      this.form.photo = ossDownloadUrl(res.data)
       console.log(this.form.photo, 'oss12312')
 
       // 强制重新渲染
@@ -211,7 +212,7 @@ export default {
       // 关闭样式过滤
       this.editor.config.pasteFilterStyle = false
       // 配置 server 接口地址
-      this.editor.config.uploadImgServer = 'http://localhost:9999/oss/file/uploadImg'
+      this.editor.config.uploadImgServer = ossUploadImgServer
       this.editor.config.withCredentials = true
       this.editor.config.uploadFileName = 'myFileName'
       this.editor.config.uploadImgMaxSize = 5 * 1024 * 1024 // 最大上传5M的图片
@@ -219,7 +220,7 @@ export default {
       this.editor.config.uploadImgHooks = {
         customInsert: function(insertImg, result, editor) {
           // 获取后台返回的url
-          var url = `http://localhost:9999/oss/file/download?name=${result.data.url}`
+          var url = ossDownloadUrl(result.data.url)
           console.log(url, 'urlurlurlurlurl')
           insertImg(url)
         }

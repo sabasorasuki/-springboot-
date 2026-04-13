@@ -6,6 +6,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -21,7 +22,8 @@ public class JwtUtil {
     private static final long JWT_EXPIRE = 24*60*60*1000L;  // 24小时
 
     // 令牌秘钥
-    private static final String JWT_KEY = "123456";
+    @Value("${jwt.secret:123456}")
+    private String jwtKey;
 
     public  String createToken(Object data){
         // 当前时间
@@ -34,7 +36,7 @@ public class JwtUtil {
                 .setSubject(JSON.toJSONString(data))
                 .setIssuer("system")
                 .setIssuedAt(new Date(currentTime))
-                .signWith(SignatureAlgorithm.HS256, encodeSecret(JWT_KEY))
+                .signWith(SignatureAlgorithm.HS256, encodeSecret(jwtKey))
                 .setExpiration(new Date(expTime));
         return builder.compact();
     }
@@ -47,7 +49,7 @@ public class JwtUtil {
 
     public Claims parseToken(String token){
         Claims body = Jwts.parser()
-                .setSigningKey(encodeSecret(JWT_KEY))
+                .setSigningKey(encodeSecret(jwtKey))
                 .parseClaimsJws(token)
                 .getBody();
         return body;
@@ -55,7 +57,7 @@ public class JwtUtil {
 
     public <T> T parseToken(String token,Class<T> clazz){
         Claims body = Jwts.parser()
-                .setSigningKey(encodeSecret(JWT_KEY))
+                .setSigningKey(encodeSecret(jwtKey))
                 .parseClaimsJws(token)
                 .getBody();
         return JSON.parseObject(body.getSubject(),clazz);

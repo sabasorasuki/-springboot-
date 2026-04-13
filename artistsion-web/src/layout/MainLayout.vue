@@ -167,13 +167,22 @@ export default {
     },
     promptRoleSelection(availableRoles) {
       const labels = availableRoles.map(r => ROLE_LABELS[r] || r)
+      const h = this.$createElement
+      let selectedIdx = 0
+      const radioGroup = h('el-radio-group', {
+        props: { value: 0 },
+        on: { input: val => { selectedIdx = val } },
+        style: 'display:flex;flex-direction:column;gap:10px;margin-top:10px;'
+      }, availableRoles.map((r, i) =>
+        h('el-radio', { props: { label: i } }, [labels[i]])
+      ))
       return this.$msgbox({
         title: '切换身份',
-        message: `请选择目标身份：${labels.join('、')}`,
+        message: radioGroup,
         showCancelButton: true,
-        confirmButtonText: labels[0],
+        confirmButtonText: '确定',
         cancelButtonText: '取消'
-      }).then(() => availableRoles[0]).catch(() => null)
+      }).then(() => availableRoles[selectedIdx]).catch(() => null)
     }
   }
 }

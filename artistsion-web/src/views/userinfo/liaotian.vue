@@ -78,6 +78,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import { ossBase } from '@/utils/oss'
 import userApi from '@/api/userManage'
 import api from '@/api/order.js'
 import Xiaoxiapi from '@/api/xiaoxi.js'
@@ -119,7 +120,7 @@ export default {
     ...mapGetters(['token']),
     ossHost() {
       const b = (this.baseApi && String(this.baseApi).trim()) || ''
-      return b.replace(/\/$/, '') || 'http://localhost:9999'
+      return b.replace(/\/$/, '') || ossBase
     },
     uploadActionPhoto() {
       return `${this.ossHost}/oss/file/upload?module=photo`

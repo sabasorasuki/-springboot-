@@ -34,7 +34,7 @@
             <el-form-item label="头像">
               <el-upload
                 class="avatar-uploader"
-                action="http://localhost:9999/oss/file/upload?module=photo"
+                :action="ossUploadAction('photo')"
                 :show-file-list="false"
                 :on-success="handleAvatarSuccess"
               >
@@ -55,6 +55,7 @@
 </template>
 <script>
 import { mapGetters } from 'vuex'
+import { ossDownloadUrl, ossUploadAction } from '@/utils/oss'
 import userApi from '@/api/userManage'
 
 export default {
@@ -71,7 +72,7 @@ export default {
   },
   methods: {
     handleAvatarSuccess(res, file) {
-      this.form.avatar = `http://localhost:9999/oss/file/download?name=${res.data}`
+      this.form.avatar = ossDownloadUrl(res.data)
       console.log(this.Form.avatar, 'oss12312')
 
       // 强制重新渲染

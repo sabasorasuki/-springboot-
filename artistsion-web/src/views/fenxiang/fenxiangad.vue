@@ -52,6 +52,7 @@
 </template>
 <script>
 import api from '@/api/fenxiang.js'
+import { ossDownloadUrl } from '@/utils/oss'
 import { mapGetters } from 'vuex'
 import userApi from '@/api/userManage'
 
@@ -88,7 +89,7 @@ export default {
     },
     handleAvatarSuccess(res, file) {
       console.log(res, 'oss1')
-      this.Form.photo = `http://localhost:9999/oss/file/download?name=${res.data}`
+      this.Form.photo = ossDownloadUrl(res.data)
       console.log(this.Form.avatar, 'oss12312')
 
       // 强制重新渲染

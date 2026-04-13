@@ -74,7 +74,7 @@
         <el-form-item label="轮播图" :label-width="formLabelWidth">
           <el-upload
             class="avatar-uploader"
-            action="http://localhost:9999/oss/file/upload?module=lunbo"
+            :action="ossUploadAction('lunbo')"
             :show-file-list="false"
             :on-success="handleAvatarSuccess"
           >
@@ -92,6 +92,7 @@
 </template>
 <script>
 import api from '@/api/lunbo.js'
+import { ossDownloadUrl, ossUploadAction } from '@/utils/oss'
 import { mapGetters } from 'vuex'
 import userApi from '@/api/userManage'
 
@@ -126,7 +127,7 @@ export default {
 
     handleAvatarSuccess(res, file) {
       console.log(res, 'oss1')
-      this.Form.lunbo = `http://localhost:9999/oss/file/download?name=${res.data}`
+      this.Form.lunbo = ossDownloadUrl(res.data)
       console.log(this.Form.lunbo, 'oss12312')
 
       // 强制重新渲染
