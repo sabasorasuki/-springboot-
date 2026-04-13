@@ -9,7 +9,7 @@ import Layout from '@/layout'
 
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
-const whiteList = ['/login', '/register', '/mas', '/theList', '/community'] // no redirect whitelist
+const whiteList = ['/login', '/register', '/auth', '/mas', '/theList', '/community'] // no redirect whitelist
 
 router.beforeEach(async(to, from, next) => {
   // start progress bar
@@ -22,9 +22,9 @@ router.beforeEach(async(to, from, next) => {
   const hasToken = getToken()
 
   if (hasToken) {
-    if (to.path === '/login') {
+    if (to.path === '/login' || to.path === '/auth') {
       // if is logged in, redirect to the home page
-      next({ path: '/' })
+      next({ path: '/home' })
       NProgress.done()
     } else {
       const hasGetUserInfo = store.getters.name
@@ -67,8 +67,8 @@ router.beforeEach(async(to, from, next) => {
       // in the free login whitelist, go directly
       next()
     } else {
-      // other pages that do not have permission to access are redirected to the login page.
-      next(`/mas?redirect=${to.path}`)
+      // other pages that do not have permission to access are redirected to the auth page.
+      next(`/auth?redirect=${to.path}`)
       NProgress.done()
     }
   }

@@ -5,6 +5,7 @@ Vue.use(Router)
 
 /* Layout */
 import Layout from '@/layout'
+import MainLayout from '@/layout/MainLayout'
 
 /**
  * Note: sub-menu only appear when route children.length >= 1
@@ -31,6 +32,11 @@ import Layout from '@/layout'
  * all roles can be accessed
  */
 export const constantRoutes = [
+  {
+    path: '/auth',
+    component: () => import('@/views/auth/index'),
+    hidden: true
+  },
   {
     path: '/login',
     component: () => import('@/views/login/index'),
@@ -75,6 +81,44 @@ export const constantRoutes = [
     component: () => import('@/views/AboutView'),
     hidden: true
   },
+  // ── 新前台站路由（使用 MainLayout） ──
+  {
+    path: '/home',
+    component: MainLayout,
+    children: [
+      {
+        path: '',
+        name: 'Home',
+        component: () => import('@/views/home/index'),
+        meta: { title: '首页' }
+      }
+    ]
+  },
+  {
+    path: '/artists',
+    component: MainLayout,
+    children: [
+      {
+        path: '',
+        name: 'Artists',
+        component: () => import('@/views/artists/index'),
+        meta: { title: '画师' }
+      }
+    ]
+  },
+  {
+    path: '/projects',
+    component: MainLayout,
+    children: [
+      {
+        path: '',
+        name: 'Projects',
+        component: () => import('@/views/projects/index'),
+        meta: { title: '企划' }
+      }
+    ]
+  },
+  // ── 旧后台管理路由（保留原 Layout） ──
   {
     path: '/',
     component: Layout,
