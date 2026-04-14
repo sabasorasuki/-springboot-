@@ -1573,14 +1573,9 @@ CREATE TABLE `x_menu`  (
 INSERT INTO `x_menu` VALUES (1, 'Layout', '/sys', '/sys/list', 'sysManage', '系统管理', 'userManage', 0, 'N', 0);
 INSERT INTO `x_menu` VALUES (2, 'sys/user', 'user', NULL, 'userList', '用户列表', 'user', 1, 'Y', 0);
 INSERT INTO `x_menu` VALUES (3, 'sys/role', 'role', NULL, 'roleList', '角色列表', 'roleManage', 1, 'Y', 0);
-INSERT INTO `x_menu` VALUES (4, 'Layout', '/test', '/test/test1', 'test', '测试模块', 'form', 0, 'N', 0);
-INSERT INTO `x_menu` VALUES (5, 'test/test1', 'test1', '', 'test1', '测试点一', 'form', 4, 'Y', 0);
-INSERT INTO `x_menu` VALUES (6, 'test/test2', 'test2', '', 'test2', '测试点二', 'form', 4, 'Y', 0);
-INSERT INTO `x_menu` VALUES (7, 'test/test3', 'test3', '', 'test3', '测试点三', 'form', 4, 'Y', 0);
 INSERT INTO `x_menu` VALUES (8, 'sys/route', 'route', NULL, 'routeList', '菜单列表', 'routeManage', 1, 'Y', 0);
 INSERT INTO `x_menu` VALUES (9, 'shangp/shangpsh', 'shangpsh', '', 'shangpsh', '画稿服务审核', 'form', 20, 'Y', 0);
 INSERT INTO `x_menu` VALUES (10, 'order/orderadglqb', 'orderadglqb', '', 'orderadglqb', '全部订单', 'form', 26, 'Y', 0);
-INSERT INTO `x_menu` VALUES (12, 'test/test4', 'test4', NULL, 'test4', '测试点四', 'form', 4, 'Y', 0);
 INSERT INTO `x_menu` VALUES (13, 'Layout', '/fenlei', '/fenlei/fenlei', 'fenlei', '分类管理', 'form', 0, 'N', 0);
 INSERT INTO `x_menu` VALUES (14, 'fenlei/fenlei', 'fenlei', '', 'fenlei', '分类列表', 'form', 13, 'Y', 0);
 INSERT INTO `x_menu` VALUES (15, 'Layout', '/shoucang', '/shoucang/shoucang', 'shoucang', '收藏管理', 'form', 0, 'N', 0);

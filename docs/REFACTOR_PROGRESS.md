@@ -209,6 +209,21 @@ spring.mail.password=${MAIL_PASSWORD:}
   - 优先处理 `test/*` 对应的菜单数据与页面文件
   - 先删 `x_menu` / `x_role_menu` 残留，再删除 `views/test/test1-4.vue`
 
+### 阶段 6F：断链修复与 test 僵尸菜单清理 ✅ 已完成
+
+- 收藏页断链修复：
+  - `views/shoucang/shoucang.vue` 中遗留的 `name: 'myfatie'` 来自旧“帖子管理”模板拷贝残留
+  - 修复依据：`work/detail.vue` 在执行收藏时会把 `wzids` 写成 `work.id`，而路由表中真实存在的作品详情页是 `/work/:id`（路由名 `WorkDetail`）
+  - 已将收藏列表中的相关入口改为跳转 `WorkDetail`，并补上“查看作品”按钮
+- test 僵尸菜单清理：
+  - 已再次确认 `x_role_menu` 中不存在 `menu_id=4/5/6/7/12` 的角色分配
+  - 已删除 `artistsion.sql` 中 `x_menu` 的 test 父菜单与 4 个子菜单记录
+  - 已删除 `views/test/test1.vue`、`views/test/test2.vue`、`views/test/test3.vue`、`views/test/test4.vue`
+  - 已复核无静态路由、无动态组件路径、无页面跳转、无 `import/require` 残留
+- 构建验证：
+  - 前端 `npm run build:prod` ✅ 通过
+  - 仅剩既有 webpack 包体积 warning 与 `Browserslist` 提示
+
 ---
 
 ## 阶段 3：新前台导航完善 ✅ 已完成

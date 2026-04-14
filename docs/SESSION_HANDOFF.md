@@ -2,7 +2,7 @@
 
 ## 当前所处阶段
 
-阶段 1 ✅ → 阶段 2 ✅ → 阶段 3 ✅ → 阶段 4 ✅ → 阶段 5A ✅ → 阶段 5B ✅ → **阶段 6A ✅ 已完成** → **阶段 6B 兼容层清理已完成并落地** → **阶段 6C 旧后台入口隔离与存活清点已完成** → **阶段 6D 明确死代码清理已完成** → **阶段 6E 旧后台菜单表与遗留模块审计已完成**。
+阶段 1 ✅ → 阶段 2 ✅ → 阶段 3 ✅ → 阶段 4 ✅ → 阶段 5A ✅ → 阶段 5B ✅ → **阶段 6A ✅ 已完成** → **阶段 6B 兼容层清理已完成并落地** → **阶段 6C 旧后台入口隔离与存活清点已完成** → **阶段 6D 明确死代码清理已完成** → **阶段 6E 旧后台菜单表与遗留模块审计已完成** → **阶段 6F 断链修复与 test 僵尸菜单清理已完成**。
 
 ---
 
@@ -80,6 +80,17 @@
 - 新发现的高优先级风险：
   - `views/shoucang/shoucang.vue` 内部仍跳转 `name: 'myfatie'`，仓库中未发现对应路由，需单独修复
 
+### 断链修复与 test 清理（6F）
+
+- 收藏页断链已修复：
+  - `views/shoucang/shoucang.vue` 不再跳转不存在的 `myfatie`
+  - 修复依据：收藏记录的 `wzids` 来源于 `work.id`，因此真实目标应为 `/work/:id`（`WorkDetail`）
+  - 当前收藏列表已补充“查看作品”入口，直接进入真实作品详情页
+- test 僵尸菜单已清理：
+  - 已删除 `artistsion.sql` 中 `x_menu` 的 test 菜单记录：`menu_id=4/5/6/7/12`
+  - 已删除 `views/test/test1.vue`、`views/test/test2.vue`、`views/test/test3.vue`、`views/test/test4.vue`
+  - 已复核：`x_role_menu` 原本就没有 test 菜单角色分配，前端源码也没有静态路由或 `import/require` 残留
+
 ### 构建验证
 
 - 后端 `mvnw compile` ✅ BUILD SUCCESS
@@ -149,8 +160,8 @@
 | 后台入口与新前台混杂 | 旧后台此前主要依赖 `/dashboard` 和各类旧根路径直接访问 | ✅ 已完成入口隔离，统一入口改为 `/admin`，旧路径保留兼容 |
 | 菜单驱动后台页面 | `/sys/*`、`/order/*`、`/shangp/*`、`/fenxiang/*` 等仍由 `/user/info` + `menuList` 驱动 | 保留，`fenxiang/fenlei/shoucang/liuyan/tongji/rizhi/lunbo/ai` 已确认真实存活 |
 | 模板残留清理 | `views/table/*`、`views/tree/*`、`views/form/*`、`views/nested/*` | ✅ 已完成第四轮删除，源码内未见路由/菜单/跳转/import 引用 |
-| 测试模块残留 | `test/test1-4` 仍存在于 `x_menu.component` 记录中，但当前未分配给任何角色 | 已审计为僵尸菜单，适合作为下一轮精准删除候选 |
-| 收藏页内部跳转 | `views/shoucang/shoucang.vue` 仍跳转到 `name: 'myfatie'` | 高优先级断链风险，需单独修复 |
+| ~~测试模块残留~~ | ~~`test/test1-4` 仍存在于 `x_menu.component` 记录中，但当前未分配给任何角色~~ | ✅ 6F 已删除 SQL 菜单残留与页面文件 |
+| ~~收藏页内部跳转~~ | ~~`views/shoucang/shoucang.vue` 仍跳转到 `name: 'myfatie'`~~ | ✅ 6F 已修复为 `/work/:id` |
 | ~~旧后台独立入口~~ | ~~当前旧后台通过动态菜单路由访问，无独立 `/admin` 入口~~ | ✅ 已完成，统一入口为 `/admin` |
 | 生产密钥轮换 | 支付宝/DashScope/JWT 密钥均为测试值 | 部署前处理 |
 | 生产部署 | 构建产物验证、静态资源优化 | 待定 |

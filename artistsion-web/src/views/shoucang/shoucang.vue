@@ -7,9 +7,6 @@
           <el-input v-model="searchModel.title" placeholder="标题" clearable />
           <el-button type="primary" round icon="el-icon-search" @click="getList">查询</el-button>
         </el-col>
-        <!-- <el-col :span="4" align="right">
-                    <el-button @click="goto(null)" type="primary" circle icon="el-icon-plus"></el-button>
-                </el-col> -->
       </el-row>
     </el-card>
     <!-- 结果列表 -->
@@ -27,8 +24,9 @@
             </el-popover>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="180">
+        <el-table-column label="操作" width="240">
           <template slot-scope="scope">
+            <el-button type="primary" plain @click="goWorkDetail(scope.row.wzids)">查看作品</el-button>
             <el-button type="danger" @click="deleteUser(scope.row)">取消收藏</el-button>
           </template>
         </el-table-column>
@@ -50,7 +48,6 @@
 </template>
 <script>
 import api from '@/api/shoucang.js'
-import { ossDownloadUrl } from '@/utils/oss'
 import { mapGetters } from 'vuex'
 import userApi from '@/api/userManage'
 
@@ -82,16 +79,12 @@ export default {
     this.getInfo(this.token)
   },
   methods: {
-    goto() {
-      this.$router.push({ name: 'myfatie' })
-    },
-    handleAvatarSuccess(res, file) {
-      console.log(res, 'oss1')
-      this.Form.photo = ossDownloadUrl(res.data)
-      console.log(this.Form.avatar, 'oss12312')
-
-      // 强制重新渲染
-      this.$forceUpdate()
+    goWorkDetail(workId) {
+      if (!workId) {
+        this.$message.warning('未找到关联作品')
+        return
+      }
+      this.$router.push({ name: 'WorkDetail', params: { id: String(workId) }})
     },
     deleteUser(content) {
       this.$confirm(`您确认删除 ${content.title} ?`, '提示', {
@@ -134,25 +127,6 @@ export default {
           return false
         }
       })
-    },
-    clearForm() {
-      this.Form = {
-
-      }
-      this.$refs.FormRef.clearValidate()
-    },
-    openEditUI(id) {
-      if (id == null) {
-        this.title = '新增'
-      } else {
-        this.title = '修改'
-        // 根据id查询用户数据
-        this.$router.push({ name: 'myfatie', params: { id: id }})
-        // api.getById(id).then(response => {
-        //     this.Form = response.data;
-        // })
-      }
-      this.dialogFormVisible = true
     },
     handleSizeChange(pageSize) {
       this.searchModel.pageSize = pageSize
