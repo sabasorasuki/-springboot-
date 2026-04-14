@@ -2,11 +2,50 @@
 
 ## 当前所处阶段
 
-阶段 1 ✅ → 阶段 2 ✅ → 阶段 3 ✅ → 阶段 4 ✅ → 阶段 5A ✅ → **阶段 5B ✅ 已完成**，准备进入阶段 6。
+阶段 1 ✅ → 阶段 2 ✅ → 阶段 3 ✅ → 阶段 4 ✅ → 阶段 5A ✅ → 阶段 5B ✅ → **阶段 6A ✅ 已完成** → 阶段 6B 策略已决定，代码已落地。
 
 ---
 
-## 阶段 5B 已完成内容
+## 产品策略决策（阶段 6B 确认）
+
+- **主站继续要求登录**：`/home`、`/artists`、`/projects`、`/work/:id`、`/artist/:id`、`/project/:id` 不开放匿名访问，`permission.js` 白名单不变
+- **旧前台入口软下线**：管理后台 `Navbar.vue` "前台"链接和注销跳转已从 `/mas` 改为 `/home`
+- **旧路由暂时保留**：`/mas`、`/theList`、`/community`、`/detail`、`/details` 的路由定义、`permission.js` 白名单项、`views/about/` 页面文件均不做删除，后续如需彻底清理再单独做一轮
+
+---
+
+## 阶段 6A 已完成内容
+
+### JWT 密钥外部化
+
+- `JwtUtil.java`：`JWT_KEY` 静态常量 → `@Value("${jwt.secret:123456}") private String jwtKey`
+- `application.properties`：新增 `jwt.secret=${JWT_SECRET:123456}`
+- `application-local.properties`：新增 `JWT_SECRET=123456`
+- 安全技术债：默认回退值仍为 `123456`，测试环境可接受，生产部署前必须替换
+
+### 作品详情页接线
+
+- `SysHuagao.java`：新增 `@TableField(exist=false) artistName` 瞬态字段
+- `SysHuagaoController.getById()`：通过 `userMapper` 填充画师名
+- `work/detail.vue`：收藏按钮对接 `shoucangApi`（查重 + 添加/取消），购物车对接 `orderApi.add(status="购物车")`
+
+### 3+ 角色切换修复
+
+- `MainLayout.vue`：`promptRoleSelection()` 从纯文本 `$msgbox` 改为 `el-radio-group`
+
+### OSS URL 集中化
+
+- 新建 `src/utils/oss.js`（`ossDownloadUrl`/`ossUploadAction`/`ossUploadImgServer`/`ossBase`）
+- 19 个视图文件共 28 处 `http://localhost:9999` 硬编码全部替换
+
+### 旧入口软下线（6B）
+
+- `Navbar.vue`："前台"链接 `/mas` → `/home`，注销跳转 `/mas` → `/home`
+
+### 构建验证
+
+- 后端 `mvnw compile` ✅ BUILD SUCCESS
+- 前端 20 个改动文件 ✅ 零 lint 错误
 
 ### 后端
 
@@ -54,31 +93,23 @@
 
 ---
 
-## 已知过渡态（需后续阶段处理）
+## 已知过渡态与技术债
 
-| 项目 | 说明 | 预计阶段 | 5B 进展 |
-|---|---|---|---|
-| 角色切换弹框 | `$confirm` 仅适配双角色，≥3 角色需改为可选列表 | 6 | — |
-| ~~画师简介/风格标签~~ | ~~User 表无 bio/style 字段~~ | ~~5B~~ | ✅ 已加 bio/style_tags |
-| ~~企划后端~~ | ~~无 `sys_project` 表~~ | ~~5B~~ | ✅ 全栈 CRUD |
-| ~~`ARTIST_ROLE_ID = 7` 硬编码~~ | ~~写死角色 ID~~ | ~~5B~~ | ✅ @PostConstruct 查库 |
-| ~~订单前台查询~~ | ~~骨架页~~ | ~~5B~~ | ✅ 双视角订单列表 |
-| 作品详情缺画师昵称 | `SysHuagao.shangjiaids` 未关联查画师名 | 6 | 以"查看画师主页"链接代替 |
-| 收藏/购物车按钮 | 作品详情页按钮已渲染但未接线 | 6 | — |
-| `/detail` 旧路由 | 保留兼容，阶段 6 再清理 | 6 | — |
-
----
-
-## 下一步：阶段 6 — 双身份闭环与收尾
-
-### 候选任务
-
-1. **收藏/购物车接线** — 作品详情页 "收藏" + "加入购物车" 功能完成
-2. **旧后台独立入口** — `/admin` 独立路由，与新前台完全分离
-3. **作品详情补画师昵称** — `SysHuagao` 查询关联画师名
-4. **`/detail` 旧路由清理** — 确认无外部引用后移除
-5. **密钥轮换** — JWT 密钥提取到配置，支付宝/DashScope 密钥轮换
-6. **生产部署** — 构建产物验证、静态资源优化
+| 项目 | 说明 | 状态 |
+|---|---|---|
+| ~~角色切换弹框~~ | ~~`$confirm` 仅适配双角色~~ | ✅ 6A 改为 `el-radio-group` |
+| ~~画师简介/风格标签~~ | ~~User 表无 bio/style 字段~~ | ✅ 5B 已加 bio/style_tags |
+| ~~企划后端~~ | ~~无 `sys_project` 表~~ | ✅ 5B 全栈 CRUD |
+| ~~`ARTIST_ROLE_ID = 7` 硬编码~~ | ~~写死角色 ID~~ | ✅ 5B @PostConstruct 查库 |
+| ~~订单前台查询~~ | ~~骨架页~~ | ✅ 5B 双视角订单列表 |
+| ~~作品详情缺画师昵称~~ | ~~`shangjiaids` 未关联查画师名~~ | ✅ 6A artistName 瞬态字段 |
+| ~~收藏/购物车按钮~~ | ~~按钮已渲染但未接线~~ | ✅ 6A 对接 shoucangApi/orderApi |
+| ~~OSS URL 硬编码~~ | ~~28 处 `http://localhost:9999`~~ | ✅ 6A 集中化到 oss.js |
+| ~~JWT 密钥硬编码~~ | ~~`"123456"` 写死在代码中~~ | ✅ 6A 外部化（回退值仍为 123456，生产需替换） |
+| 旧前台路由残留 | `/mas`、`/theList`、`/community`、`/detail`、`/details` 及 `views/about/` | 软下线中，后续专门一轮清理 |
+| 旧后台独立入口 | 当前旧后台通过动态菜单路由访问，无独立 `/admin` 入口 | 待定 |
+| 生产密钥轮换 | 支付宝/DashScope/JWT 密钥均为测试值 | 部署前处理 |
+| 生产部署 | 构建产物验证、静态资源优化 | 待定 |
 
 ---
 
