@@ -131,6 +131,36 @@ spring.mail.password=${MAIL_PASSWORD:}
 - 已登录访问 `/auth` 统一跳转 `/home`
 - 后端旧接口 `/user/login`、`/user/info`、`/user/register` 继续保留，供旧后台管理链路兼容使用
 
+### 阶段 6C：旧后台入口隔离与存活清点 ✅ 已完成
+
+#### 入口隔离
+
+- 新增前端静态入口 `/admin`，统一作为旧后台入口，访问后进入既有后台首页 `/dashboard`
+- 为了兼容历史后台路径，前端守卫新增 `/admin/<legacy-path>` 映射：
+  - `/admin/sys/...` → `/sys/...`
+  - `/admin/order/...` → `/order/...`
+  - `/admin/shangp/...` → `/shangp/...`
+  - 其他旧后台根路径同理
+- 不修改后端 `x_menu` 数据，不修改 `/user/info` 返回结构，不修改动态菜单注入逻辑
+- 后台壳内面包屑首页统一指向 `/admin`
+- 后台壳内注销后默认跳转 `/auth?redirect=/admin`
+
+#### 后台存活清点结论
+
+- 明确仍在使用：
+  - `views/dashboard/index.vue`：静态后台首页 `/dashboard`
+  - `views/sys/user.vue`、`views/sys/role.vue`、`views/sys/route.vue`：`x_menu` 组件路径 `sys/user`、`sys/role`、`sys/route`
+  - `views/userinfo/index.vue`、`views/userinfo/fabusp.vue`、`views/userinfo/myfenxiang.vue`、`views/userinfo/liaotian.vue`：静态路由 `/userinfo`、`/fabusp`、`/myfenxiang`、`/liaotian`，且被旧后台/新个人中心页内部跳转引用
+  - `views/order/gouwuche.vue`、`views/order/ordergl.vue`、`views/order/orderadgl.vue`、`views/order/orderadglqb.vue`：`x_menu` 组件路径 `order/*`
+  - `views/shangp/shangp.vue`、`views/shangp/shangpsh.vue`、`views/shangp/spsxj.vue`：`x_menu` 组件路径 `shangp/*`
+- 待观察：
+  - `views/fenxiang/*`、`views/fenlei/*`、`views/shoucang/*`、`views/liuyan/*`、`views/tongji/*`、`views/rizhi/*`、`views/lunbo/*`、`views/ai/*`
+  - 依据：仍在 `x_menu` + `x_role_menu` 链路中，但不在本轮重点目录，需下一轮按真实角色/入口继续梳理
+- 下一轮删除候选：
+  - `views/test/test1.vue`、`views/test/test2.vue`、`views/test/test3.vue`、`views/test/test4.vue`
+  - 依据：虽在 `x_menu` 中存在 `test/*` 记录，但当前 `x_role_menu` 未给任何角色分配测试模块根菜单 `menu_id=4` 或其子菜单；前端也无静态路由或页面内跳转引用
+  - 另外一批模板残留（如 `views/table/*`、`views/tree/*`、`views/form/*`、`views/nested/*`）当前未见静态路由、菜单分配或页面跳转引用，也可在下一轮纳入候选清单
+
 ---
 
 ## 阶段 3：新前台导航完善 ✅ 已完成

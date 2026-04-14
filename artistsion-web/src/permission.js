@@ -10,6 +10,18 @@ import Layout from '@/layout'
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
 const whiteList = ['/auth'] // no redirect whitelist
+const ADMIN_ENTRY_PATH = '/admin'
+
+function resolveLegacyAdminPath(path) {
+  if (path === `${ADMIN_ENTRY_PATH}/`) {
+    return '/dashboard'
+  }
+  if (!path.startsWith(`${ADMIN_ENTRY_PATH}/`)) {
+    return ''
+  }
+  const legacyPath = path.slice(ADMIN_ENTRY_PATH.length)
+  return legacyPath || '/dashboard'
+}
 
 router.beforeEach(async(to, from, next) => {
   // start progress bar
@@ -22,6 +34,12 @@ router.beforeEach(async(to, from, next) => {
   const hasToken = getToken()
 
   if (hasToken) {
+    const legacyAdminPath = resolveLegacyAdminPath(to.path)
+    if (legacyAdminPath) {
+      next({ path: legacyAdminPath, query: to.query, hash: to.hash, replace: true })
+      return
+    }
+
     if (to.path === '/auth') {
       // if is logged in, redirect to the home page
       next({ path: '/home' })

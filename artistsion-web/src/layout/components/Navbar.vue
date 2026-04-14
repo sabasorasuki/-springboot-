@@ -53,7 +53,7 @@ export default {
       // 注销时删除所有tagview
       await this.$store.dispatch('tagsView/delAllViews')
       sessionStorage.removeItem('tabViews')
-      this.$router.push(`/home`)
+      this.$router.push(`/auth?redirect=/admin`)
     }
   }
 }

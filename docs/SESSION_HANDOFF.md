@@ -2,7 +2,7 @@
 
 ## 当前所处阶段
 
-阶段 1 ✅ → 阶段 2 ✅ → 阶段 3 ✅ → 阶段 4 ✅ → 阶段 5A ✅ → 阶段 5B ✅ → **阶段 6A ✅ 已完成** → **阶段 6B 兼容层清理已完成并落地**。
+阶段 1 ✅ → 阶段 2 ✅ → 阶段 3 ✅ → 阶段 4 ✅ → 阶段 5A ✅ → 阶段 5B ✅ → **阶段 6A ✅ 已完成** → **阶段 6B 兼容层清理已完成并落地** → **阶段 6C 旧后台入口隔离与存活清点已完成**。
 
 ---
 
@@ -12,6 +12,8 @@
 - **旧前台入口软下线**：管理后台 `Navbar.vue` "前台"链接和注销跳转已从 `/mas` 改为 `/home`
 - **第一轮旧前台兼容层清理已完成**：`/mas`、`/theList`、`/community`、`/detail`、`/details` 路由以及 `views/about/`、`AboutView.vue` 已删除
 - **第二轮旧认证页清理已完成**：旧 `/login`、`/register` 路由与 `views/login/index.vue`、`views/login/register.vue` 已删除，前端仅保留统一认证页 `/auth`
+- **第三轮后台入口隔离已完成**：新增旧后台入口 `/admin`，内部仍复用原有 `/dashboard`、动态菜单、`/user/info`、`x_menu`、`menuList` 链路
+- **后台兼容策略**：`/#/admin` 作为后台统一入口；`/#/admin/<旧后台路径>` 会在前端守卫中映射回原始后台路由，旧 `/dashboard`、`/sys/*`、`/order/*`、`/shangp/*` 等地址继续保留兼容
 
 ---
 
@@ -51,6 +53,15 @@
 - 第二轮：删除 `artistsion-web/src/views/login/index.vue` 与 `artistsion-web/src/views/login/register.vue`
 - 第二轮：`permission.js` 白名单收缩为仅保留 `/auth`
 - 第二轮：旧后台个人资料页和 dashboard 中的注销后跳转统一改为 `/auth`
+
+### 后台入口隔离（6C）
+
+- 新增 `/admin` 静态入口，访问后重定向到旧后台首页 `/dashboard`
+- 新增 `/admin/<legacy-path>` 兼容映射，例如 `/admin/order/ordergl` → `/order/ordergl`
+- `x_menu` 中的 `component`、`path`、`redirect` 数据不做修改，动态菜单继续按旧路径注入
+- `/user/info`、`MenuService.getMenuListByUserId(...)`、前端 `require(@/views/${menu.component}.vue)` 链路保持不变
+- 后台壳内的面包屑首页入口改为 `/admin`
+- 旧后台壳内的注销后默认回到 `/auth?redirect=/admin`
 
 ### 构建验证
 
@@ -118,7 +129,10 @@
 | ~~JWT 密钥硬编码~~ | ~~`"123456"` 写死在代码中~~ | ✅ 6A 外部化（回退值仍为 123456，生产需替换） |
 | ~~旧前台路由残留~~ | ~~`/mas`、`/theList`、`/community`、`/detail`、`/details` 及 `views/about/`~~ | ✅ 已完成第一轮清理 |
 | ~~旧认证页残留~~ | ~~`/login`、`/register` 路由与 `views/login/*`~~ | ✅ 已完成第二轮清理，仅保留 `/auth` |
-| 旧后台独立入口 | 当前旧后台通过动态菜单路由访问，无独立 `/admin` 入口 | 待定 |
+| 后台入口与新前台混杂 | 旧后台此前主要依赖 `/dashboard` 和各类旧根路径直接访问 | ✅ 已完成入口隔离，统一入口改为 `/admin`，旧路径保留兼容 |
+| 菜单驱动后台页面 | `/sys/*`、`/order/*`、`/shangp/*`、`/fenxiang/*` 等仍由 `/user/info` + `menuList` 驱动 | 保留，下一轮仅做清点后按证据删减 |
+| 测试/模板后台残留 | `test/test1-4` 以及若干模板视图不在当前角色菜单链路中 | 下一轮删除候选 |
+| ~~旧后台独立入口~~ | ~~当前旧后台通过动态菜单路由访问，无独立 `/admin` 入口~~ | ✅ 已完成，统一入口为 `/admin` |
 | 生产密钥轮换 | 支付宝/DashScope/JWT 密钥均为测试值 | 部署前处理 |
 | 生产部署 | 构建产物验证、静态资源优化 | 待定 |
 
