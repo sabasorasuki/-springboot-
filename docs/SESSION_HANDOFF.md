@@ -2,7 +2,7 @@
 
 ## 当前所处阶段
 
-阶段 1 ✅ → 阶段 2 ✅ → 阶段 3 ✅ → 阶段 4 ✅ → 阶段 5A ✅ → 阶段 5B ✅ → **阶段 6A ✅ 已完成** → **阶段 6B 兼容层清理已完成并落地** → **阶段 6C 旧后台入口隔离与存活清点已完成**。
+阶段 1 ✅ → 阶段 2 ✅ → 阶段 3 ✅ → 阶段 4 ✅ → 阶段 5A ✅ → 阶段 5B ✅ → **阶段 6A ✅ 已完成** → **阶段 6B 兼容层清理已完成并落地** → **阶段 6C 旧后台入口隔离与存活清点已完成** → **阶段 6D 明确死代码清理已完成** → **阶段 6E 旧后台菜单表与遗留模块审计已完成**。
 
 ---
 
@@ -62,6 +62,23 @@
 - `/user/info`、`MenuService.getMenuListByUserId(...)`、前端 `require(@/views/${menu.component}.vue)` 链路保持不变
 - 后台壳内的面包屑首页入口改为 `/admin`
 - 旧后台壳内的注销后默认回到 `/auth?redirect=/admin`
+
+### 遗留页面清理与菜单审计（6D / 6E）
+
+- 第四轮已删除模板残留：
+  - `views/table/index.vue`
+  - `views/tree/index.vue`
+  - `views/form/index.vue`
+  - `views/nested/**/*`
+- 第五轮已确认真实存活模块：
+  - `views/fenxiang/*`、`views/fenlei/*`、`views/shoucang/*`、`views/liuyan/*`、`views/tongji/*`、`views/rizhi/*`、`views/lunbo/*`、`views/ai/*`
+  - 依据：`x_menu` 有记录、`x_role_menu` 有角色分配、页面文件存在，且由 `/user/info` + `menuList` + 动态 `require()` 链路可正常拉起
+- 第五轮已确认僵尸菜单：
+  - `views/test/test1.vue`、`views/test/test2.vue`、`views/test/test3.vue`、`views/test/test4.vue`
+  - 依据：`x_menu.component` 仍保留 `test/test1-4`，但当前 `x_role_menu` 未给任何角色分配测试模块
+- 第五轮重点审计目录中暂未发现“孤儿页面”
+- 新发现的高优先级风险：
+  - `views/shoucang/shoucang.vue` 内部仍跳转 `name: 'myfatie'`，仓库中未发现对应路由，需单独修复
 
 ### 构建验证
 
@@ -130,9 +147,10 @@
 | ~~旧前台路由残留~~ | ~~`/mas`、`/theList`、`/community`、`/detail`、`/details` 及 `views/about/`~~ | ✅ 已完成第一轮清理 |
 | ~~旧认证页残留~~ | ~~`/login`、`/register` 路由与 `views/login/*`~~ | ✅ 已完成第二轮清理，仅保留 `/auth` |
 | 后台入口与新前台混杂 | 旧后台此前主要依赖 `/dashboard` 和各类旧根路径直接访问 | ✅ 已完成入口隔离，统一入口改为 `/admin`，旧路径保留兼容 |
-| 菜单驱动后台页面 | `/sys/*`、`/order/*`、`/shangp/*`、`/fenxiang/*` 等仍由 `/user/info` + `menuList` 驱动 | 保留，下一轮仅做清点后按证据删减 |
+| 菜单驱动后台页面 | `/sys/*`、`/order/*`、`/shangp/*`、`/fenxiang/*` 等仍由 `/user/info` + `menuList` 驱动 | 保留，`fenxiang/fenlei/shoucang/liuyan/tongji/rizhi/lunbo/ai` 已确认真实存活 |
 | 模板残留清理 | `views/table/*`、`views/tree/*`、`views/form/*`、`views/nested/*` | ✅ 已完成第四轮删除，源码内未见路由/菜单/跳转/import 引用 |
-| 测试模块残留 | `test/test1-4` 仍存在于 `x_menu.component` 记录中，但当前未分配给任何角色 | 待观察，下一轮若清菜单数据后再删 |
+| 测试模块残留 | `test/test1-4` 仍存在于 `x_menu.component` 记录中，但当前未分配给任何角色 | 已审计为僵尸菜单，适合作为下一轮精准删除候选 |
+| 收藏页内部跳转 | `views/shoucang/shoucang.vue` 仍跳转到 `name: 'myfatie'` | 高优先级断链风险，需单独修复 |
 | ~~旧后台独立入口~~ | ~~当前旧后台通过动态菜单路由访问，无独立 `/admin` 入口~~ | ✅ 已完成，统一入口为 `/admin` |
 | 生产密钥轮换 | 支付宝/DashScope/JWT 密钥均为测试值 | 部署前处理 |
 | 生产部署 | 构建产物验证、静态资源优化 | 待定 |

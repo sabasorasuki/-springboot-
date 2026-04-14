@@ -178,6 +178,37 @@ spring.mail.password=${MAIL_PASSWORD:}
 - 构建验证：
   - 前端 `npm run build:prod` ✅ 通过
 
+### 阶段 6E：旧后台菜单表与遗留模块审计 ✅ 已完成
+
+- 审计链路已确认：
+  - `artistsion.sql` 中 `x_menu` / `x_role_menu`
+  - 后端 `/user/info` → `menuService.getMenuListByUserId(...)`
+  - 前端 `permission.js` → `require(@/views/${menu.component}.vue)`
+- 真实存活模块：
+  - `views/fenlei/fenlei.vue`
+  - `views/shoucang/shoucang.vue`
+  - `views/liuyan/liuyan.vue`、`views/liuyan/liuyanyh.vue`
+  - `views/fenxiang/fenxiang.vue`、`views/fenxiang/fenxiangad.vue`
+  - `views/tongji/tongji.vue`
+  - `views/rizhi/rizhi.vue`
+  - `views/lunbo/lunbo.vue`
+  - `views/ai/ai.vue`
+  - 依据：菜单记录存在、已有角色分配、前端页面文件存在、组件路径可被动态菜单正常加载
+- 僵尸菜单：
+  - `views/test/test1.vue`
+  - `views/test/test2.vue`
+  - `views/test/test3.vue`
+  - `views/test/test4.vue`
+  - 依据：`x_menu.component` 仍保留 `test/test1-4`，但当前 `x_role_menu` 未给任何角色分配 `menu_id=4/5/6/7/12`，也未发现静态路由或页面跳转入口
+- 孤儿页面：
+  - 本轮重点审计目录中暂未发现
+  - 说明：当前保留文件要么仍被 `x_menu` 组件路径引用，要么处于真实角色菜单链路中
+- 新识别的高优先级问题：
+  - `views/shoucang/shoucang.vue` 仍有 `this.$router.push({ name: 'myfatie' })`，仓库内未发现对应路由名，属于内部跳转断链风险
+- 第六轮精准删除候选建议：
+  - 优先处理 `test/*` 对应的菜单数据与页面文件
+  - 先删 `x_menu` / `x_role_menu` 残留，再删除 `views/test/test1-4.vue`
+
 ---
 
 ## 阶段 3：新前台导航完善 ✅ 已完成
