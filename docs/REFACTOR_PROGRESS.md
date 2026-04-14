@@ -159,7 +159,24 @@ spring.mail.password=${MAIL_PASSWORD:}
 - 下一轮删除候选：
   - `views/test/test1.vue`、`views/test/test2.vue`、`views/test/test3.vue`、`views/test/test4.vue`
   - 依据：虽在 `x_menu` 中存在 `test/*` 记录，但当前 `x_role_menu` 未给任何角色分配测试模块根菜单 `menu_id=4` 或其子菜单；前端也无静态路由或页面内跳转引用
-  - 另外一批模板残留（如 `views/table/*`、`views/tree/*`、`views/form/*`、`views/nested/*`）当前未见静态路由、菜单分配或页面跳转引用，也可在下一轮纳入候选清单
+  - `views/table/*`、`views/tree/*`、`views/form/*`、`views/nested/*` 已在阶段 6D 删除，不再保留为候选
+
+### 阶段 6D：明确死代码清理 ✅ 已完成
+
+- 已删除前端模板残留：
+  - `views/table/index.vue`
+  - `views/tree/index.vue`
+  - `views/form/index.vue`
+  - `views/nested/**/*`
+- 删除依据：
+  - 未出现在 `router/index.js` 静态路由中
+  - 未出现在 `artistsion.sql` 的 `x_menu.component` 菜单路径中
+  - 未搜到页面内跳转、`import` 或 `require` 引用
+- 暂未删除：
+  - `views/test/test1.vue`、`views/test/test2.vue`、`views/test/test3.vue`、`views/test/test4.vue`
+  - 原因：虽然当前 `x_role_menu` 未分配给任何角色，但 `x_menu.component` 仍保留 `test/test1-4` 组件路径记录，因此本轮不再按“明确无人引用”处理
+- 构建验证：
+  - 前端 `npm run build:prod` ✅ 通过
 
 ---
 
