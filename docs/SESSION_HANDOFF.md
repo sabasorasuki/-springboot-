@@ -2,15 +2,16 @@
 
 ## 当前所处阶段
 
-阶段 1 ✅ → 阶段 2 ✅ → 阶段 3 ✅ → 阶段 4 ✅ → 阶段 5A ✅ → 阶段 5B ✅ → **阶段 6A ✅ 已完成** → 阶段 6B 策略已决定，代码已落地。
+阶段 1 ✅ → 阶段 2 ✅ → 阶段 3 ✅ → 阶段 4 ✅ → 阶段 5A ✅ → 阶段 5B ✅ → **阶段 6A ✅ 已完成** → **阶段 6B 兼容层清理已完成并落地**。
 
 ---
 
 ## 产品策略决策（阶段 6B 确认）
 
-- **主站继续要求登录**：`/home`、`/artists`、`/projects`、`/work/:id`、`/artist/:id`、`/project/:id` 不开放匿名访问，`permission.js` 白名单不变
+- **主站继续要求登录**：`/home`、`/artists`、`/projects`、`/work/:id`、`/artist/:id`、`/project/:id` 不开放匿名访问，`permission.js` 白名单现仅保留 `/auth`
 - **旧前台入口软下线**：管理后台 `Navbar.vue` "前台"链接和注销跳转已从 `/mas` 改为 `/home`
-- **旧路由暂时保留**：`/mas`、`/theList`、`/community`、`/detail`、`/details` 的路由定义、`permission.js` 白名单项、`views/about/` 页面文件均不做删除，后续如需彻底清理再单独做一轮
+- **第一轮旧前台兼容层清理已完成**：`/mas`、`/theList`、`/community`、`/detail`、`/details` 路由以及 `views/about/`、`AboutView.vue` 已删除
+- **第二轮旧认证页清理已完成**：旧 `/login`、`/register` 路由与 `views/login/index.vue`、`views/login/register.vue` 已删除，前端仅保留统一认证页 `/auth`
 
 ---
 
@@ -41,6 +42,15 @@
 ### 旧入口软下线（6B）
 
 - `Navbar.vue`："前台"链接 `/mas` → `/home`，注销跳转 `/mas` → `/home`
+
+### 兼容层清理（6B 收尾）
+
+- 第一轮：删除旧前台兼容路由 `/mas`、`/theList`、`/community`、`/detail`、`/details`
+- 第一轮：删除 `artistsion-web/src/views/AboutView.vue` 与 `artistsion-web/src/views/about/`
+- 第二轮：删除旧认证页路由 `/login`、`/register`
+- 第二轮：删除 `artistsion-web/src/views/login/index.vue` 与 `artistsion-web/src/views/login/register.vue`
+- 第二轮：`permission.js` 白名单收缩为仅保留 `/auth`
+- 第二轮：旧后台个人资料页和 dashboard 中的注销后跳转统一改为 `/auth`
 
 ### 构建验证
 
@@ -106,7 +116,8 @@
 | ~~收藏/购物车按钮~~ | ~~按钮已渲染但未接线~~ | ✅ 6A 对接 shoucangApi/orderApi |
 | ~~OSS URL 硬编码~~ | ~~28 处 `http://localhost:9999`~~ | ✅ 6A 集中化到 oss.js |
 | ~~JWT 密钥硬编码~~ | ~~`"123456"` 写死在代码中~~ | ✅ 6A 外部化（回退值仍为 123456，生产需替换） |
-| 旧前台路由残留 | `/mas`、`/theList`、`/community`、`/detail`、`/details` 及 `views/about/` | 软下线中，后续专门一轮清理 |
+| ~~旧前台路由残留~~ | ~~`/mas`、`/theList`、`/community`、`/detail`、`/details` 及 `views/about/`~~ | ✅ 已完成第一轮清理 |
+| ~~旧认证页残留~~ | ~~`/login`、`/register` 路由与 `views/login/*`~~ | ✅ 已完成第二轮清理，仅保留 `/auth` |
 | 旧后台独立入口 | 当前旧后台通过动态菜单路由访问，无独立 `/admin` 入口 | 待定 |
 | 生产密钥轮换 | 支付宝/DashScope/JWT 密钥均为测试值 | 部署前处理 |
 | 生产部署 | 构建产物验证、静态资源优化 | 待定 |

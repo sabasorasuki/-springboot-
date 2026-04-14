@@ -38,18 +38,8 @@ export const constantRoutes = [
     hidden: true
   },
   {
-    path: '/login',
-    component: () => import('@/views/login/index'),
-    hidden: true
-  },
-  {
     path: '/404',
     component: () => import('@/views/404'),
-    hidden: true
-  },
-  {
-    path: '/register',
-    component: () => import('@/views/login/register'),
     hidden: true
   },
   // ── 新前台站路由（使用 MainLayout） ──

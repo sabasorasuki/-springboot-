@@ -104,12 +104,32 @@ spring.mail.password=${MAIL_PASSWORD:}
 
 ## 旧代码删除前提
 
-以下条件全部满足前，不删除旧登录/注册页和旧接口：
+以下条件已满足，旧认证页兼容层已进入删除阶段：
 
 1. `/auth` 登录/注册功能可用且验证通过
 2. `/auth/login` 返回结构能被 `store/modules/user.js` 正确消费
-3. 旧后台管理端有明确独立入口或确认不再需要
+3. 旧后台管理端继续沿用 `/user/login` + `/user/info` + `menuList` 动态路由链路，不依赖前端 `/login`、`/register` 页面
 4. 数据库迁移已执行且验证
+
+### 阶段 6B 收尾：旧兼容入口清理 ✅ 已完成
+
+- 第一轮旧前台兼容层清理：
+  - 删除 `/mas`、`/theList`、`/community`、`/detail`、`/details` 路由
+  - 删除 `artistsion-web/src/views/AboutView.vue`
+  - 删除 `artistsion-web/src/views/about/`
+- 第二轮旧认证页清理：
+  - 删除前端 `/login`、`/register` 路由
+  - 删除 `artistsion-web/src/views/login/index.vue`
+  - 删除 `artistsion-web/src/views/login/register.vue`
+  - `permission.js` 白名单从 `['/login', '/register', '/auth']` 收缩为仅保留 `['/auth']`
+  - 旧后台个人资料页与 dashboard 的注销后跳转改为 `/auth`
+
+### 当前认证入口状态
+
+- 前端仅保留统一认证页 `/auth`
+- 未登录访问受保护页面统一跳转 `/auth`
+- 已登录访问 `/auth` 统一跳转 `/home`
+- 后端旧接口 `/user/login`、`/user/info`、`/user/register` 继续保留，供旧后台管理链路兼容使用
 
 ---
 

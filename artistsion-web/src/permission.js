@@ -9,7 +9,7 @@ import Layout from '@/layout'
 
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
-const whiteList = ['/login', '/register', '/auth'] // no redirect whitelist
+const whiteList = ['/auth'] // no redirect whitelist
 
 router.beforeEach(async(to, from, next) => {
   // start progress bar
@@ -22,7 +22,7 @@ router.beforeEach(async(to, from, next) => {
   const hasToken = getToken()
 
   if (hasToken) {
-    if (to.path === '/login' || to.path === '/auth') {
+    if (to.path === '/auth') {
       // if is logged in, redirect to the home page
       next({ path: '/home' })
       NProgress.done()
