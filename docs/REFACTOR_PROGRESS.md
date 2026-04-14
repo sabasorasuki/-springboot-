@@ -224,6 +224,22 @@ spring.mail.password=${MAIL_PASSWORD:}
   - 前端 `npm run build:prod` ✅ 通过
   - 仅剩既有 webpack 包体积 warning 与 `Browserslist` 提示
 
+### 阶段 7A：admin 控制台信息架构方案 ✅ 已定义
+
+- 重构方向已明确：
+  - `/#/admin` 不再被视为“旧后台遗留页面集合”，而是未来真正的管理员控制台过渡入口
+  - 后台只保留平台级管理能力；普通用户/画师自助流程逐步迁出 admin
+- 当前模块分类结论：
+  - 保留并重做：admin 首页（`views/dashboard/index.vue`）、`views/sys/*`、`views/fenlei/fenlei.vue`、`views/tongji/tongji.vue`、`views/rizhi/rizhi.vue`、`views/lunbo/lunbo.vue`
+  - 可保留但需改名或改语义：`views/shangp/shangpsh.vue`（作品审核）、`views/order/orderadglqb.vue`（交易订单总览）、`views/fenxiang/fenxiangad.vue`（社区内容管理）、`views/liuyan/liuyan.vue`（反馈工单）
+  - 应移出 admin：`views/userinfo/*`、`views/order/gouwuche.vue`、`views/order/ordergl.vue`、`views/order/orderadgl.vue`、`views/shangp/shangp.vue`、`views/shangp/spsxj.vue`、`views/fenxiang/fenxiang.vue`、`views/shoucang/shoucang.vue`、`views/liuyan/liuyanyh.vue`、`views/ai/ai.vue`
+  - 建议新增：admin 举报与审核中心、画师认证审核、支付对账/售后、资源管理、推荐/AI 配置、系统公告、异常监控
+- admin 菜单结构 v1 方向：
+  - 控制台 / 用户与权限 / 作品与委托 / 内容与社区 / 订单与支付 / 运营配置 / 统计与审计 / 系统设置
+- 第一阶段执行重点：
+  - 先做信息架构收敛与菜单收敛，不直接改 `/user/info`、`MenuService`、`/admin` 兼容入口
+  - 优先减少 admin 侧边栏中的用户自助页，仅保留管理员必需菜单
+
 ---
 
 ## 阶段 3：新前台导航完善 ✅ 已完成

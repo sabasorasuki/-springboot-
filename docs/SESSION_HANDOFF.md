@@ -2,7 +2,7 @@
 
 ## 当前所处阶段
 
-阶段 1 ✅ → 阶段 2 ✅ → 阶段 3 ✅ → 阶段 4 ✅ → 阶段 5A ✅ → 阶段 5B ✅ → **阶段 6A ✅ 已完成** → **阶段 6B 兼容层清理已完成并落地** → **阶段 6C 旧后台入口隔离与存活清点已完成** → **阶段 6D 明确死代码清理已完成** → **阶段 6E 旧后台菜单表与遗留模块审计已完成** → **阶段 6F 断链修复与 test 僵尸菜单清理已完成**。
+阶段 1 ✅ → 阶段 2 ✅ → 阶段 3 ✅ → 阶段 4 ✅ → 阶段 5A ✅ → 阶段 5B ✅ → **阶段 6A ✅ 已完成** → **阶段 6B 兼容层清理已完成并落地** → **阶段 6C 旧后台入口隔离与存活清点已完成** → **阶段 6D 明确死代码清理已完成** → **阶段 6E 旧后台菜单表与遗留模块审计已完成** → **阶段 6F 断链修复与 test 僵尸菜单清理已完成** → **阶段 7A admin 控制台信息架构方案已定义**。
 
 ---
 
@@ -91,6 +91,29 @@
   - 已删除 `views/test/test1.vue`、`views/test/test2.vue`、`views/test/test3.vue`、`views/test/test4.vue`
   - 已复核：`x_role_menu` 原本就没有 test 菜单角色分配，前端源码也没有静态路由或 `import/require` 残留
 
+### admin 控制台重构方向（7A）
+
+- 已确认未来 `/admin` 的目标不是继续承载混合型旧页面，而是收敛为“管理员控制台”
+- 当前确认保留的管理能力：
+  - `views/sys/*` 用户/角色/菜单权限
+  - `views/fenlei/fenlei.vue` 分类管理
+  - `views/shangp/shangpsh.vue` 作品审核
+  - `views/order/orderadglqb.vue` 交易订单总览
+  - `views/fenxiang/fenxiangad.vue` 社区内容管理
+  - `views/liuyan/liuyan.vue` 反馈工单
+  - `views/tongji/tongji.vue`、`views/rizhi/rizhi.vue`、`views/lunbo/lunbo.vue`
+- 当前确认应迁出 admin 的用户自助页：
+  - `views/userinfo/*`
+  - `views/order/gouwuche.vue`、`views/order/ordergl.vue`、`views/order/orderadgl.vue`
+  - `views/shangp/shangp.vue`、`views/shangp/spsxj.vue`
+  - `views/fenxiang/fenxiang.vue`
+  - `views/shoucang/shoucang.vue`
+  - `views/liuyan/liuyanyh.vue`
+  - `views/ai/ai.vue`
+- 下一轮建议优先做：
+  - 阶段 1 信息架构收敛：先明确 admin 菜单只保留管理能力
+  - 阶段 2 菜单与路由收敛：减少侧边栏中的用户自助页，但暂不破坏 `/user/info` / `menuList` / `x_menu` 链路
+
 ### 构建验证
 
 - 后端 `mvnw compile` ✅ BUILD SUCCESS
@@ -159,6 +182,7 @@
 | ~~旧认证页残留~~ | ~~`/login`、`/register` 路由与 `views/login/*`~~ | ✅ 已完成第二轮清理，仅保留 `/auth` |
 | 后台入口与新前台混杂 | 旧后台此前主要依赖 `/dashboard` 和各类旧根路径直接访问 | ✅ 已完成入口隔离，统一入口改为 `/admin`，旧路径保留兼容 |
 | 菜单驱动后台页面 | `/sys/*`、`/order/*`、`/shangp/*`、`/fenxiang/*` 等仍由 `/user/info` + `menuList` 驱动 | 保留，`fenxiang/fenlei/shoucang/liuyan/tongji/rizhi/lunbo/ai` 已确认真实存活 |
+| admin 信息架构 | 旧后台仍混有管理员页面与用户自助页 | ✅ 7A 已完成分类；下一轮开始收敛 admin 菜单 |
 | 模板残留清理 | `views/table/*`、`views/tree/*`、`views/form/*`、`views/nested/*` | ✅ 已完成第四轮删除，源码内未见路由/菜单/跳转/import 引用 |
 | ~~测试模块残留~~ | ~~`test/test1-4` 仍存在于 `x_menu.component` 记录中，但当前未分配给任何角色~~ | ✅ 6F 已删除 SQL 菜单残留与页面文件 |
 | ~~收藏页内部跳转~~ | ~~`views/shoucang/shoucang.vue` 仍跳转到 `name: 'myfatie'`~~ | ✅ 6F 已修复为 `/work/:id` |
