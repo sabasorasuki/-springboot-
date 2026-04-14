@@ -51,35 +51,6 @@ export const constantRoutes = [
     path: '/register',
     component: () => import('@/views/login/register'),
     hidden: true
-  }, {
-    path: '/theList',
-    name: 'theList',
-    component: () => import('@/views/about/the-list'),
-    hidden: true
-  },
-  {
-    path: '/community',
-    name: 'community',
-    component: () => import('@/views/about/the-community'),
-    hidden: true
-  },
-  {
-    path: '/detail',
-    name: 'detail',
-    component: () => import('@/views/about/detail'),
-    hidden: true
-  },
-  {
-    path: '/details',
-    name: 'details',
-    component: () => import('@/views/about/details'),
-    hidden: true
-  },
-  {
-    path: '/mas',
-    name: 'about',
-    component: () => import('@/views/AboutView'),
-    hidden: true
   },
   // ── 新前台站路由（使用 MainLayout） ──
   {
