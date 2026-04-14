@@ -1,41 +1,48 @@
 <template>
-  <div>
-    <!-- 搜索栏 -->
-    <el-card id="search">
+  <div class="admin-page">
+    <el-card class="page-hero" shadow="never">
+      <p class="page-kicker">Admin Commerce</p>
+      <h1>交易订单总览</h1>
+      <p>当前列表展示全站交易订单，已排除购物车记录。管理员可统一查看交易状态、买家信息与沟通入口。</p>
+    </el-card>
+
+    <el-card id="search" class="page-search">
       <el-row>
         <el-col :span="20">
-          <el-input v-model="searchModel.name" placeholder="画稿名字" clearable />
+          <el-input v-model="searchModel.name" placeholder="按作品标题搜索订单" clearable />
           <el-button type="primary" round icon="el-icon-search" @click="getList">查询</el-button>
         </el-col>
-        <!-- <el-col :span="4" align="right">
-                    <el-button @click="openEditUI(null)" type="primary" circle icon="el-icon-plus"></el-button>
-                </el-col> -->
       </el-row>
     </el-card>
-    <!-- 结果列表 -->
-    <el-card>
-      <el-table :data="List" stripe style="width: 100%">
 
-        <el-table-column prop="id" label="ID" width="180" />
-        <el-table-column prop="name" label="画稿名字" width="180" />
-        <el-table-column prop="price" label="价格" width="180" />
-        <el-table-column prop="username" label="姓名" width="180" />
-        <el-table-column prop="phone" label="手机号" width="180" />
-        <el-table-column prop="address" label="邮箱地址" width="180" />
-        <el-table-column prop="status" label="状态" width="180" />
-        <el-table-column prop="pingjia" label="评价" width="180" />
-
-        <el-table-column label="操作" width="280">
+    <el-card class="page-table">
+      <el-table :data="List" stripe style="width: 100%" empty-text="暂无交易订单">
+        <el-table-column prop="id" label="订单ID" width="100" />
+        <el-table-column prop="name" label="作品标题" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="price" label="成交金额" width="100" />
+        <el-table-column prop="username" label="下单用户" width="110" />
+        <el-table-column prop="phone" label="联系电话" width="120" />
+        <el-table-column prop="address" label="联系邮箱" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="xddate" label="下单日期" width="120" />
+        <el-table-column label="交易状态" width="120">
           <template slot-scope="scope">
-            <!-- <el-button type="primary"  v-if="scope.row.status =='已付款'" @click="openEditUI(scope.row.id,'已发货')" >点击发货</el-button> -->
-            <el-button class="btn btn-outline-secondary" @click="enterChat(scope.row)">进入聊天</el-button>
-            <el-button type="danger" icon="el-icon-delete" @click="deleteUser(scope.row)">删除订单</el-button>
+            <el-tag size="mini" :type="statusType(scope.row.status)">{{ scope.row.status }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="评价结果" width="100">
+          <template slot-scope="scope">
+            <span>{{ scope.row.pingjia || '--' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="220">
+          <template slot-scope="scope">
+            <el-button size="mini" @click="enterChat(scope.row)">查看沟通记录</el-button>
+            <el-button type="danger" size="mini" @click="deleteOrder(scope.row)">删除订单记录</el-button>
           </template>
         </el-table-column>
       </el-table>
     </el-card>
 
-    <!-- 分页组件 -->
     <el-pagination
       :current-page="searchModel.pageNo"
       :page-sizes="[5, 10, 20, 50]"
@@ -45,147 +52,64 @@
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
     />
-
-    <!-- 用户信息编辑对话框 -->
-    <el-dialog :title="title" :visible.sync="dialogFormVisible" @close="clearForm">
-      <el-form ref="FormRef" :model="Form" :rules="rules">
-        <el-form-item label="画稿名字" :label-width="formLabelWidth">
-          <el-input v-model="Form.name" readonly autocomplete="off" />
-        </el-form-item>
-        <el-form-item label="价格" :label-width="formLabelWidth">
-          <el-input v-model="Form.price" readonly autocomplete="off" />
-        </el-form-item>
-        <el-form-item label="姓名" :label-width="formLabelWidth">
-          <el-input v-model="Form.username" autocomplete="off" />
-        </el-form-item>
-        <el-form-item label="手机号" :label-width="formLabelWidth">
-          <el-input v-model="Form.phone" autocomplete="off" />
-        </el-form-item>
-        <el-form-item label="邮箱地址" :label-width="formLabelWidth">
-          <el-input v-model="Form.address" autocomplete="off" />
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">取 消</el-button>
-        <el-button type="primary" @click="saveOrUpdate">确定</el-button>
-      </div>
-    </el-dialog>
   </div>
 </template>
+
 <script>
 import api from '@/api/order.js'
-import { ossDownloadUrl } from '@/utils/oss'
-import { mapGetters } from 'vuex'
-import userApi from '@/api/userManage'
 
 export default {
+  name: 'AdminOrderOverview',
   data() {
     return {
-      title: '',
       total: 0,
-      dialogFormVisible: false,
       searchModel: {
         pageNo: 1,
-        pageSize: 5
+        pageSize: 10,
+        name: '',
+        status: '购物车1'
       },
-      List: [],
-      Form: {
-      },
-      forms: {},
-      allForm: [{}],
-      formLabelWidth: '130px',
-      rules: {
-        title: [
-          { required: true, message: '请输入分类名字', trigger: 'blur' },
-          { min: 3, max: 50, message: '长度在 3 到 50 个字符', trigger: 'blur' }
-        ]
-      }
+      List: []
     }
   },
   created() {
     this.getList()
-    // this.getInfo(this.token);
   },
   methods: {
-    enterChat(job) {
-      // 处理进入聊天的逻辑，你可以跳转到聊天界面
-      this.$router.push({ name: 'liaotian', params: { id: job.id }})
-
-      console.log('进入聊天', job)
+    enterChat(order) {
+      this.$router.push({ name: 'liaotian', params: { id: order.id }})
     },
-    handleAvatarSuccess(res, file) {
-      console.log(res, 'oss1')
-      this.Form.photo = ossDownloadUrl(res.data)
-      console.log(this.Form.avatar, 'oss12312')
-
-      // 强制重新渲染
-      this.$forceUpdate()
-    },
-    deleteUser(content) {
-      this.$confirm(`您确认删除`, '提示', {
+    deleteOrder(order) {
+      this.$confirm(`确认删除订单 #${order.id} 吗？该操作会移除当前订单记录。`, '删除确认', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        api.deleteById(content.id).then(response => {
+        api.deleteById(order.id).then(response => {
           this.$message({
             type: 'success',
-            message: response.message
+            message: response.message || '订单记录已删除'
           })
           this.getList()
         })
       }).catch(() => {
         this.$message({
           type: 'info',
-          message: '已取消删除'
+          message: '已取消删除订单记录'
         })
       })
     },
-    saveOrUpdate() {
-      // 触发表单验证
-      this.$refs.FormRef.validate((valid) => {
-        if (valid) {
-          // this.Form.status ="已付款"
-          console.log(this.Form.userids, 'this.fthis.Form.useridsorm')
-          // 再提交请求给后台
-          api.saveOrUpdate(this.Form).then(response => {
-            // 成功提示
-            this.$message({
-              message: '发货成功',
-              type: 'success'
-            })
-            // 关闭对话框
-            this.dialogFormVisible = false
-            // 刷新表格
-            this.getList()
-          })
-        } else {
-          console.log('error submit!!')
-          return false
-        }
-      })
-    },
-    clearForm() {
-      this.Form = {
-
+    statusType(status) {
+      if (status === '已完成' || status === '已评价') {
+        return 'success'
       }
-      this.$refs.FormRef.clearValidate()
-    },
-    openEditUI(id, status) {
-      // 再提交请求给后台
-      this.Form.id = id
-      this.Form.status = status
-      api.saveOrUpdate(this.Form).then(response => {
-        // 成功提示
-        this.$message({
-          message: response.message,
-          type: 'success'
-        })
-        // 关闭对话框
-        this.dialogFormVisible = false
-        // 刷新表格
-        this.getList()
-      })
+      if (status === '已付款' || status === '已发货') {
+        return 'warning'
+      }
+      if (status === '购物车') {
+        return 'info'
+      }
+      return ''
     },
     handleSizeChange(pageSize) {
       this.searchModel.pageSize = pageSize
@@ -196,72 +120,51 @@ export default {
       this.getList()
     },
     getList() {
-      this.searchModel.status = '购物车1'
       api.getList(this.searchModel).then(response => {
         this.List = response.data.rows
         this.total = response.data.total
       })
-    },
-    getGuanliyuan() {
-      api.getGuanliyuan().then(response => {
-        this.allForm = response.data
-      })
-    },
-    getInfo(token) {
-      userApi.getInfo(token).then(response => {
-        this.forms = response.data.userList
-        this.Form.userids = this.forms.id
-        this.searchModel.shangjiaids = this.forms.id
-        console.log(this.forms, 'this.form')
-        console.log(this.Form.userids, 'this.fthis.Form.useridsorm')
-        this.getList()
-        console.log(response, 'response')
-      })
     }
-  },
-  computed: {
-    ...mapGetters([
-      'token'
-    ])
   }
 }
 </script>
 
-<style>
-#search .el-input {
-    width: 200px;
-    margin-right: 10px;
+<style scoped>
+.admin-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.el-dialog .el-input {
-    width: 85%;
+.page-hero {
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #1f2937 0%, #334155 55%, #475569 100%);
+  color: #fff;
 }
 
-.avatar-uploader .el-upload {
-  border: 1px dashed #d9d9d9 !important;
-  border-radius: 6px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
+.page-kicker {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
 }
 
-.avatar-uploader .el-upload:hover {
-  border-color: #409EFF;
-}
-
-.avatar-uploader .avatar-uploader-icon {
+.page-hero h1 {
+  margin: 0;
   font-size: 28px;
-  color: #8c939d;
-  width: 178px;
-  height: 78px;
-  line-height: 78px;
-  text-align: center;
 }
 
-.avatar-uploader img {
-  width: 178px;
-  height: 178px;
-  display: block;
+.page-hero p {
+  margin: 12px 0 0;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.82);
 }
 
+#search .el-input {
+  width: 260px;
+  margin-right: 10px;
+}
 </style>

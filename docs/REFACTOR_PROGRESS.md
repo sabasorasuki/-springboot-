@@ -240,6 +240,42 @@ spring.mail.password=${MAIL_PASSWORD:}
   - 先做信息架构收敛与菜单收敛，不直接改 `/user/info`、`MenuService`、`/admin` 兼容入口
   - 优先减少 admin 侧边栏中的用户自助页，仅保留管理员必需菜单
 
+### 阶段 7B：admin 菜单收敛与 P0 页面改造 ✅ 已完成
+
+- admin 菜单收敛已在前端落地：
+  - `permission.js` 现在会在 `roles` 包含 `admin` 且当前激活角色仍是 `admin` 时，对 `/user/info -> menuList` 做运行时收敛
+  - 通过 `ADMIN_MENU_COMPONENT_BLACKLIST` 隐藏 admin 视角下不应继续作为主菜单暴露的自助页：`order/gouwuche`、`order/ordergl`、`order/orderadgl`、`shangp/shangp`、`shangp/spsxj`、`fenxiang/fenxiang`、`shoucang/shoucang`、`liuyan/liuyanyh`、`ai/ai`
+  - 通过 `ADMIN_MENU_OVERRIDES` 将后台主菜单改成更接近控制台语义的标题和跳转：
+    - `/sys` → 用户与权限
+    - `/shangp` → 作品与委托（默认进入 `shangpsh`）
+    - `/order` → 订单与支付（默认进入 `orderadglqb`）
+    - `/fenxiang` → 内容与社区（默认进入 `fenxiangad`）
+    - `/liuyan` → 反馈与工单
+    - `/fenlei` → 分类与配置
+    - `/tongji` → 统计与审计
+    - `/rizhi` → 日志与审计
+    - `/lunbo` → 轮播与运营
+- `views/dashboard/index.vue` 已从旧个人资料页改造为管理看板：
+  - 聚合用户总数、作品总数、订单总数、待审核作品数、待处理反馈数、分类数、轮播数
+  - 展示待审核作品、最近订单、最近操作日志三个面板
+  - 数据全部来自现有列表接口聚合，不改后端 `/user/info`、`MenuService` 或菜单表结构
+  - 由于后端暂缺“按状态统计反馈工单”的专用接口，待处理反馈数当前按已拉取反馈列表估算，后续应补聚合/过滤接口
+- `views/userinfo/index.vue` 已降级为隐藏的“管理员账号设置”页：
+  - 不再承担 dashboard 首页职责
+  - 当前通过后台 `Navbar` 右上角头像菜单进入
+- 四个核心页面已完成管理员语义改造：
+  - `views/shangp/shangpsh.vue` → 作品审核
+  - `views/order/orderadglqb.vue` → 交易订单总览
+  - `views/fenxiang/fenxiangad.vue` → 社区内容管理
+  - `views/liuyan/liuyan.vue` → 反馈工单
+  - 本轮重点改了标题、说明文案、按钮文案、表头文案与交互提示，原有列表/审核/删除/工单处理主逻辑保留
+- 顺手修复：
+  - `api/order.js` 的订单列表查询参数由错误的 `title` 改回后端真实接收的 `name`，恢复所有订单页按作品标题搜索能力
+- 构建验证：
+  - 前端 `npm run build:prod` ✅ 通过
+  - 无新增编译错误
+  - 仍仅保留既有 webpack 包体积 warning 与 `Browserslist` 提示
+
 ---
 
 ## 阶段 3：新前台导航完善 ✅ 已完成

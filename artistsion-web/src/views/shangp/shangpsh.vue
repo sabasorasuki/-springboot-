@@ -1,45 +1,68 @@
 <template>
-  <div>
-    <!-- 搜索栏 -->
-    <el-card id="search">
+  <div class="admin-page">
+    <el-card class="page-hero" shadow="never">
+      <div class="page-hero__content">
+        <div>
+          <p class="page-kicker">Admin Review</p>
+          <h1>作品审核</h1>
+          <p>当前页用于处理全站稿件审核。未审核作品可直接执行通过或驳回，历史审核结果也会继续保留在列表中。</p>
+        </div>
+      </div>
+    </el-card>
+
+    <el-card id="search" class="page-search">
       <el-row>
         <el-col :span="20">
-          <el-input v-model="searchModel.name" placeholder="画稿名字" clearable />
+          <el-input v-model="searchModel.name" placeholder="按作品标题搜索" clearable />
           <el-button type="primary" round icon="el-icon-search" @click="getList">查询</el-button>
-        </el-col>
-        <el-col :span="4" align="right">
-          <!-- <el-button @click="goto(null)" type="primary" circle icon="el-icon-plus"></el-button> -->
         </el-col>
       </el-row>
     </el-card>
-    <!-- 结果列表 -->
-    <el-card>
-      <el-table :data="List" stripe style="width: 100%">
 
-        <el-table-column prop="id" label="ID" width="180" />
-        <el-table-column prop="name" label="画稿名字" width="180" />
-        <el-table-column label="封面" prop="photo" width="180">
+    <el-card class="page-table">
+      <el-table :data="List" stripe style="width: 100%" empty-text="暂无作品审核记录">
+        <el-table-column prop="id" label="ID" width="90" />
+        <el-table-column prop="name" label="作品标题" min-width="160" show-overflow-tooltip />
+        <el-table-column label="封面" prop="photo" width="120">
           <template slot-scope="scope">
-            <el-popover placement="top-start" title="" trigger="hover">
+            <el-popover placement="top-start" trigger="hover">
               <img :src="scope.row.photo" alt="" style="width: 150px;height: 150px">
               <img slot="reference" :src="scope.row.photo" style="width: 50px;height: 50px">
             </el-popover>
           </template>
         </el-table-column>
-        <el-table-column prop="price" label="价格" width="180" />
-        <el-table-column prop="fenlei" label="分类" width="180" />
-        <el-table-column prop="type" label="状态" width="180" />
-        <el-table-column prop="status" label="审核结果" width="180" />
-        <el-table-column label="操作" width="280">
+        <el-table-column prop="price" label="报价" width="100" />
+        <el-table-column prop="fenlei" label="分类" width="120" />
+        <el-table-column prop="type" label="上架状态" width="120" />
+        <el-table-column label="审核状态" width="120">
           <template slot-scope="scope">
-            <el-button v-if="scope.row.status==='未审核'" type="primary" @click="openEditUI(scope.row.id,'审核成功')">审核成功</el-button>
-            <el-button v-if="scope.row.status==='未审核'" type="danger" @click="openEditUI(scope.row.id,'审核失败')">审核失败</el-button>
+            <el-tag size="mini" :type="auditStatusType(scope.row.status)">{{ scope.row.status }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="220">
+          <template slot-scope="scope">
+            <el-button
+              v-if="scope.row.status === '未审核'"
+              type="primary"
+              size="mini"
+              @click="updateAuditStatus(scope.row, '审核成功', '通过审核')"
+            >
+              通过审核
+            </el-button>
+            <el-button
+              v-if="scope.row.status === '未审核'"
+              type="danger"
+              size="mini"
+              @click="updateAuditStatus(scope.row, '审核失败', '驳回作品')"
+            >
+              驳回作品
+            </el-button>
+            <span v-else class="table-muted">已完成审核</span>
           </template>
         </el-table-column>
       </el-table>
     </el-card>
 
-    <!-- 分页组件 -->
     <el-pagination
       :current-page="searchModel.pageNo"
       :page-sizes="[5, 10, 20, 50]"
@@ -49,115 +72,59 @@
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
     />
-
   </div>
 </template>
+
 <script>
 import api from '@/api/huagao.js'
-import { ossDownloadUrl } from '@/utils/oss'
-import { mapGetters } from 'vuex'
-import userApi from '@/api/userManage'
 
 export default {
+  name: 'AdminWorkReview',
   data() {
     return {
-      title: '',
       total: 0,
-      dialogFormVisible: false,
       searchModel: {
         pageNo: 1,
-        pageSize: 5
+        pageSize: 10
       },
-      List: [],
-      Form: {
-      },
-      allForm: [{}],
-      formLabelWidth: '130px',
-      rules: {
-        title: [
-          { required: true, message: '请输入促销名字', trigger: 'blur' },
-          { min: 3, max: 50, message: '长度在 3 到 50 个字符', trigger: 'blur' }
-        ]
-      }
+      List: []
     }
   },
   created() {
     this.getList()
-    // this.getInfo(this.token);
   },
   methods: {
-    goto() {
-      this.$router.push({ name: 'fabusp' })
-    },
-    handleAvatarSuccess(res, file) {
-      console.log(res, 'oss1')
-      this.Form.photo = ossDownloadUrl(res.data)
-      console.log(this.Form.avatar, 'oss12312')
-
-      // 强制重新渲染
-      this.$forceUpdate()
-    },
-    deleteUser(content) {
-      this.$confirm(`您确认删除 ${content.title} ?`, '提示', {
+    updateAuditStatus(row, status, actionLabel) {
+      this.$confirm(`确认将作品《${row.name}》设为“${actionLabel}”吗？`, '审核确认', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        api.deleteById(content.id).then(response => {
+        api.saveOrUpdate({ id: row.id, status: status }).then(response => {
           this.$message({
-            type: 'success',
-            message: response.message
+            message: response.message || `${actionLabel}成功`,
+            type: 'success'
           })
           this.getList()
         })
       }).catch(() => {
         this.$message({
           type: 'info',
-          message: '已取消删除'
+          message: '已取消本次审核操作'
         })
       })
     },
-    saveOrUpdate() {
-      // 触发表单验证
-      this.$refs.FormRef.validate((valid) => {
-        if (valid) {
-          // 再提交请求给后台
-          api.saveOrUpdate(this.Form).then(response => {
-            // 成功提示
-            this.$message({
-              message: response.message,
-              type: 'success'
-            })
-            // 关闭对话框
-            this.dialogFormVisible = false
-            // 刷新表格
-            this.getList()
-          })
-        } else {
-          console.log('error submit!!')
-          return false
-        }
-      })
-    },
-    clearForm() {
-      this.Form = {
-
+    auditStatusType(status) {
+      if (status === '审核成功') {
+        return 'success'
       }
-      this.$refs.FormRef.clearValidate()
-    },
-    openEditUI(id, status) {
-      // 再提交请求给后台
-      this.Form.id = id
-      this.Form.status = status
-      api.saveOrUpdate(this.Form).then(response => {
-        // 成功提示
-        this.$message({
-          message: response.message,
-          type: 'success'
-        })
-        // 刷新表格
-        this.getList()
-      })
+      if (status === '审核失败') {
+        return 'danger'
+      }
+      if (status === '未审核') {
+        return 'warning'
+      }
+      return 'info'
     },
     handleSizeChange(pageSize) {
       this.searchModel.pageSize = pageSize
@@ -172,66 +139,52 @@ export default {
         this.List = response.data.rows
         this.total = response.data.total
       })
-    },
-    getGuanliyuan() {
-      api.getGuanliyuan().then(response => {
-        this.allForm = response.data
-      })
-    }, getInfo(token) {
-      userApi.getInfo(token).then(response => {
-        this.forms = response.data.userList
-        this.Form.userids = this.forms.id
-        this.searchModel.shangjiaids = this.forms.id
-        console.log(this.forms, 'this.form')
-        console.log(this.Form.userids, 'this.fthis.Form.useridsorm')
-        this.getList()
-        console.log(response, 'response')
-      })
     }
-  },
-  computed: {
-    ...mapGetters([
-      'token'
-    ])
   }
 }
 </script>
 
-<style>
-#search .el-input {
-    width: 200px;
-    margin-right: 10px;
+<style scoped>
+.admin-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.el-dialog .el-input {
-    width: 85%;
+.page-hero {
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #13293d 0%, #1f4565 60%, #295e85 100%);
+  color: #fff;
 }
 
-.avatar-uploader .el-upload {
-  border: 1px dashed #d9d9d9 !important;
-  border-radius: 6px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
+.page-kicker {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
 }
 
-.avatar-uploader .el-upload:hover {
-  border-color: #409EFF;
-}
-
-.avatar-uploader .avatar-uploader-icon {
+.page-hero h1 {
+  margin: 0;
   font-size: 28px;
-  color: #8c939d;
-  width: 178px;
-  height: 78px;
-  line-height: 78px;
-  text-align: center;
 }
 
-.avatar-uploader img {
-  width: 178px;
-  height: 178px;
-  display: block;
+.page-hero p {
+  margin: 12px 0 0;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.82);
 }
 
+#search .el-input {
+  width: 260px;
+  margin-right: 10px;
+}
+
+.table-muted {
+  color: #909399;
+  font-size: 13px;
+}
 </style>

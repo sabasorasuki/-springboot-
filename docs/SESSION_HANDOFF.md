@@ -2,7 +2,7 @@
 
 ## 当前所处阶段
 
-阶段 1 ✅ → 阶段 2 ✅ → 阶段 3 ✅ → 阶段 4 ✅ → 阶段 5A ✅ → 阶段 5B ✅ → **阶段 6A ✅ 已完成** → **阶段 6B 兼容层清理已完成并落地** → **阶段 6C 旧后台入口隔离与存活清点已完成** → **阶段 6D 明确死代码清理已完成** → **阶段 6E 旧后台菜单表与遗留模块审计已完成** → **阶段 6F 断链修复与 test 僵尸菜单清理已完成** → **阶段 7A admin 控制台信息架构方案已定义**。
+阶段 1 ✅ → 阶段 2 ✅ → 阶段 3 ✅ → 阶段 4 ✅ → 阶段 5A ✅ → 阶段 5B ✅ → **阶段 6A ✅ 已完成** → **阶段 6B 兼容层清理已完成并落地** → **阶段 6C 旧后台入口隔离与存活清点已完成** → **阶段 6D 明确死代码清理已完成** → **阶段 6E 旧后台菜单表与遗留模块审计已完成** → **阶段 6F 断链修复与 test 僵尸菜单清理已完成** → **阶段 7A admin 控制台信息架构方案已定义** → **阶段 7B admin 菜单收敛与 P0 页面改造已完成**。
 
 ---
 
@@ -113,6 +113,42 @@
 - 下一轮建议优先做：
   - 阶段 1 信息架构收敛：先明确 admin 菜单只保留管理能力
   - 阶段 2 菜单与路由收敛：减少侧边栏中的用户自助页，但暂不破坏 `/user/info` / `menuList` / `x_menu` 链路
+
+### admin 控制台第一阶段代码改造（7B）
+
+- admin 菜单收敛已真正接入运行时：
+  - `permission.js` 在 admin 角色下会先 clone `/user/info` 返回的 `menuList`，再做前端侧过滤与标题/redirect 覆写
+  - 收敛目标是“先让 admin 看起来像 admin”，不改 `/user/info` 返回结构，不改 `MenuService`，不改 `/admin` 兼容入口
+- 本轮已从 admin 主菜单收敛掉的自助页：
+  - `order/gouwuche`
+  - `order/ordergl`
+  - `order/orderadgl`
+  - `shangp/shangp`
+  - `shangp/spsxj`
+  - `fenxiang/fenxiang`
+  - `shoucang/shoucang`
+  - `liuyan/liuyanyh`
+  - `ai/ai`
+- 本轮兼容保留但不再承担首页/主菜单职责的页面：
+  - `views/userinfo/index.vue`：改为隐藏的“管理员账号设置”页，从 `Navbar` 头像菜单进入
+  - `views/userinfo/fabusp.vue`、`views/userinfo/myfenxiang.vue`、`views/userinfo/liaotian.vue`：仍为隐藏兼容路由，保留给旧流转使用
+- dashboard 已改造成真正的管理看板：
+  - 聚合用户、作品、订单、反馈、分类、轮播、日志数据
+  - 当前展示 7 张统计卡片 + 待审核作品 / 最近订单 / 最近操作日志三块概览面板
+  - 数据全部来自现有列表接口
+  - 待处理反馈数因后端缺少专用聚合接口，当前按已拉取反馈列表估算
+- 四个核心页面已完成管理员语义改造：
+  - `shangpsh.vue`：作品审核
+  - `orderadglqb.vue`：交易订单总览
+  - `fenxiangad.vue`：社区内容管理
+  - `liuyan.vue`：反馈工单
+  - 本轮主要修改标题、说明、按钮、表头、提示文案，保留原有主逻辑
+- 顺手修复：
+  - `api/order.js` 恢复 `/sysOrder/list` 的真实搜索参数 `name`，订单页搜索重新可用
+- 构建验证：
+  - 前端 `npm run build:prod` ✅ 通过
+  - 没有新增编译错误
+  - 仍仅有既有 webpack 包体积 warning 与 `Browserslist` 提示
 
 ### 构建验证
 

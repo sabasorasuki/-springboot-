@@ -146,16 +146,18 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/home',
     children: [{
-      // 兼容保留：当前仍是历史个人资料页，后续 admin 控制台重构会改造成真正的管理看板。
+      // admin 过渡版首页：当前已改造成管理看板，继续作为 /admin 的默认落点。
       path: 'dashboard',
       name: 'Dashboard',
       component: () => import('@/views/dashboard/index'),
-      meta: { title: '首页', icon: 'dashboard', affix: true, noCache: false }
+      meta: { title: '控制台', icon: 'dashboard', affix: true, noCache: false }
     },
     // 兼容保留：以下隐藏路由本质上是旧用户自助页，后续会迁出 admin 侧信息架构。
     {
       path: '/userinfo',
+      name: 'AdminProfile',
       component: () => import('@/views/userinfo/index'),
+      meta: { title: '管理员账号设置' },
       hidden: true
     },
     {

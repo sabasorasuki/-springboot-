@@ -1,43 +1,44 @@
 <template>
-  <div>
-    <!-- 搜索栏 -->
-    <el-card id="search">
+  <div class="admin-page">
+    <el-card class="page-hero" shadow="never">
+      <p class="page-kicker">Admin Community</p>
+      <h1>社区内容管理</h1>
+      <p>当前页统一处理前台帖子内容，管理员可按标题检索、查看发布信息，并对不合规内容执行删除操作。</p>
+    </el-card>
+
+    <el-card id="search" class="page-search">
       <el-row>
         <el-col :span="20">
-          <el-input v-model="searchModel.title" placeholder="标题" clearable />
+          <el-input v-model="searchModel.title" placeholder="按内容标题搜索" clearable />
           <el-button type="primary" round icon="el-icon-search" @click="getList">查询</el-button>
         </el-col>
-        <!-- <el-col :span="4" align="right">
-                    <el-button @click="goto(null)" type="primary" circle icon="el-icon-plus"></el-button>
-                </el-col> -->
       </el-row>
     </el-card>
-    <!-- 结果列表 -->
-    <el-card>
-      <el-table :data="List" stripe style="width: 100%">
-        <el-table-column prop="id" label="ID" width="180" />
-        <el-table-column prop="title" label="标题" width="180" />
-        <el-table-column label="封面" prop="photo" width="180">
+
+    <el-card class="page-table">
+      <el-table :data="List" stripe style="width: 100%" empty-text="暂无社区内容">
+        <el-table-column prop="id" label="内容ID" width="100" />
+        <el-table-column prop="title" label="内容标题" min-width="180" show-overflow-tooltip />
+        <el-table-column label="封面" prop="photo" width="120">
           <template slot-scope="scope">
-            <el-popover placement="top-start" title="" trigger="hover">
+            <el-popover placement="top-start" trigger="hover">
               <img :src="scope.row.photo" alt="" style="width: 150px;height: 150px">
               <img slot="reference" :src="scope.row.photo" style="width: 50px;height: 50px">
             </el-popover>
           </template>
         </el-table-column>
-        <el-table-column prop="fbdate" label="发布日期" width="180" />
-        <el-table-column prop="username" label="用户名" width="180" />
-        <el-table-column label="操作" width="180">
+        <el-table-column prop="fenlei" label="所属分类" width="110" />
+        <el-table-column prop="fbdate" label="发布日期" width="120" />
+        <el-table-column prop="username" label="发布用户" width="110" />
+        <el-table-column prop="dznum" label="互动热度" width="100" />
+        <el-table-column label="操作" width="160">
           <template slot-scope="scope">
-            <!-- <el-button type="primary" icon="el-icon-edit" @click="openEditUI(scope.row.id)" circle
-                            size="mini"></el-button> -->
-            <el-button type="danger" icon="el-icon-delete" @click="deleteUser(scope.row)">删除攻略</el-button>
+            <el-button type="danger" size="mini" @click="deleteContent(scope.row)">删除内容</el-button>
           </template>
         </el-table-column>
       </el-table>
     </el-card>
 
-    <!-- 分页组件 -->
     <el-pagination
       :current-page="searchModel.pageNo"
       :page-sizes="[5, 10, 20, 50]"
@@ -47,56 +48,31 @@
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
     />
-
   </div>
 </template>
+
 <script>
 import api from '@/api/fenxiang.js'
-import { ossDownloadUrl } from '@/utils/oss'
-import { mapGetters } from 'vuex'
-import userApi from '@/api/userManage'
 
 export default {
+  name: 'AdminCommunityContent',
   data() {
     return {
-      title: '',
       total: 0,
-      dialogFormVisible: false,
       searchModel: {
         pageNo: 1,
-        pageSize: 5
+        pageSize: 10,
+        title: ''
       },
-      List: [],
-      Form: {
-      },
-      allForm: [{}],
-      formLabelWidth: '130px',
-      rules: {
-        title: [
-          { required: true, message: '请输入促销名字', trigger: 'blur' },
-          { min: 3, max: 50, message: '长度在 3 到 50 个字符', trigger: 'blur' }
-        ]
-      }
+      List: []
     }
   },
   created() {
     this.getList()
-    // this.getInfo(this.token);
   },
   methods: {
-    goto() {
-      this.$router.push({ name: 'myfenxiang' })
-    },
-    handleAvatarSuccess(res, file) {
-      console.log(res, 'oss1')
-      this.Form.photo = ossDownloadUrl(res.data)
-      console.log(this.Form.avatar, 'oss12312')
-
-      // 强制重新渲染
-      this.$forceUpdate()
-    },
-    deleteUser(content) {
-      this.$confirm(`您确认删除 ${content.title} ?`, '提示', {
+    deleteContent(content) {
+      this.$confirm(`确认删除社区内容《${content.title}》吗？`, '删除确认', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
@@ -104,57 +80,16 @@ export default {
         api.deleteById(content.id).then(response => {
           this.$message({
             type: 'success',
-            message: response.message
+            message: response.message || '社区内容已删除'
           })
           this.getList()
         })
       }).catch(() => {
         this.$message({
           type: 'info',
-          message: '已取消删除'
+          message: '已取消删除内容'
         })
       })
-    },
-    saveOrUpdate() {
-      // 触发表单验证
-      this.$refs.FormRef.validate((valid) => {
-        if (valid) {
-          // 再提交请求给后台
-          api.saveOrUpdate(this.Form).then(response => {
-            // 成功提示
-            this.$message({
-              message: response.message,
-              type: 'success'
-            })
-            // 关闭对话框
-            this.dialogFormVisible = false
-            // 刷新表格
-            this.getList()
-          })
-        } else {
-          console.log('error submit!!')
-          return false
-        }
-      })
-    },
-    clearForm() {
-      this.Form = {
-
-      }
-      this.$refs.FormRef.clearValidate()
-    },
-    openEditUI(id) {
-      if (id == null) {
-        this.title = '新增用户'
-      } else {
-        this.title = '修改用户'
-        // 根据id查询用户数据
-        this.$router.push({ name: 'myfenxiang', params: { id: id }})
-        // api.getById(id).then(response => {
-        //     this.Form = response.data;
-        // })
-      }
-      this.dialogFormVisible = true
     },
     handleSizeChange(pageSize) {
       this.searchModel.pageSize = pageSize
@@ -169,66 +104,47 @@ export default {
         this.List = response.data.rows
         this.total = response.data.total
       })
-    },
-    getGuanliyuan() {
-      api.getGuanliyuan().then(response => {
-        this.allForm = response.data
-      })
-    }, getInfo(token) {
-      userApi.getInfo(token).then(response => {
-        this.forms = response.data.userList
-        this.Form.userids = this.forms.id
-        this.searchModel.userids = this.forms.id
-        console.log(this.forms, 'this.form')
-        console.log(this.Form.userids, 'this.fthis.Form.useridsorm')
-        this.getList()
-        console.log(response, 'response')
-      })
     }
-  },
-  computed: {
-    ...mapGetters([
-      'token'
-    ])
   }
 }
 </script>
 
-<style>
-#search .el-input {
-    width: 200px;
-    margin-right: 10px;
+<style scoped>
+.admin-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.el-dialog .el-input {
-    width: 85%;
+.page-hero {
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #16213e 0%, #0f3460 55%, #1b6ca8 100%);
+  color: #fff;
 }
 
-.avatar-uploader .el-upload {
-  border: 1px dashed #d9d9d9 !important;
-  border-radius: 6px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
+.page-kicker {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
 }
 
-.avatar-uploader .el-upload:hover {
-  border-color: #409EFF;
-}
-
-.avatar-uploader .avatar-uploader-icon {
+.page-hero h1 {
+  margin: 0;
   font-size: 28px;
-  color: #8c939d;
-  width: 178px;
-  height: 78px;
-  line-height: 78px;
-  text-align: center;
 }
 
-.avatar-uploader img {
-  width: 178px;
-  height: 178px;
-  display: block;
+.page-hero p {
+  margin: 12px 0 0;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.82);
 }
 
+#search .el-input {
+  width: 260px;
+  margin-right: 10px;
+}
 </style>

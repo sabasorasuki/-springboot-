@@ -11,9 +11,9 @@
           <i class="el-icon-caret-bottom" />
         </div>
         <el-dropdown-menu slot="dropdown" class="user-dropdown">
-          <router-link to="/center/profile">
+          <router-link to="/userinfo">
             <el-dropdown-item>
-              个人信息
+              管理员账号设置
             </el-dropdown-item>
           </router-link>
           <router-link to="/home">
