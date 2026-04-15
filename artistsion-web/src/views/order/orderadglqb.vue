@@ -15,6 +15,15 @@
       </el-row>
     </el-card>
 
+    <el-alert
+      v-if="focusOrderId"
+      :closable="false"
+      class="page-alert"
+      show-icon
+      type="info"
+      :title="`当前已根据举报上下文定位交易订单 #${focusOrderId}`"
+    />
+
     <el-card class="page-table">
       <el-table :data="List" stripe style="width: 100%" empty-text="暂无交易订单">
         <el-table-column prop="id" label="订单ID" width="100" />
@@ -66,16 +75,35 @@ export default {
       searchModel: {
         pageNo: 1,
         pageSize: 10,
+        id: '',
         name: '',
         status: '购物车1'
       },
-      List: []
+      List: [],
+      focusOrderId: ''
     }
   },
   created() {
+    this.applyFocusQuery()
     this.getList()
   },
+  watch: {
+    '$route.query.focusId'() {
+      this.applyFocusQuery()
+      this.getList()
+    }
+  },
   methods: {
+    applyFocusQuery() {
+      const focusId = this.$route.query.focusId ? String(this.$route.query.focusId) : ''
+      this.focusOrderId = focusId
+      this.searchModel.id = focusId
+      if (!focusId) {
+        return
+      }
+      this.searchModel.pageNo = 1
+      this.searchModel.name = ''
+    },
     enterChat(order) {
       this.$router.push({ name: 'liaotian', params: { id: order.id }})
     },
@@ -150,6 +178,10 @@ export default {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.72);
+}
+
+.page-alert {
+  border-radius: 18px;
 }
 
 .page-hero h1 {

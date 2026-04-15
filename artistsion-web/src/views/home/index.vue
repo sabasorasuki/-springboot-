@@ -60,6 +60,32 @@
       </div>
     </section>
 
+    <section v-if="communityPosts.length" class="section">
+      <div class="section-header">
+        <h2 class="section-title">社区精选</h2>
+      </div>
+      <div class="community-grid">
+        <div
+          v-for="post in communityPosts"
+          :key="post.id"
+          class="community-card"
+          @click="goPostDetail(post.id)"
+        >
+          <div class="community-cover">
+            <img v-if="post.photo" :src="post.photo" alt="" class="cover-img">
+            <div v-else class="cover-placeholder" />
+          </div>
+          <div class="community-body">
+            <div class="community-title">{{ post.title }}</div>
+            <div class="community-meta">
+              <span v-if="post.fenlei" class="card-tag">{{ post.fenlei }}</span>
+              <span class="community-author">{{ post.username || '匿名用户' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- 全部作品浏览 -->
     <section class="section">
       <div class="section-header">
@@ -99,6 +125,7 @@ import { mapGetters } from 'vuex'
 import huagaoApi from '@/api/huagao'
 import fenleiApi from '@/api/fenlei'
 import lunboApi from '@/api/lunbo'
+import fenxiangApi from '@/api/fenxiang'
 import tuijianApi from '@/api/tuijian'
 import userManageApi from '@/api/userManage'
 
@@ -110,6 +137,7 @@ export default {
       recommendWorks: [],
       recommendLoading: false,
       categories: [],
+      communityPosts: [],
       allWorks: [],
       allWorksTotal: 0,
       allWorksPage: 1,
@@ -125,6 +153,7 @@ export default {
   created() {
     this.fetchCarousel()
     this.fetchCategories()
+    this.fetchCommunityPosts()
     this.fetchAllWorks()
     this.fetchRecommend()
   },
@@ -140,6 +169,15 @@ export default {
     fetchCategories() {
       fenleiApi.getList1().then(res => {
         this.categories = res.data.rows || []
+      }).catch(() => {})
+    },
+
+    fetchCommunityPosts() {
+      fenxiangApi.getList({
+        pageNo: 1,
+        pageSize: 4
+      }).then(res => {
+        this.communityPosts = res.data.rows || []
       }).catch(() => {})
     },
 
@@ -215,6 +253,10 @@ export default {
 
     goWorkDetail(id) {
       this.$router.push('/work/' + id)
+    },
+
+    goPostDetail(id) {
+      this.$router.push('/post/' + id)
     },
 
     goCategory(fenlei) {
@@ -294,6 +336,12 @@ export default {
   gap: 20px;
 }
 
+.community-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
 .work-card {
   background: #fff;
   border-radius: 12px;
@@ -306,6 +354,53 @@ export default {
     transform: translateY(-3px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
   }
+}
+
+.community-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.community-cover {
+  position: relative;
+  width: 100%;
+  padding-top: 68%;
+  background: #f5f5f5;
+  overflow: hidden;
+}
+
+.community-body {
+  padding: 14px 16px 16px;
+}
+
+.community-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.5;
+  min-height: 44px;
+}
+
+.community-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.community-author {
+  font-size: 12px;
+  color: #7b8796;
 }
 
 .card-cover {
@@ -408,13 +503,15 @@ export default {
 
 /* ── 响应式 ── */
 @media (max-width: 900px) {
-  .card-grid {
+  .card-grid,
+  .community-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (max-width: 600px) {
-  .card-grid {
+  .card-grid,
+  .community-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 

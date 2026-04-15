@@ -30,6 +30,7 @@
           <div class="detail-actions">
             <el-button type="primary" icon="el-icon-shopping-cart-2" round :loading="cartLoading" @click="addToCart">加入购物车</el-button>
             <el-button :icon="isFav ? 'el-icon-star-on' : 'el-icon-star-off'" :type="isFav ? 'warning' : 'default'" round :loading="favLoading" @click="toggleFav">{{ isFav ? '已收藏' : '收藏' }}</el-button>
+            <el-button type="danger" plain round @click="openReportDialog">举报作品</el-button>
           </div>
         </div>
       </div>
@@ -49,6 +50,13 @@
       </div>
     </template>
     <el-empty v-else description="作品不存在或已下架" />
+
+    <ReportDialog
+      v-model="reportVisible"
+      target-type="作品"
+      :target-id="work ? work.id : ''"
+      :target-title="work ? work.name : ''"
+    />
   </div>
 </template>
 
@@ -57,9 +65,13 @@ import { mapGetters } from 'vuex'
 import huagaoApi from '@/api/huagao'
 import shoucangApi from '@/api/shoucang'
 import orderApi from '@/api/order'
+import ReportDialog from '@/components/ReportDialog'
 
 export default {
   name: 'WorkDetail',
+  components: {
+    ReportDialog
+  },
   data() {
     return {
       loading: true,
@@ -67,7 +79,8 @@ export default {
       isFav: false,
       favId: null,
       favLoading: false,
-      cartLoading: false
+      cartLoading: false,
+      reportVisible: false
     }
   },
   computed: {
@@ -152,6 +165,9 @@ export default {
     },
     goArtist(artistId) {
       this.$router.push('/artist/' + artistId)
+    },
+    openReportDialog() {
+      this.reportVisible = true
     }
   }
 }
@@ -269,6 +285,7 @@ export default {
 .detail-actions {
   margin-top: auto;
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
 }
 

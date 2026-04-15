@@ -59,14 +59,22 @@
             <el-tag size="mini" effect="plain" :type="targetTagType(scope.row.targetType)">{{ scope.row.targetType }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="targetTitle" label="举报对象" min-width="180" show-overflow-tooltip />
+        <el-table-column label="举报对象" min-width="220">
+          <template slot-scope="scope">
+            <div class="target-summary">
+              <div class="target-summary__title" :title="scope.row.targetTitle">{{ scope.row.targetTitle }}</div>
+              <div class="target-summary__meta">对象 ID #{{ scope.row.targetId }}</div>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="reason" label="举报原因" width="140" show-overflow-tooltip />
         <el-table-column prop="reporterUsername" label="举报人" width="110" />
         <el-table-column prop="createdAt" label="创建时间" width="170" />
         <el-table-column prop="handledAt" label="处理时间" width="170" />
-        <el-table-column label="操作" width="220" fixed="right">
+        <el-table-column label="操作" width="280" fixed="right">
           <template slot-scope="scope">
             <el-button type="text" @click="openDetail(scope.row)">查看详情</el-button>
+            <el-button type="text" @click="openTarget(scope.row)">{{ targetAction(scope.row).label }}</el-button>
             <el-button type="text" @click="openHandle(scope.row)">
               {{ scope.row.status === '待处理' ? '处理举报' : '更新处理' }}
             </el-button>
@@ -138,6 +146,23 @@
             <span>处理人</span>
             <strong>{{ detailRecord.handlerUsername || '尚未分配' }}</strong>
           </div>
+          <div class="detail-item detail-item--full">
+            <span>对象定位</span>
+            <div class="detail-actions">
+              <el-button
+                v-if="targetAction(detailRecord).canOpen"
+                type="primary"
+                round
+                @click="openTarget(detailRecord)"
+              >{{ targetAction(detailRecord).label }}</el-button>
+              <el-alert
+                v-else
+                :closable="false"
+                type="info"
+                :title="targetAction(detailRecord).note"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </el-drawer>
@@ -174,6 +199,11 @@
 
 <script>
 import reportApi from '@/api/report'
+import {
+  REPORT_REASON_OPTIONS,
+  REPORT_TARGET_TYPE_OPTIONS,
+  resolveReportTargetNavigation
+} from '@/utils/reporting'
 
 const defaultSearchModel = () => ({
   pageNo: 1,
@@ -203,8 +233,8 @@ export default {
         handlerResult: ''
       },
       statusOptions: ['待处理', '已处理', '已驳回'],
-      targetTypeOptions: ['作品', '社区内容', '反馈', '订单'],
-      reasonOptions: ['违规内容', '侵权/抄袭', '欺诈/异常交易', '骚扰辱骂', '垃圾广告', '其他']
+      targetTypeOptions: REPORT_TARGET_TYPE_OPTIONS,
+      reasonOptions: REPORT_REASON_OPTIONS
     }
   },
   computed: {
@@ -239,6 +269,35 @@ export default {
         return 'warning'
       }
       return 'success'
+    },
+    targetAction(record) {
+      if (!record) {
+        return {
+          canOpen: false,
+          label: '查看原对象',
+          note: '当前举报记录尚未加载，暂时无法定位原对象。'
+        }
+      }
+      const target = resolveReportTargetNavigation(record.targetType, record.targetId)
+      return {
+        label: target.label || '查看原对象',
+        canOpen: !!target.canOpen,
+        path: target.path,
+        query: target.query,
+        note: target.note || '当前对象暂不支持直接跳转，请根据对象标题手动定位。'
+      }
+    },
+    openTarget(record) {
+      const target = this.targetAction(record)
+      if (!target.canOpen) {
+        this.$message.info(target.note)
+        return
+      }
+      const resolved = this.$router.resolve({
+        path: target.path,
+        query: target.query || {}
+      })
+      window.open(resolved.href, '_blank')
     },
     handleSearch() {
       this.searchModel.pageNo = 1
@@ -384,6 +443,19 @@ export default {
   color: #102542;
 }
 
+.target-summary__title {
+  color: #102542;
+  font-weight: 600;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.target-summary__meta {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #7b8796;
+}
+
 .detail-panel {
   padding: 24px;
 }
@@ -431,6 +503,12 @@ export default {
   color: #102542;
   line-height: 1.7;
   word-break: break-word;
+}
+
+.detail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 @media (max-width: 900px) {

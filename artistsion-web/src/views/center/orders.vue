@@ -40,6 +40,11 @@
               {{ row.username }} {{ row.phone }}
             </template>
           </el-table-column>
+          <el-table-column label="操作" width="140">
+            <template slot-scope="{ row }">
+              <el-button type="text" @click="openReportDialog(row)">举报订单</el-button>
+            </template>
+          </el-table-column>
         </el-table>
         <el-empty v-else description="暂无订单" :image-size="120" />
 
@@ -55,15 +60,26 @@
         </div>
       </template>
     </div>
+
+    <ReportDialog
+      v-model="reportVisible"
+      target-type="订单"
+      :target-id="currentReportOrder ? currentReportOrder.id : ''"
+      :target-title="currentReportOrder ? currentReportOrder.name : ''"
+    />
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
 import orderApi from '@/api/order'
+import ReportDialog from '@/components/ReportDialog'
 
 export default {
   name: 'CenterOrders',
+  components: {
+    ReportDialog
+  },
   data() {
     return {
       orders: [],
@@ -71,7 +87,9 @@ export default {
       pageNo: 1,
       pageSize: 10,
       loading: false,
-      viewRole: '用户角色'
+      viewRole: '用户角色',
+      reportVisible: false,
+      currentReportOrder: null
     }
   },
   computed: {
@@ -111,6 +129,10 @@ export default {
     onRoleChange() {
       this.pageNo = 1
       this.fetchOrders()
+    },
+    openReportDialog(order) {
+      this.currentReportOrder = order
+      this.reportVisible = true
     },
     statusTagType(status) {
       const map = { '待支付': 'warning', '已支付': 'success', '已完成': 'success', '已取消': 'info', '退款中': 'danger' }

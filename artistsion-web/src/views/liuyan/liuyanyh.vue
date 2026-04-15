@@ -21,14 +21,11 @@
         <el-table-column prop="content" label="留言内容" width="180" />
         <el-table-column prop="status" label="状态" width="180" />
         <el-table-column prop="result" label="回复内容" width="180" />
-        <!-- <el-table-column label="操作" width="180">
-                    <template slot-scope="scope">
-                        <el-button type="primary" icon="el-icon-edit" @click="openEditUI(scope.row.id)" circle
-                            size="mini"></el-button>
-                        <el-button type="danger" icon="el-icon-delete" @click="deleteUser(scope.row)" circle
-                            size="mini"></el-button>
-                    </template>
-                </el-table-column> -->
+        <el-table-column label="操作" width="140">
+          <template slot-scope="scope">
+            <el-button type="text" @click="openReportDialog(scope.row)">举报反馈</el-button>
+          </template>
+        </el-table-column>
       </el-table>
     </el-card>
 
@@ -62,6 +59,13 @@
         <el-button type="primary" @click="saveOrUpdate">确 定</el-button>
       </div>
     </el-dialog>
+
+    <ReportDialog
+      v-model="reportVisible"
+      target-type="反馈"
+      :target-id="currentReportItem ? currentReportItem.id : ''"
+      :target-title="currentReportItem ? currentReportItem.content : ''"
+    />
   </div>
 </template>
 <script>
@@ -69,8 +73,12 @@ import api from '@/api/liuyan.js'
 import { ossDownloadUrl } from '@/utils/oss'
 import { mapGetters } from 'vuex'
 import userApi from '@/api/userManage'
+import ReportDialog from '@/components/ReportDialog'
 
 export default {
+  components: {
+    ReportDialog
+  },
   data() {
     return {
       title: '',
@@ -83,6 +91,8 @@ export default {
       List: [],
       Form: {
       },
+      currentReportItem: null,
+      reportVisible: false,
       forms: {},
       allForm: [{}],
       formLabelWidth: '130px',
@@ -181,6 +191,10 @@ export default {
         this.List = response.data.rows
         this.total = response.data.total
       })
+    },
+    openReportDialog(item) {
+      this.currentReportItem = item
+      this.reportVisible = true
     },
     getGuanliyuan() {
       api.getGuanliyuan().then(response => {

@@ -15,6 +15,15 @@
       </el-row>
     </el-card>
 
+    <el-alert
+      v-if="focusTicketId"
+      :closable="false"
+      class="page-alert"
+      show-icon
+      type="info"
+      :title="`当前已根据举报上下文定位反馈工单 #${focusTicketId}`"
+    />
+
     <el-card class="page-table">
       <el-table :data="List" stripe style="width: 100%" empty-text="暂无反馈工单">
         <el-table-column prop="id" label="工单ID" width="100" />
@@ -88,18 +97,37 @@ export default {
       searchModel: {
         pageNo: 1,
         pageSize: 10,
+        id: '',
         username: ''
       },
       List: [],
       Form: {},
       formLabelWidth: '130px',
-      rules: {}
+      rules: {},
+      focusTicketId: ''
     }
   },
   created() {
+    this.applyFocusQuery()
     this.getList()
   },
+  watch: {
+    '$route.query.focusId'() {
+      this.applyFocusQuery()
+      this.getList()
+    }
+  },
   methods: {
+    applyFocusQuery() {
+      const focusId = this.$route.query.focusId ? String(this.$route.query.focusId) : ''
+      this.focusTicketId = focusId
+      this.searchModel.id = focusId
+      if (!focusId) {
+        return
+      }
+      this.searchModel.pageNo = 1
+      this.searchModel.username = ''
+    },
     deleteTicket(ticket) {
       this.$confirm(`确认删除工单 #${ticket.id} 吗？`, '删除确认', {
         confirmButtonText: '确定',
@@ -190,6 +218,10 @@ export default {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.72);
+}
+
+.page-alert {
+  border-radius: 18px;
 }
 
 .page-hero h1 {

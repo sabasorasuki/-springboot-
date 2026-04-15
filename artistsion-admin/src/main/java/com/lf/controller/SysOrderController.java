@@ -90,6 +90,7 @@ public class SysOrderController {
     @GetMapping("/list")
     public Result<Map<String,Object>> getList(
             @RequestParam(value = "name",required = false) String name,
+            @RequestParam(value = "id",required = false) String id,
             @RequestParam(value = "userids",required = false) String userids,
             @RequestParam(value = "shangjiaids",required = false) String shangjiaids,
             @RequestParam(value = "status",required = false) String status,
@@ -98,6 +99,7 @@ public class SysOrderController {
         LambdaQueryWrapper<SysOrder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(StringUtils.hasLength(shangjiaids),SysOrder::getShangjiaids,shangjiaids);
         wrapper.eq(StringUtils.hasLength(userids),SysOrder::getUserids,userids);
+        wrapper.eq(StringUtils.hasLength(id),SysOrder::getId,id);
         wrapper.like(StringUtils.hasLength(name),SysOrder::getName,name);
         if(!status.equals("购物车1")){
             wrapper.eq(StringUtils.hasLength(status),SysOrder::getStatus,status);

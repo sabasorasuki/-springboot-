@@ -8,6 +8,7 @@ export default {
       params: {
         pageNo: searchModel.pageNo,
         pageSize: searchModel.pageSize,
+        id: searchModel.id,
         title: searchModel.title,
         username: searchModel.username,
         userids: searchModel.userids

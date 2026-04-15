@@ -349,6 +349,53 @@ spring.mail.password=${MAIL_PASSWORD:}
     - 详情抽屉可打开
     - 处理弹窗可将待处理举报更新为“已驳回”，页面列表实时反映状态变化
 
+### 阶段 10：前台举报入口接线 + 举报对象上下文联动 ✅ 已完成
+
+- 前台统一举报入口已落地：
+  - `views/work/detail.vue` 新增“举报作品”
+  - `views/posts/detail.vue` 新增“举报内容”
+  - `views/center/orders.vue` 新增“举报订单”
+  - `views/liuyan/liuyanyh.vue` 新增“举报反馈”
+- 为避免多页复制表单，已新增统一组件：
+  - `src/components/ReportDialog/index.vue`
+  - 自动带入 `targetType` / `targetId` / `targetTitle`
+  - 统一举报原因、补充说明、表单校验与提交成功反馈
+  - 未登录时复用既有认证跳转：`/auth?redirect=当前页`
+- 社区内容对象页已补齐：
+  - `router/index.js` 新增 `/post/:id`
+  - 新增 `views/posts/detail.vue`
+  - `views/home/index.vue` 新增“社区精选”卡片区，可进入帖子详情并发起举报
+- admin 举报中心已增强对象上下文：
+  - `views/report/index.vue` 列表新增对象摘要：对象标题 + 对象 ID
+  - 详情抽屉新增对象类型、对象标题、举报原因、补充说明、举报人、创建时间、处理时间、处理备注、处理人
+  - 新增“查看原对象”入口
+    - 作品 → `/work/:id`
+    - 社区内容 → `/post/:id`
+    - 反馈 → `/liuyan/liuyan?focusId=:id`
+    - 订单 → `/order/orderadglqb?focusId=:id`
+- 为对象定位补了最小必要接口能力：
+  - `MyWebConfig.java` 白名单新增 `/sysZuopin/getById/**`
+  - `SysOrderController.getList()` 新增 `id` 过滤
+  - `api/order.js` 与 `api/liuyan.js` 传递 `id`
+  - `orderadglqb.vue` 与 `liuyan.vue` 支持读取 `focusId` 并展示定位提示
+- 真实验证结果：
+  - 前端 `npm run build:prod` ✅
+  - 后端 `mvnw -q -DskipTests compile` ✅
+  - 使用本地普通用户测试账号成功创建 4 条举报：
+    - 作品 `#10`
+    - 社区内容 `#9`
+    - 反馈 `#13`
+    - 订单 `#37`
+  - 使用本地 admin 测试账号成功查询上述 4 条记录，并处理其中 1 条订单举报
+  - `/sysZuopin/getById/9` 匿名访问成功
+  - `/sysLiuyan/list?id=13&pageNo=1&pageSize=10` 返回 1 条
+  - `/sysOrder/list?id=37&pageNo=1&pageSize=10&status=购物车1` 返回 1 条
+- 当前闭环状态：
+  - 前台可发起举报 ✅
+  - admin 可查看举报 ✅
+  - admin 可处理举报 ✅
+  - admin 可按对象定位作品 / 帖子 / 反馈 / 订单 ✅
+
 ---
 
 ## 阶段 3：新前台导航完善 ✅ 已完成

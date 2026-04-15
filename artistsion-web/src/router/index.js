@@ -133,6 +133,19 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/post/:id',
+    component: MainLayout,
+    hidden: true,
+    children: [
+      {
+        path: '',
+        name: 'PostDetail',
+        component: () => import('@/views/posts/detail'),
+        meta: { title: '帖子详情' }
+      }
+    ]
+  },
+  {
     path: '/center',
     component: MainLayout,
     redirect: '/center/profile',
