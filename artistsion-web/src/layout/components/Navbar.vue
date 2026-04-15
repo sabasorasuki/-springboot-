@@ -11,9 +11,9 @@
           <i class="el-icon-caret-bottom" />
         </div>
         <el-dropdown-menu slot="dropdown" class="user-dropdown">
-          <router-link to="/userinfo">
+          <router-link :to="profileLink">
             <el-dropdown-item>
-              管理员账号设置
+              {{ profileLabel }}
             </el-dropdown-item>
           </router-link>
           <router-link to="/home">
@@ -32,6 +32,7 @@
 import { mapGetters } from 'vuex'
 import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
+import { canAccessAdminConsole, isAdminOnlyPath } from '@/utils/adminConsole'
 
 export default {
   components: {
@@ -41,8 +42,22 @@ export default {
   computed: {
     ...mapGetters([
       'sidebar',
-      'avatar'
-    ])
+      'avatar',
+      'roles',
+      'activeRole'
+    ]),
+    isAdminConsole() {
+      return canAccessAdminConsole(this.roles, this.activeRole) && isAdminOnlyPath(this.$route.path)
+    },
+    profileLink() {
+      return this.isAdminConsole ? '/userinfo' : '/center/profile'
+    },
+    profileLabel() {
+      return this.isAdminConsole ? '管理员账号设置' : '个人中心'
+    },
+    logoutRedirect() {
+      return this.isAdminConsole ? '/admin' : '/home'
+    }
   },
   methods: {
     toggleSideBar() {
@@ -53,7 +68,7 @@ export default {
       // 注销时删除所有tagview
       await this.$store.dispatch('tagsView/delAllViews')
       sessionStorage.removeItem('tabViews')
-      this.$router.push(`/auth?redirect=/admin`)
+      this.$router.push(`/auth?redirect=${this.logoutRedirect}`)
     }
   }
 }

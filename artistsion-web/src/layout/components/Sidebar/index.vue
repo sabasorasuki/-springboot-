@@ -23,15 +23,31 @@ import { mapGetters } from 'vuex'
 import Logo from './Logo'
 import SidebarItem from './SidebarItem'
 import variables from '@/styles/variables.scss'
+import { canAccessAdminConsole } from '@/utils/adminConsole'
 
 export default {
   components: { SidebarItem, Logo },
   computed: {
     ...mapGetters([
-      'sidebar'
+      'sidebar',
+      'roles',
+      'activeRole'
     ]),
     routes() {
-      return this.$router.options.routes.concat(global.myRoutes)
+      const rawRoutes = this.$router.options.routes.concat(global.myRoutes || [])
+      const canAccessAdmin = canAccessAdminConsole(this.roles, this.activeRole)
+      return rawRoutes.reduce((result, route) => {
+        if (route.path !== '/') {
+          result.push(route)
+          return result
+        }
+        const current = Object.assign({}, route)
+        current.children = (route.children || []).filter(child => canAccessAdmin || child.name !== 'Dashboard')
+        if (current.children.length) {
+          result.push(current)
+        }
+        return result
+      }, [])
     },
     activeMenu() {
       const route = this.$route

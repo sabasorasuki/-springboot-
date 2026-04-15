@@ -2,7 +2,7 @@
 
 ## 当前所处阶段
 
-阶段 1 ✅ → 阶段 2 ✅ → 阶段 3 ✅ → 阶段 4 ✅ → 阶段 5A ✅ → 阶段 5B ✅ → **阶段 6A ✅ 已完成** → **阶段 6B 兼容层清理已完成并落地** → **阶段 6C 旧后台入口隔离与存活清点已完成** → **阶段 6D 明确死代码清理已完成** → **阶段 6E 旧后台菜单表与遗留模块审计已完成** → **阶段 6F 断链修复与 test 僵尸菜单清理已完成** → **阶段 7A admin 控制台信息架构方案已定义** → **阶段 7B admin 菜单收敛与 P0 页面改造已完成**。
+阶段 1 ✅ → 阶段 2 ✅ → 阶段 3 ✅ → 阶段 4 ✅ → 阶段 5A ✅ → 阶段 5B ✅ → **阶段 6A ✅ 已完成** → **阶段 6B 兼容层清理已完成并落地** → **阶段 6C 旧后台入口隔离与存活清点已完成** → **阶段 6D 明确死代码清理已完成** → **阶段 6E 旧后台菜单表与遗留模块审计已完成** → **阶段 6F 断链修复与 test 僵尸菜单清理已完成** → **阶段 7A admin 控制台信息架构方案已定义** → **阶段 7B admin 菜单收敛与 P0 页面改造已完成** → **阶段 8 admin 冒烟测试补洞与边界加固已完成**。
 
 ---
 
@@ -149,6 +149,31 @@
   - 前端 `npm run build:prod` ✅ 通过
   - 没有新增编译错误
   - 仍仅有既有 webpack 包体积 warning 与 `Browserslist` 提示
+
+### admin 控制台第二阶段稳固（8）
+
+- admin 菜单与入口边界已进一步收紧：
+  - 新增 `src/utils/adminConsole.js`，集中维护 admin 菜单白名单、入口判断、admin-only 路径与标题覆写
+  - 非 admin 身份访问 `/admin`、`/dashboard`、`/userinfo`、`/sys/*`、`/fenlei/*`、`/tongji/*`、`/rizhi/*`、`/lunbo/*` 时会被守卫重定向回 `/home`
+  - 新增隐藏路由 `/admin/*`，确保深链接先被前端守卫处理，不再直接进入 404
+  - 新前台 `MainLayout` 路由全部隐藏，避免误出现在旧后台侧边栏
+- admin 壳层交互已补稳：
+  - `Navbar` 会按当前身份显示“管理员账号设置”或“个人中心”
+  - `Breadcrumb` 首页会按当前身份指向 `/admin` 或 `/home`
+  - `views/userinfo/index.vue` 的 `ossUploadAction` 运行时报错已修复
+- dashboard 数据能力已升级：
+  - 新增后端接口 `GET /adminDashboard/summary`
+  - 新增前端 `api/adminDashboard.js`
+  - 首页统计、待审核作品、最近订单、最近日志均改为通过单一汇总接口返回，不再由前端多列表估算
+  - 后端接口只校验 `admin` 角色，不改 `/user/info`、`MenuService`、`x_menu` 结构
+- 实际冒烟验证：
+  - admin：`/auth?redirect=/admin` → `/dashboard` ✅；侧边栏仅显示管理员相关菜单 ✅；4 个核心页面可打开 ✅；头像菜单进入 `/userinfo` 正常 ✅
+  - 普通用户：`/auth?redirect=/admin` → `/home` ✅；直接访问 `/dashboard`、`/userinfo`、`/admin/sys/user` 会被拦回 `/home` ✅；`/order/ordergl` 仍可用 ✅
+  - 画师：`/auth?redirect=/admin` → `/home` ✅；直接访问 admin 深链接会被拦回 `/home` ✅；`/shangp/shangp` 仍可用 ✅
+- P1 最小技术方案预研：
+  - 举报中心不建议复用 `sys_liuyan`；建议新增 `sys_report`
+  - 画师认证审核不建议复用用户启停状态；建议新增 `artist_verification_request`
+  - 下一轮优先建议先做“画师认证审核”，再做举报中心
 
 ### 构建验证
 

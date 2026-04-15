@@ -71,6 +71,7 @@ export default {
     this.getInfo(this.token)
   },
   methods: {
+    ossUploadAction,
     handleAvatarSuccess(res, file) {
       this.form.avatar = ossDownloadUrl(res.data)
       console.log(this.Form.avatar, 'oss12312')

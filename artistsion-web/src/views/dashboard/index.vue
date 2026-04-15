@@ -5,7 +5,7 @@
         <p class="hero-kicker">Admin Console</p>
         <h1>管理控制台</h1>
         <p class="hero-description">
-          当前首页聚合了用户、作品、订单、反馈、分类、轮播与操作日志数据，先为 admin 入口提供稳定的管理概览。
+          当前首页通过最小聚合接口返回管理员概览数据，减少前端多次估算和多请求拼装，先把 admin 的真实看板能力补稳。
         </p>
         <p class="hero-note">管理员账号设置已迁移到右上角头像菜单，dashboard 不再承担个人资料页职责。</p>
       </div>
@@ -22,7 +22,7 @@
       :closable="false"
       class="dashboard-alert"
       show-icon
-      title="当前看板使用现有列表接口聚合数据，避免重写后端菜单体系；待处理反馈暂按已拉取列表估算。"
+      title="当前看板已切到单一后台汇总接口：待处理反馈、待审核作品、最近订单、最近日志均由后端统一返回。"
       type="info"
     />
 
@@ -110,13 +110,7 @@
 </template>
 
 <script>
-import userApi from '@/api/userManage'
-import huagaoApi from '@/api/huagao'
-import orderApi from '@/api/order'
-import liuyanApi from '@/api/liuyan'
-import fenleiApi from '@/api/fenlei'
-import lunboApi from '@/api/lunbo'
-import rizhiApi from '@/api/rizhi'
+import adminDashboardApi from '@/api/adminDashboard'
 
 export default {
   name: 'AdminDashboard',
@@ -137,60 +131,41 @@ export default {
     async loadDashboard() {
       this.loading = true
       this.loadWarnings = []
+      try {
+        const response = await adminDashboardApi.getSummary()
+        const payload = response.data || {}
+        const metrics = payload.metrics || {}
 
-      const [
-        userResult,
-        workResult,
-        orderResult,
-        pendingWorkResult,
-        feedbackResult,
-        categoryResult,
-        bannerResult,
-        logResult
-      ] = await Promise.allSettled([
-        userApi.getUserList({ pageNo: 1, pageSize: 1 }),
-        huagaoApi.getList({ pageNo: 1, pageSize: 1 }),
-        orderApi.getList({ pageNo: 1, pageSize: 5, status: '购物车1' }),
-        huagaoApi.getList({ pageNo: 1, pageSize: 5, status: '未审核' }),
-        liuyanApi.getList({ pageNo: 1, pageSize: 200 }),
-        fenleiApi.getList({ pageNo: 1, pageSize: 1 }),
-        lunboApi.getList({ pageNo: 1, pageSize: 1 }),
-        rizhiApi.getList({ pageNo: 1, pageSize: 5 })
-      ])
+        this.metrics = [
+          this.createMetric('users', '用户总数', metrics.userTotal, '来自后台管理员汇总接口', 'ink'),
+          this.createMetric('works', '作品总数', metrics.workTotal, '来自后台管理员汇总接口', 'cyan'),
+          this.createMetric('orders', '订单总数', metrics.orderTotal, '已排除购物车记录', 'amber'),
+          this.createMetric('pendingWorks', '待审核作品', metrics.pendingWorkTotal, '由后端直接统计未审核作品', 'red'),
+          this.createMetric('pendingFeedback', '待处理反馈', metrics.pendingFeedbackTotal, '由后端直接统计未回复工单', 'violet'),
+          this.createMetric('categories', '分类总数', metrics.categoryTotal, '来自后台管理员汇总接口', 'green'),
+          this.createMetric('banners', '轮播总数', metrics.bannerTotal, '来自后台管理员汇总接口', 'blue')
+        ]
 
-      this.collectWarning(userResult, '用户概览')
-      this.collectWarning(workResult, '作品概览')
-      this.collectWarning(orderResult, '订单概览')
-      this.collectWarning(pendingWorkResult, '待审核作品')
-      this.collectWarning(feedbackResult, '反馈工单')
-      this.collectWarning(categoryResult, '分类统计')
-      this.collectWarning(bannerResult, '轮播统计')
-      this.collectWarning(logResult, '操作日志')
-
-      const feedbackRows = this.getRows(feedbackResult)
-      const feedbackTotal = this.getTotal(feedbackResult, feedbackRows.length)
-      const pendingFeedbackCount = feedbackRows.filter(item => item.status === '未回复').length
-      const feedbackMetricValue = feedbackResult.status === 'fulfilled' ? pendingFeedbackCount : '--'
-      const feedbackHelper = feedbackResult.status !== 'fulfilled'
-        ? '反馈接口加载失败，请从反馈工单页重试'
-        : feedbackTotal > feedbackRows.length
-            ? '缺少待处理汇总接口，当前按已拉取反馈列表估算'
-            : '基于现有反馈列表实时统计'
-
-      this.metrics = [
-        this.createMetric('users', '用户总数', this.getTotal(userResult), '来自用户列表接口', 'ink'),
-        this.createMetric('works', '作品总数', this.getTotal(workResult), '来自全站作品列表', 'cyan'),
-        this.createMetric('orders', '订单总数', this.getTotal(orderResult), '已排除购物车记录', 'amber'),
-        this.createMetric('pendingWorks', '待审核作品', this.getTotal(pendingWorkResult), '可直接进入作品审核页处理', 'red'),
-        this.createMetric('pendingFeedback', '待处理反馈', feedbackMetricValue, feedbackHelper, 'violet'),
-        this.createMetric('categories', '分类总数', this.getTotal(categoryResult), '来自分类管理模块', 'green'),
-        this.createMetric('banners', '轮播总数', this.getTotal(bannerResult), '来自轮播运营模块', 'blue')
-      ]
-
-      this.pendingWorks = this.getRows(pendingWorkResult)
-      this.recentOrders = this.getRows(orderResult)
-      this.recentLogs = this.getRows(logResult)
-      this.loading = false
+        this.pendingWorks = Array.isArray(payload.pendingWorks) ? payload.pendingWorks : []
+        this.recentOrders = Array.isArray(payload.recentOrders) ? payload.recentOrders : []
+        this.recentLogs = Array.isArray(payload.recentLogs) ? payload.recentLogs : []
+      } catch (error) {
+        this.loadWarnings = ['首页汇总接口']
+        this.metrics = [
+          this.createMetric('users', '用户总数', '--', '汇总接口加载失败', 'ink'),
+          this.createMetric('works', '作品总数', '--', '汇总接口加载失败', 'cyan'),
+          this.createMetric('orders', '订单总数', '--', '汇总接口加载失败', 'amber'),
+          this.createMetric('pendingWorks', '待审核作品', '--', '汇总接口加载失败', 'red'),
+          this.createMetric('pendingFeedback', '待处理反馈', '--', '汇总接口加载失败', 'violet'),
+          this.createMetric('categories', '分类总数', '--', '汇总接口加载失败', 'green'),
+          this.createMetric('banners', '轮播总数', '--', '汇总接口加载失败', 'blue')
+        ]
+        this.pendingWorks = []
+        this.recentOrders = []
+        this.recentLogs = []
+      } finally {
+        this.loading = false
+      }
     },
     createMetric(key, label, value, helper, tone) {
       return {
@@ -200,26 +175,6 @@ export default {
         helper,
         tone
       }
-    },
-    collectWarning(result, label) {
-      if (result.status === 'rejected') {
-        this.loadWarnings.push(label)
-      }
-    },
-    getPayload(result) {
-      if (result.status !== 'fulfilled' || !result.value || !result.value.data) {
-        return {}
-      }
-      return result.value.data
-    },
-    getRows(result) {
-      const payload = this.getPayload(result)
-      return Array.isArray(payload.rows) ? payload.rows : []
-    },
-    getTotal(result, fallback = '--') {
-      const payload = this.getPayload(result)
-      const total = Number(payload.total)
-      return Number.isFinite(total) ? total : fallback
     },
     go(path) {
       this.$router.push(path)

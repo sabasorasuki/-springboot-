@@ -244,7 +244,7 @@ spring.mail.password=${MAIL_PASSWORD:}
 
 - admin 菜单收敛已在前端落地：
   - `permission.js` 现在会在 `roles` 包含 `admin` 且当前激活角色仍是 `admin` 时，对 `/user/info -> menuList` 做运行时收敛
-  - 通过 `ADMIN_MENU_COMPONENT_BLACKLIST` 隐藏 admin 视角下不应继续作为主菜单暴露的自助页：`order/gouwuche`、`order/ordergl`、`order/orderadgl`、`shangp/shangp`、`shangp/spsxj`、`fenxiang/fenxiang`、`shoucang/shoucang`、`liuyan/liuyanyh`、`ai/ai`
+  - 通过 `src/utils/adminConsole.js` 中的菜单白名单与标题覆写，只保留 admin 当前应显示的管理菜单，运行时收敛掉旧自助页暴露
   - 通过 `ADMIN_MENU_OVERRIDES` 将后台主菜单改成更接近控制台语义的标题和跳转：
     - `/sys` → 用户与权限
     - `/shangp` → 作品与委托（默认进入 `shangpsh`）
@@ -275,6 +275,38 @@ spring.mail.password=${MAIL_PASSWORD:}
   - 前端 `npm run build:prod` ✅ 通过
   - 无新增编译错误
   - 仍仅保留既有 webpack 包体积 warning 与 `Browserslist` 提示
+
+### 阶段 8：admin 冒烟测试补洞 + 菜单边界加固 + 首页数据能力补强 ✅ 已完成
+
+- admin 菜单边界已进一步加固：
+  - 新增 `src/utils/adminConsole.js`，集中维护 admin 入口、角色判断、admin-only 路径、菜单白名单与文案覆写
+  - `permission.js` 不再只做“显示层面”收敛，同时拦截非 admin 身份访问 `/admin`、`/dashboard`、`/userinfo`、`/sys/*`、`/fenlei/*`、`/tongji/*`、`/rizhi/*`、`/lunbo/*`
+  - 新增隐藏路由 `/admin/*`，确保 `/admin/sys/user`、`/admin/order/orderadglqb` 这类深链接先进入守卫，再映射或阻断，不再直接掉进 404
+  - `router/index.js` 中新前台 `MainLayout` 路由已全部 `hidden`，避免被旧后台侧边栏误显示
+  - `Sidebar` 现在会按当前激活身份过滤静态 `Dashboard`，普通用户和画师不再在旧后台壳内看到“控制台”
+- admin 入口联动已补稳：
+  - `Navbar` 根据当前身份与路径自适应显示“管理员账号设置”或“个人中心”
+  - `Breadcrumb` 首页根据当前身份回到 `/admin` 或 `/home`
+  - `views/userinfo/index.vue` 修复了 `ossUploadAction` 未挂入 methods 导致的运行时报错，管理员隐藏设置页可正常进入
+- dashboard 首页数据能力已从“前端多列表估算”升级为“最小聚合接口”：
+  - 新增前端 `api/adminDashboard.js`
+  - 后端新增 `GET /adminDashboard/summary`
+  - 接口返回：
+    - `metrics.userTotal / workTotal / orderTotal / pendingWorkTotal / pendingFeedbackTotal / categoryTotal / bannerTotal`
+    - `pendingWorks`
+    - `recentOrders`
+    - `recentLogs`
+  - 权限策略保持最小改动：接口仅根据 `X-Token` 解析当前用户并校验其是否拥有 `admin` 角色，不改 `/user/info`、`MenuService`、`x_menu`
+- 冒烟测试结果：
+  - admin 登录 `/auth?redirect=/admin` 后可进入 `/dashboard`，侧边栏仅显示管理员相关菜单
+  - `shangpsh.vue`、`orderadglqb.vue`、`fenxiangad.vue`、`liuyan.vue` 四个核心页面均可正常打开
+  - `/userinfo` 可从右上角头像菜单进入，并可经面包屑返回 admin 首页
+  - 普通用户与画师登录 `/auth?redirect=/admin` 均会被安全重定向回 `/home`
+  - 普通用户 `/order/ordergl`、画师 `/shangp/shangp` 等必要自助链路仍可进入，未被 admin 收敛误伤
+- P1 预研结论：
+  - 举报与审核中心暂不建议复用 `sys_liuyan`，该表语义更接近用户反馈工单；建议最小新增 `sys_report`，字段至少包括：`id`、`reporter_user_id`、`target_type`、`target_id`、`reason`、`detail`、`status`、`handler_user_id`、`handler_result`、`created_at`、`handled_at`
+  - 画师认证审核可复用 `x_user` 的基础资料展示，但不建议把审核状态直接塞进现有用户启停字段；建议最小新增 `artist_verification_request`，字段至少包括：`id`、`user_id`、`real_name`、`contact`、`id_card_mask`、`proof_urls`、`portfolio_note`、`status`、`reviewer_user_id`、`review_note`、`submitted_at`、`reviewed_at`
+  - 下一轮优先建议先做“画师认证审核”：它更贴近平台供给侧质量控制，且可直接复用现有画师资料展示；举报中心涉及目标类型更杂，设计面更广
 
 ---
 

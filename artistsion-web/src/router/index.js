@@ -43,6 +43,11 @@ export const constantRoutes = [
     hidden: true
   },
   {
+    path: '/admin/*',
+    component: Layout,
+    hidden: true
+  },
+  {
     path: '/404',
     component: () => import('@/views/404'),
     hidden: true
@@ -51,6 +56,7 @@ export const constantRoutes = [
   {
     path: '/home',
     component: MainLayout,
+    hidden: true,
     children: [
       {
         path: '',
@@ -63,6 +69,7 @@ export const constantRoutes = [
   {
     path: '/artists',
     component: MainLayout,
+    hidden: true,
     children: [
       {
         path: '',
@@ -75,6 +82,7 @@ export const constantRoutes = [
   {
     path: '/projects',
     component: MainLayout,
+    hidden: true,
     children: [
       {
         path: '',
@@ -88,6 +96,7 @@ export const constantRoutes = [
   {
     path: '/work/:id',
     component: MainLayout,
+    hidden: true,
     children: [
       {
         path: '',
@@ -100,6 +109,7 @@ export const constantRoutes = [
   {
     path: '/artist/:id',
     component: MainLayout,
+    hidden: true,
     children: [
       {
         path: '',
@@ -112,6 +122,7 @@ export const constantRoutes = [
   {
     path: '/project/:id',
     component: MainLayout,
+    hidden: true,
     children: [
       {
         path: '',
@@ -125,6 +136,7 @@ export const constantRoutes = [
     path: '/center',
     component: MainLayout,
     redirect: '/center/profile',
+    hidden: true,
     children: [
       {
         path: 'profile',

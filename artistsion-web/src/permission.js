@@ -6,45 +6,19 @@ import 'nprogress/nprogress.css' // progress bar style
 import { getToken } from '@/utils/auth' // get token from cookie
 import getPageTitle from '@/utils/get-page-title'
 import Layout from '@/layout'
+import {
+  ADMIN_ENTRY_PATH,
+  ADMIN_MENU_OVERRIDES,
+  canAccessAdminConsole,
+  isAdminEntryPath,
+  isAdminOnlyPath,
+  shouldKeepAdminMenu,
+  shouldUseAdminConsoleMenus
+} from '@/utils/adminConsole'
 
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
 const whiteList = ['/auth'] // no redirect whitelist
-const ADMIN_ENTRY_PATH = '/admin'
-const ADMIN_ROLE_NAME = 'admin'
-const ADMIN_MENU_COMPONENT_BLACKLIST = new Set([
-  'order/gouwuche',
-  'order/ordergl',
-  'order/orderadgl',
-  'shangp/shangp',
-  'shangp/spsxj',
-  'fenxiang/fenxiang',
-  'shoucang/shoucang',
-  'liuyan/liuyanyh',
-  'ai/ai'
-])
-const ADMIN_MENU_OVERRIDES = {
-  '/sys': { title: '用户与权限', redirect: '/sys/user' },
-  'sys/user': { title: '用户管理' },
-  'sys/role': { title: '角色管理' },
-  'sys/route': { title: '菜单权限' },
-  '/shangp': { title: '作品与委托', redirect: '/shangp/shangpsh' },
-  'shangp/shangpsh': { title: '作品审核' },
-  '/order': { title: '订单与支付', redirect: '/order/orderadglqb' },
-  'order/orderadglqb': { title: '交易订单总览' },
-  '/fenxiang': { title: '内容与社区', redirect: '/fenxiang/fenxiangad' },
-  'fenxiang/fenxiangad': { title: '社区内容管理' },
-  '/liuyan': { title: '反馈与工单', redirect: '/liuyan/liuyan' },
-  'liuyan/liuyan': { title: '反馈工单' },
-  '/fenlei': { title: '分类与配置', redirect: '/fenlei/fenlei' },
-  'fenlei/fenlei': { title: '分类管理' },
-  '/tongji': { title: '统计与审计', redirect: '/tongji/tongji' },
-  'tongji/tongji': { title: '交易统计' },
-  '/rizhi': { title: '日志与审计', redirect: '/rizhi/rizhi' },
-  'rizhi/rizhi': { title: '操作日志' },
-  '/lunbo': { title: '轮播与运营', redirect: '/lunbo/lunbo' },
-  'lunbo/lunbo': { title: '轮播运营' }
-}
 
 function resolveLegacyAdminPath(path) {
   if (path === `${ADMIN_ENTRY_PATH}/`) {
@@ -68,12 +42,6 @@ router.beforeEach(async(to, from, next) => {
   const hasToken = getToken()
 
   if (hasToken) {
-    const legacyAdminPath = resolveLegacyAdminPath(to.path)
-    if (legacyAdminPath) {
-      next({ path: legacyAdminPath, query: to.query, hash: to.hash, replace: true })
-      return
-    }
-
     if (to.path === '/auth') {
       // if is logged in, redirect to the home page
       next({ path: '/home' })
@@ -81,11 +49,18 @@ router.beforeEach(async(to, from, next) => {
     } else {
       const hasGetUserInfo = store.getters.name
       if (hasGetUserInfo) {
+        if (handleAdminAccess(to, next)) {
+          return
+        }
         next()
       } else {
         try {
           // get user info
           await store.dispatch('user/getInfo')
+
+          if (handleAdminAccess(to, next)) {
+            return
+          }
 
           // 路由转换
           const runtimeMenuList = cloneMenuList(store.getters.menuList)
@@ -152,13 +127,6 @@ function myFilterAsyncRoutes(menuList) {
   return menuList
 }
 
-function shouldUseAdminConsoleMenus(roles = [], activeRole = '') {
-  if (!Array.isArray(roles) || roles.indexOf(ADMIN_ROLE_NAME) === -1) {
-    return false
-  }
-  return !activeRole || activeRole === ADMIN_ROLE_NAME
-}
-
 function cloneMenuList(menuList) {
   return JSON.parse(JSON.stringify(menuList || []))
 }
@@ -182,7 +150,7 @@ function applyAdminMenuOverride(menu) {
 function normalizeAdminConsoleMenus(menuList) {
   return menuList.reduce((result, rawMenu) => {
     const menu = Object.assign({}, rawMenu)
-    if (menu.component !== 'Layout' && ADMIN_MENU_COMPONENT_BLACKLIST.has(menu.component)) {
+    if (!shouldKeepAdminMenu(menu)) {
       return result
     }
     if (menu.children && menu.children.length) {
@@ -194,4 +162,28 @@ function normalizeAdminConsoleMenus(menuList) {
     result.push(applyAdminMenuOverride(menu))
     return result
   }, [])
+}
+
+function handleAdminAccess(to, next) {
+  const canAccess = canAccessAdminConsole(store.getters.roles, store.getters.activeRole)
+  if (isAdminEntryPath(to.path)) {
+    if (!canAccess) {
+      Message.warning('当前身份不可进入管理员控制台')
+      next({ path: '/home', replace: true })
+      NProgress.done()
+      return true
+    }
+    const legacyAdminPath = resolveLegacyAdminPath(to.path)
+    if (legacyAdminPath) {
+      next({ path: legacyAdminPath, query: to.query, hash: to.hash, replace: true })
+      return true
+    }
+  }
+  if (!canAccess && isAdminOnlyPath(to.path)) {
+    Message.warning('当前身份不可访问管理员页面')
+    next({ path: '/home', replace: true })
+    NProgress.done()
+    return true
+  }
+  return false
 }

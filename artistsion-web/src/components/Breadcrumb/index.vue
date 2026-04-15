@@ -11,11 +11,24 @@
 
 <script>
 import pathToRegexp from 'path-to-regexp'
+import { mapGetters } from 'vuex'
+import { canAccessAdminConsole } from '@/utils/adminConsole'
 
 export default {
   data() {
     return {
       levelList: null
+    }
+  },
+  computed: {
+    ...mapGetters([
+      'roles',
+      'activeRole'
+    ]),
+    homeEntry() {
+      return canAccessAdminConsole(this.roles, this.activeRole)
+        ? { path: '/admin', meta: { title: '首页' }}
+        : { path: '/home', meta: { title: '首页' }}
     }
   },
   watch: {
@@ -33,7 +46,7 @@ export default {
       const first = matched[0]
 
       if (!this.isDashboard(first)) {
-        matched = [{ path: '/admin', meta: { title: '首页' }}].concat(matched)
+        matched = [this.homeEntry].concat(matched)
       }
 
       this.levelList = matched.filter(item => item.meta && item.meta.title && item.meta.breadcrumb !== false)
