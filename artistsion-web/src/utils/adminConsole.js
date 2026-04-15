@@ -7,6 +7,7 @@ export const ADMIN_MENU_PATH_ALLOWLIST = new Set([
   '/order',
   '/fenxiang',
   '/liuyan',
+  '/report',
   '/fenlei',
   '/tongji',
   '/rizhi',
@@ -21,6 +22,7 @@ export const ADMIN_MENU_COMPONENT_ALLOWLIST = new Set([
   'order/orderadglqb',
   'fenxiang/fenxiangad',
   'liuyan/liuyan',
+  'report/index',
   'fenlei/fenlei',
   'tongji/tongji',
   'rizhi/rizhi',
@@ -40,6 +42,8 @@ export const ADMIN_MENU_OVERRIDES = {
   'fenxiang/fenxiangad': { title: '社区内容管理' },
   '/liuyan': { title: '反馈与工单', redirect: '/liuyan/liuyan' },
   'liuyan/liuyan': { title: '反馈工单' },
+  '/report': { title: '举报与审核', redirect: '/report/center' },
+  'report/index': { title: '举报与审核中心' },
   '/fenlei': { title: '分类与配置', redirect: '/fenlei/fenlei' },
   'fenlei/fenlei': { title: '分类管理' },
   '/tongji': { title: '统计与审计', redirect: '/tongji/tongji' },
@@ -56,11 +60,13 @@ const ADMIN_ONLY_EXACT_PATHS = new Set([
   '/shangp/shangpsh',
   '/order/orderadglqb',
   '/fenxiang/fenxiangad',
-  '/liuyan/liuyan'
+  '/liuyan/liuyan',
+  '/report/center'
 ])
 
 const ADMIN_ONLY_PREFIXES = [
   '/sys',
+  '/report',
   '/fenlei',
   '/tongji',
   '/rizhi',
@@ -98,4 +104,3 @@ export function shouldKeepAdminMenu(menu) {
   }
   return ADMIN_MENU_COMPONENT_ALLOWLIST.has(menu.component)
 }
-

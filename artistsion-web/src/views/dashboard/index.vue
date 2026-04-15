@@ -14,6 +14,7 @@
         <el-button @click="go('/order/orderadglqb')">交易订单</el-button>
         <el-button @click="go('/fenxiang/fenxiangad')">社区内容</el-button>
         <el-button @click="go('/liuyan/liuyan')">反馈工单</el-button>
+        <el-button @click="go('/report/center')">举报与审核</el-button>
         <el-button @click="go('/sys/user')">用户管理</el-button>
       </div>
     </section>

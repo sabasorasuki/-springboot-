@@ -308,6 +308,47 @@ spring.mail.password=${MAIL_PASSWORD:}
   - 画师认证审核可复用 `x_user` 的基础资料展示，但不建议把审核状态直接塞进现有用户启停字段；建议最小新增 `artist_verification_request`，字段至少包括：`id`、`user_id`、`real_name`、`contact`、`id_card_mask`、`proof_urls`、`portfolio_note`、`status`、`reviewer_user_id`、`review_note`、`submitted_at`、`reviewed_at`
   - 下一轮优先建议先做“画师认证审核”：它更贴近平台供给侧质量控制，且可直接复用现有画师资料展示；举报中心涉及目标类型更杂，设计面更广
 
+### 阶段 9：P1 举报与审核中心预实现 ✅ 已完成
+
+- 数据模型已落地：
+  - 新增 `sys_report` 主表，字段覆盖：`reporter_user_id`、`reporter_username`、`target_type`、`target_id`、`target_title`、`reason`、`detail`、`status`、`handler_user_id`、`handler_username`、`handler_result`、`created_at`、`handled_at`
+  - 当前只做最小闭环，不额外拆分附件表、对象快照表或复杂状态机
+  - 新增 SQL 补丁：`artistsion-admin/sql/2026-04-15-phase9-report-center.sql`
+  - 根库导出 `artistsion.sql` 已同步补入 `sys_report` 表结构与 admin 菜单记录
+- 后端接口已落地：
+  - 新增 `GET /sysReport/list`：管理员查看举报列表，支持 `status`、`targetType`、`reason`、`keyword` 筛选
+  - 新增 `GET /sysReport/getById/{id}`：管理员查看举报详情
+  - 新增 `PUT /sysReport/handle`：管理员更新举报状态与处理备注
+  - 新增 `POST /sysReport/add`：登录用户可提交举报，占位给后续前台接入
+  - 权限策略保持最小改动：仅在新接口内部通过 `X-Token` + `userMapper.getRoleNamesByUserId(...)` 校验 admin，不改 `/user/info`、`MenuService`
+- 前端 admin 页面已落地：
+  - 新增 `src/views/report/index.vue`，作为真正的“举报与审核中心”页面
+  - 页面支持：
+    - 举报列表
+    - 状态筛选
+    - 对象类型筛选
+    - 举报原因筛选
+    - 关键词搜索
+    - 查看详情抽屉
+    - 处理弹窗（已处理 / 已驳回 + 处理备注）
+  - 视觉上沿用 admin 与用户端已建立的卡片、圆角、渐变 Hero、标签与按钮风格，不再回退到陈旧后台模板观感
+- 菜单接入已完成：
+  - 新增后台菜单根节点 `/report` 与子页面 `report/index`
+  - `src/utils/adminConsole.js` 已将 `/report`、`report/index` 纳入 admin 白名单与标题覆写
+  - dashboard Hero 已增加“举报与审核”快捷入口
+- 真实验证结果：
+  - 后端 `mvnw -q -DskipTests compile` ✅
+  - 前端 `npm run build:prod` ✅
+  - 已对本地 MySQL 执行 phase9 SQL 补丁，`sys_report`、菜单与角色分配均已创建
+  - 真实接口联调：
+    - 使用普通用户 token 成功创建 4 条举报（作品 / 社区内容 / 反馈 / 订单各 1 条）
+    - 使用 admin token 成功查询列表、查看详情并处理其中 1 条举报
+  - 浏览器冒烟：
+    - admin 登录后侧边栏出现“举报与审核 / 举报与审核中心”
+    - 进入 `/#/report/center` 页面成功
+    - 详情抽屉可打开
+    - 处理弹窗可将待处理举报更新为“已驳回”，页面列表实时反映状态变化
+
 ---
 
 ## 阶段 3：新前台导航完善 ✅ 已完成

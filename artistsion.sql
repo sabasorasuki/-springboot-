@@ -1380,6 +1380,36 @@ CREATE TABLE `sys_zuopin`  (
 INSERT INTO `sys_zuopin` VALUES (9, '画稿展示', 'https://f1-seo.v3mh.com/social/007e7e5a2944619cab7e38777a417b82-watermark.seo', '2026-03-19 00:00:00', '7', '用户', '<div style=\"max-width: 100%; overflow-x: visible; font-size: 18px; line-height: 30px; color: rgb(34, 34, 34); font-family: arial;\"><p>专业画稿服务，定制您的艺术想象在艺术创作与商业设计的多元需求中，专业画稿服务正成为连接创意与现实的重要桥梁。我们依托经验丰富的画师团队，为您提供全品类、定制化的画稿创作服务，覆盖艺术创作、商业设计、教育需求等多个场景，满足您从个人兴趣到商业项目的各类画稿需求。我们的画稿服务类型丰富多元，无论是用于艺术创作的临摹性画稿、写生性画稿，还是为商业项目定制的创作性画稿，都能精准匹配您的需求。在艺术创作领域，我们可以为画家提供创作前期的推敲稿本，帮助您捕捉灵感、完善构图；在商业设计领域，我们能够承接游戏原画、广告插画、绘本画稿等定制需求，将品牌理念与创意视觉完美融合。同时，针对教育场景，我们还能提供适合临摹学习的标准化画稿，为艺术爱好者与学生提供专业的学习范本。为了保障服务质量与效率，我们建立了完善的服务流程。您只需提供具体需求与参考素材，我们的画师会在24小时内提供初步方案，您可享有2次免费修改机会，确保画稿完全符合您的预期。在交付周期上，常规画稿3-5天即可完成，加急订单最快30分钟出图，满足您的紧急需求。所有画稿均提供版权保障，商业项目画稿版权完全归您所有，让您无后顾之忧。我们坚持高性价比的定价策略，根据画稿类型、尺寸与复杂程度制定透明价格，无任何隐藏费用。A4尺寸基础画稿低至35元，商业定制画稿可根据需求提供详细报价。同时，我们支持手绘与板绘两种创作形式，无论是传统纸质画稿还是数字化电子画稿，都能为您呈现细腻生动的视觉效果。选择我们的画稿服务，不仅是选择一份专业的艺术创作，更是选择一个可靠的创意合作伙伴。我们将以严谨的创作态度、高效的服务流程，为您打造兼具艺术价值与实用功能的画稿作品，让每一份创意都能完美落地。 （AI生成）</p></div><p style=\"border: 0px; margin-top: 0.63em; margin-bottom: 1.8em; counter-reset: list-1 0 list-2 0 list-3 0 list-4 0 list-5 0 list-6 0 list-7 0 list-8 0 list-9 0; color: rgb(25, 25, 25); font-family: &quot;PingFang SC&quot;, Arial, 微软雅黑, 宋体, simsun, sans-serif;\"></p><p style=\"box-sizing: inherit; margin-top: 34px; margin-bottom: 34px; text-align: justify; color: rgb(64, 64, 64); font-family: Arial, &quot;Hiragino Sans GB&quot;, STHeiti, &quot;Helvetica Neue&quot;, Helvetica, &quot;Microsoft Yahei&quot;, &quot;WenQuanYi Micro Hei&quot;, sans-serif; font-size: 18px;\"></p>', 21, NULL);
 
 -- ----------------------------
+-- Table structure for sys_report
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_report`;
+CREATE TABLE `sys_report`  (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `reporter_user_id` bigint NOT NULL COMMENT '举报人用户ID',
+  `reporter_username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '举报人名称（冗余）',
+  `target_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '作品/社区内容/反馈/订单',
+  `target_id` bigint NOT NULL COMMENT '举报对象ID',
+  `target_title` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '举报对象标题或摘要（冗余）',
+  `reason` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '举报原因',
+  `detail` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '补充说明',
+  `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '待处理' COMMENT '待处理/已处理/已驳回',
+  `handler_user_id` bigint NULL DEFAULT NULL COMMENT '处理管理员ID',
+  `handler_username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '处理管理员名称（冗余）',
+  `handler_result` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '处理备注',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `handled_at` datetime NULL DEFAULT NULL COMMENT '处理时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_sys_report_status`(`status`) USING BTREE,
+  INDEX `idx_sys_report_target_type`(`target_type`) USING BTREE,
+  INDEX `idx_sys_report_created_at`(`created_at`) USING BTREE,
+  INDEX `idx_sys_report_reporter_user_id`(`reporter_user_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of sys_report
+-- ----------------------------
+
+-- ----------------------------
 -- Table structure for user_article_operation
 -- ----------------------------
 DROP TABLE IF EXISTS `user_article_operation`;
@@ -1601,6 +1631,8 @@ INSERT INTO `x_menu` VALUES (34, 'Layout', '/lunbo', '/lunbo/lunbo', 'lunbo', '�
 INSERT INTO `x_menu` VALUES (35, 'lunbo/lunbo', 'lunbo', '', 'lunbo', '轮播列表', 'form', 34, 'Y', 0);
 INSERT INTO `x_menu` VALUES (36, 'Layout', '/ai', '/ai/ai', 'ai', '智能AI', 'form', 0, 'N', 0);
 INSERT INTO `x_menu` VALUES (37, 'ai/ai', 'ai', '', 'ai', 'AI助手', 'form', 36, 'Y', 0);
+INSERT INTO `x_menu` VALUES (38, 'Layout', '/report', '/report/center', 'reportCenterRoot', '举报与审核', 'form', 0, 'N', 0);
+INSERT INTO `x_menu` VALUES (39, 'report/index', 'center', '', 'reportCenter', '举报与审核中心', 'form', 38, 'Y', 0);
 
 -- ----------------------------
 -- Table structure for x_role
@@ -1629,7 +1661,7 @@ CREATE TABLE `x_role_menu`  (
   `role_id` int(0) NULL DEFAULT NULL,
   `menu_id` int(0) NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 555 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 566 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of x_role_menu
@@ -1674,6 +1706,8 @@ INSERT INTO `x_role_menu` VALUES (560, 7, 17);
 INSERT INTO `x_role_menu` VALUES (561, 7, 20);
 INSERT INTO `x_role_menu` VALUES (562, 7, 23);
 INSERT INTO `x_role_menu` VALUES (563, 7, 26);
+INSERT INTO `x_role_menu` VALUES (564, 1, 38);
+INSERT INTO `x_role_menu` VALUES (565, 1, 39);
 
 -- ----------------------------
 -- Table structure for x_user
