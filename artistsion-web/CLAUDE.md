@@ -1,122 +1,44 @@
-# Artistsion Web Guide
+# Artistsion Web 指引
 
-## Stack
+## 前端技术栈
 
-- Vue 2
-- Vue Router
-- Vuex
-- Element UI
-- Axios
-- WangEditor
+- Vue 2 + Vue Router + Vuex
+- Element UI + Axios
+- WangEditor + ECharts
+- 双壳结构：`MainLayout`（主站）与 `Layout`（admin）
 
-## Dev Basics
+## 启动和构建命令
 
-- Dev server port: `8888`
-- Dev API base: `http://localhost:9999`
-- Config files:
-  - `.env.development`
-  - `.env.production`
-  - `vue.config.js`
-  - `src/settings.js`
+- 安装依赖：`npm install`
+- 开发：`npm run dev`
+- 生产构建：`npm run build:prod`
+- 单测：`npm run test:unit`
+- 关键配置：`.env.development`、`.env.production`、`vue.config.js`
 
-Typical commands:
+## 路由与权限链路
 
-```powershell
-npm install
-npm run dev
-npm run build:prod
-npm run test:unit
-```
+- 静态路由入口：`src/router/index.js`
+- 登录守卫：`src/permission.js`
+- 当前唯一认证入口：`/auth`
+- 主站关键路径：`/home`、`/artists`、`/projects`、`/work/:id`、`/artist/:id`、`/project/:id`、`/post/:id`、`/center/profile`、`/center/orders`
+- admin 统一入口：`/admin`，默认落到 `/dashboard`
+- admin 深链接兼容：`/admin/<legacy-path>` 会在守卫里映射回旧后台路由
+- 动态菜单链路仍是 `/user/info` -> `menuList` -> `require(@/views/${menu.component}.vue)`
+- admin 菜单白名单、标题覆写和 admin-only 路径集中在 `src/utils/adminConsole.js`
 
-## Routing Model
+## 当前前台 / admin 的边界
 
-- Static/public routes live in `src/router/index.js`
-- Permission logic and dynamic route injection live in `src/permission.js`
-- Logged-in menus are returned by backend `/user/info` and converted into route components with:
+- 主站、个人中心、举报入口走 `MainLayout`
+- 控制台走旧 `Layout` + 动态菜单
+- admin 当前定位是平台控制台，不再把用户自助页作为主菜单
+- 非 admin 身份访问 `/admin`、`/dashboard`、`/sys/*`、`/report/*` 等会被守卫拦回 `/home`
+- 仍保留的隐藏兼容页：`/userinfo`、`/fabusp`、`/myfenxiang`、`/liaotian`
 
-```js
-require(`@/views/${menu.component}.vue`).default
-```
+## 最容易改错的前端模块
 
-This means:
-
-- Backend menu `component` strings must match actual files under `src/views`
-- Route/menu bugs are often data issues in `x_menu`, not only frontend code issues
-
-## Main Frontend Areas
-
-### Public-facing pages
-
-- `src/views/AboutView.vue`: landing page shell
-- `src/views/about/the-index.vue`: homepage data assembly
-- `src/views/about/the-list.vue`: listing page
-- `src/views/about/detail.vue`
-- `src/views/about/details.vue`
-- `src/views/about/the-community.vue`
-
-### Auth
-
-- `src/views/login/index.vue`
-- `src/views/login/register.vue`
-- API: `src/api/user.js`
-
-### User center
-
-- `src/views/userinfo/index.vue`: profile center
-- `src/views/userinfo/fabusp.vue`: publish/edit own showcase or listing-related content
-- `src/views/userinfo/myfenxiang.vue`
-- `src/views/userinfo/liaotian.vue`
-
-### Seller / artwork management
-
-- `src/views/shangp/shangp.vue`
-- `src/views/shangp/shangpsh.vue`
-- `src/views/shangp/spsxj.vue`
-- API: `src/api/huagao.js`
-
-### Orders
-
-- `src/views/order/gouwuche.vue`
-- `src/views/order/ordergl.vue`
-- `src/views/order/orderadgl.vue`
-- `src/views/order/orderadglqb.vue`
-- API: `src/api/order.js`
-
-### System admin
-
-- `src/views/sys/user.vue`
-- `src/views/sys/role.vue`
-- `src/views/sys/route.vue`
-- APIs:
-  - `src/api/userManage.js`
-  - `src/api/roleManage.js`
-  - `src/api/menuManage.js`
-
-### Recommendation / AI / content extras
-
-- `src/api/tuijian.js`: personalized recommendation requests
-- `src/views/ai/ai.vue`: AI-related UI
-- `src/api/fenxiang.js`: showcase/share posts (`sysZuopin`)
-- `src/api/liuyan.js`, `src/api/pinglun.js`, `src/api/shoucang.js`
-
-## Important Behavior Notes
-
-- The homepage uses newest items for guests, but tries personalized recommendations for logged-in users.
-- Many list pages expect backend responses shaped like:
-
-```json
-{ "code": 20000, "data": { "total": 0, "rows": [] } }
-```
-
-- A lot of upload and download URLs are hardcoded to `http://localhost:9999/oss/file/...` inside views, not only centralized in config.
-- The project mixes public pages, personal-center pages, and admin pages inside one frontend app.
-
-## Editing Guidance
-
-- Before editing a view, check its paired API file under `src/api`.
-- Before editing login/menu behavior, check:
-  - `src/store/modules/user.js`
-  - `src/permission.js`
-  - `src/router/index.js`
-- Broad refactors, component splits, route cleanup, and structural frontend changes are acceptable when the task calls for them. Avoid noise-only formatting churn, but do not feel constrained to keep changes artificially small.
-- Do not replace project behavior with upstream `vue-admin-template` assumptions.
+- `src/permission.js`：同时处理白名单、动态路由注入、`/admin` 兼容映射和 admin 拦截
+- `src/router/index.js`：两套路由壳共存，主站页和 admin 页不要挂错壳
+- `src/store/modules/user.js`：新旧认证接口并存，但运行时仍默认消费 `/user/info`
+- `src/utils/adminConsole.js`：admin 菜单收敛和权限边界的单一事实源
+- `src/components/ReportDialog` 与 `src/views/report/index.vue`：举报前后台闭环共用链路
+- `src/views/center/profile.vue`：仍会跳隐藏兼容页，改个人中心时要一起检查 `/fabusp`、`/myfenxiang`、`/liaotian`

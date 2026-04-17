@@ -1,115 +1,49 @@
-# Artistsion Admin Guide
+# Artistsion Admin 指引
 
-## Stack
+## 后端技术栈
 
-- Spring Boot `2.7.13`
-- MyBatis-Plus
-- MySQL
-- Redis
-- JWT
-- Swagger / Springfox
-- Alipay SDK
-- DashScope SDK
+- Spring Boot `2.7.13` / Java 8
+- MyBatis-Plus + MySQL
+- Redis + JWT
+- Spring Mail + Swagger / Springfox
+- Alipay SDK + DashScope SDK + Mahout
 
-## Run Basics
+## 启动方式
 
-- Port: `9999`
-- Main class: `src/main/java/com/lf/XAdminApplication.java`
+- 开发运行：`.\mvnw.cmd spring-boot:run`
+- 编译自检：`.\mvnw.cmd -DskipTests compile`
+- 入口类：`src/main/java/com/lf/XAdminApplication.java`
+- 默认端口：`9999`
+- 本地依赖：MySQL `artistsion`、Redis
 
-Typical command on Windows:
+## 认证与菜单链路
 
-```powershell
-.\mvnw.cmd spring-boot:run
-```
+- 新认证接口：`/auth/login`、`/auth/register`、`/auth/me`、`/auth/switch-role`
+- 旧 admin 运行时仍依赖：`/user/login`、`/user/info?token=...`
+- JWT 校验：`src/main/java/com/lf/interceptor/JwtValidateInterceptor.java`
+- 白名单与跨域：`src/main/java/com/lf/config/MyWebConfig.java`
+- 菜单来源：`MenuServiceImpl.getMenuListByUserId()` -> `x_menu` / `x_role_menu` / `x_user_role`
+- 前端 token 走 `X-Token` 请求头，但 `/user/info` 仍是 query 参数 `token` 的兼容接口
 
-## Configuration
+## 关键控制器与表
 
-Primary config file:
+- 认证 / 用户 / 菜单：`AuthController`、`UserController`、`MenuController`
+- admin 能力：`AdminDashboardController`、`SysReportController`
+- 内容与交易：`SysHuagaoController`、`SysZuopinController`、`SysOrderController`
+- 配套能力：`OSSController`、`AliPayController`、`AliAiController`、`UserArticleOperationController`
+- 权限表：`x_user`、`x_role`、`x_menu`、`x_user_role`、`x_role_menu`
+- 业务表：`sys_huagao`、`sys_zuopin`、`sys_order`、`sys_report`、`sys_liuyan`、`sys_fenlei`、`sys_lunbo`
+- 推荐表：`user_article_operation`
 
-- `src/main/resources/application.properties`
+## 敏感配置提醒
 
-Important local dependencies:
+- `src/main/resources/application.properties` 与本地覆写文件包含数据库、JWT、支付宝、DashScope、邮件、文件存储配置。
+- 不要把真实密钥、支付参数、邮箱凭据、文件落盘路径写进文档、日志、截图或提交。
+- 结构变更前先核对 `artistsion-admin/sql` 和根目录 `artistsion.sql` 是否需要同步。
 
-- MySQL database: `artistsion`
-- Redis: local default connection
-- Local file storage path is configured in properties
+## 改动后端时必须联查的层次
 
-Security note:
-
-- `application.properties` currently contains database credentials, payment keys, and AI keys.
-- Treat these as sensitive. Do not echo them into new docs, logs, screenshots, or commits unless the user explicitly asks.
-
-## Project Structure
-
-- `controller`: HTTP endpoints
-- `service` / `service/impl`: business logic
-- `dao`: MyBatis-Plus mapper interfaces
-- `entity`: table mappings
-- `resources/mapper`: mapper XML
-- `config`: web, CORS, Redis, Swagger, Alipay, AI, MyBatis config
-- `interceptor`: JWT validation
-
-## Auth And Menu Flow
-
-- Login endpoint: `/user/login`
-- User info endpoint: `/user/info`
-- Token validation: `src/main/java/com/lf/interceptor/JwtValidateInterceptor.java`
-- Interceptor registration / whitelist: `src/main/java/com/lf/config/MyWebConfig.java`
-- Frontend menus come from `MenuService.getMenuListByUserId(...)`
-- Menu data is stored in `x_menu` and filtered through user roles
-
-Important detail:
-
-- Frontend sends token in `X-Token`
-- `/user/info` still expects a `token` query param and parses user data directly from JWT
-
-## High-Value Controllers
-
-- `UserController`: login, register, user CRUD, profile update
-- `SysHuagaoController`: commission listing CRUD and homepage/recommendation listing
-- `SysZuopinController`: showcase/share post CRUD
-- `SysOrderController`: order CRUD
-- `OSSController`: upload/download endpoints
-- `AliPayController`: Alipay payment request
-- `AliAiController`: DashScope / Tongyi Qianwen integration
-- `UserArticleOperationController`: recommendation behavior and recommendation results
-
-## Common Response And Query Patterns
-
-- Success wrapper: `Result.success(...)`
-- Success code: `20000`
-- Many paginated list endpoints return:
-  - `data.total`
-  - `data.rows`
-- Controllers often use `LambdaQueryWrapper` + `Page`
-- A lot of CRUD endpoints are simple `save`, `updateById`, `removeById` flows
-
-## Main Tables
-
-- `sys_huagao`
-- `sys_zuopin`
-- `sys_order`
-- `sys_fenlei`
-- `sys_lunbo`
-- `sys_pinglun`
-- `sys_shoucang`
-- `sys_liuyan`
-- `sys_liuyans`
-- `user_article_operation`
-- `x_user`
-- `x_role`
-- `x_menu`
-- `x_user_role`
-- `x_role_menu`
-
-Schema bootstrap:
-
-- Root file `artistsion.sql`
-- Additional SQL patch: `sql/2026-04-06-fix-user-username-unique.sql`
-
-## Editing Guidance
-
-- For backend behavior changes, inspect controller + service impl + entity + mapper XML together.
-- Do not assume all validation lives in controllers. Some important checks are in service impls, for example username uniqueness in `UserServiceImpl`.
-- Some strings/comments may render as mojibake in terminal output. Avoid mass re-encoding unless that is the task.
-- Existing endpoint contracts are tightly coupled to the frontend, so check consumers carefully. Contract changes and backend restructures are allowed when intentional, but they should be completed end-to-end instead of half-migrated.
+- 常规业务：`controller -> service/impl -> entity -> resources/mapper`
+- 认证 / 权限：再加看 `MyWebConfig`、`JwtValidateInterceptor`、`UserServiceImpl`、`MenuServiceImpl`
+- 菜单 / 角色：再加看 `x_menu`、`x_role_menu`、`x_user_role`，并联查前端 `permission.js`
+- 列表筛选 / 返回结构：再加看对应前端 `src/api/*.js` 和页面是否依赖 `{ code: 20000, data: { total, rows } }`
