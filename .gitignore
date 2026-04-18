@@ -46,6 +46,11 @@ build/
 # ===== VS Code =====
 .vscode/
 
+# ===== Local DB tools =====
+tools/db_readonly.local.env
+__pycache__/
+*.pyc
+
 # ===== 前端 =====
 node_modules/
 dist/

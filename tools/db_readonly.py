@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
 import argparse
+import datetime as dt
 import json
 import os
 import re
-import sys
+from decimal import Decimal
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 
 MAX_SAMPLE_LIMIT = 50
 DEFAULT_SAMPLE_LIMIT = 10
 DEFAULT_SQL_LIMIT = 50
+REPO_ROOT = Path(__file__).resolve().parent.parent
+LOCAL_ENV_FILE = REPO_ROOT / "tools" / "db_readonly.local.env"
+SPRING_APP_FILE = REPO_ROOT / "artistsion-admin" / "src" / "main" / "resources" / "application.properties"
+SPRING_LOCAL_FILE = REPO_ROOT / "artistsion-admin" / "src" / "main" / "resources" / "application-local.properties"
 TABLE_NAME_RE = re.compile(r"^[A-Za-z0-9_]+$")
+JDBC_URL_RE = re.compile(r"^jdbc:mysql://(?P<host>[^:/?#]+)(?::(?P<port>\d+))?/(?P<db>[^?]+)")
 FORBIDDEN_SQL_RE = re.compile(
     r"\b("
     r"insert|update|delete|drop|alter|truncate|create|replace|rename|grant|revoke|"
@@ -43,8 +50,24 @@ class ReadOnlyDbError(Exception):
 
 
 def json_print(payload: Dict[str, Any], exit_code: int = 0) -> None:
-    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    print(json.dumps(to_json_safe(payload), ensure_ascii=False, indent=2))
     raise SystemExit(exit_code)
+
+
+def to_json_safe(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {str(key): to_json_safe(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [to_json_safe(item) for item in value]
+    if isinstance(value, tuple):
+        return [to_json_safe(item) for item in value]
+    if isinstance(value, Decimal):
+        return int(value) if value == value.to_integral_value() else float(value)
+    if isinstance(value, (dt.datetime, dt.date, dt.time)):
+        return value.isoformat()
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return value
 
 
 def success_payload(command: str, data: Any, **extra: Any) -> Dict[str, Any]:
@@ -76,6 +99,68 @@ def require_table_name(table: str) -> str:
     return table
 
 
+def load_key_value_file(path: Path) -> Dict[str, str]:
+    values: Dict[str, str] = {}
+    if not path.exists():
+        return values
+
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        values[key.strip()] = value.strip()
+    return values
+
+
+def extract_default_placeholder(raw_value: str) -> str:
+    match = re.fullmatch(r"\$\{[^:}]+:(.*)\}", raw_value.strip())
+    if match:
+        return match.group(1)
+    return raw_value.strip()
+
+
+def parse_jdbc_url(jdbc_url: str) -> Dict[str, str]:
+    match = JDBC_URL_RE.match(jdbc_url.strip())
+    if not match:
+        return {}
+    return {
+        "DB_HOST": match.group("host"),
+        "DB_PORT": match.group("port") or "3306",
+        "DB_NAME": match.group("db"),
+    }
+
+
+def load_fallback_db_env() -> Dict[str, str]:
+    merged: Dict[str, str] = {}
+
+    local_env = load_key_value_file(LOCAL_ENV_FILE)
+    merged.update({key: value for key, value in local_env.items() if value})
+
+    spring_app = load_key_value_file(SPRING_APP_FILE)
+    spring_local = load_key_value_file(SPRING_LOCAL_FILE)
+
+    jdbc_values = parse_jdbc_url(spring_app.get("spring.datasource.url", ""))
+    for key, value in jdbc_values.items():
+        merged.setdefault(key, value)
+
+    username_value = spring_local.get("DB_USERNAME") or extract_default_placeholder(
+        spring_app.get("spring.datasource.username", "")
+    )
+    password_value = spring_local.get("DB_PASSWORD") or extract_default_placeholder(
+        spring_app.get("spring.datasource.password", "")
+    )
+
+    if username_value:
+        merged.setdefault("DB_USER", username_value)
+    if password_value or "DB_PASSWORD" in spring_local or "spring.datasource.password" in spring_app:
+        merged.setdefault("DB_PASSWORD", password_value)
+
+    return merged
+
+
 def get_db_config() -> Dict[str, Any]:
     env_map = {
         "host": "DB_HOST",
@@ -84,6 +169,10 @@ def get_db_config() -> Dict[str, Any]:
         "user": "DB_USER",
         "password": "DB_PASSWORD",
     }
+    fallback_env = load_fallback_db_env()
+    for env_name, env_value in fallback_env.items():
+        os.environ.setdefault(env_name, env_value)
+
     missing = [env_name for env_name in env_map.values() if not os.getenv(env_name)]
     if missing:
         raise ReadOnlyDbError("Missing database environment variables: " + ", ".join(missing))
@@ -130,13 +219,20 @@ def connect():
     )
 
 
+def normalize_row(row: Dict[str, Any]) -> Dict[str, Any]:
+    normalized: Dict[str, Any] = {}
+    for key, value in row.items():
+        normalized[str(key).lower()] = value
+    return normalized
+
+
 def execute_query(sql: str, params: Tuple[Any, ...] = ()) -> List[Dict[str, Any]]:
     connection = connect()
     try:
         with connection.cursor() as cursor:
             cursor.execute(sql, params)
             rows = cursor.fetchall()
-            return list(rows)
+            return [normalize_row(row) for row in rows]
     finally:
         connection.close()
 
