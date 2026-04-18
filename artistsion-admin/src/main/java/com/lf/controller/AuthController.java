@@ -111,7 +111,7 @@ public class AuthController {
         data.put("user", userInfo);
 
         data.put("roles", roles);
-        data.put("activeRole", roles.isEmpty() ? "" : roles.get(0));
+        data.put("activeRole", resolveActiveRole(roles));
 
         return Result.success(data);
     }
@@ -233,7 +233,7 @@ public class AuthController {
         data.put("user", userInfo);
 
         data.put("roles", roles);
-        data.put("activeRole", roles.isEmpty() ? "" : roles.get(0));
+        data.put("activeRole", resolveActiveRole(roles));
         data.put("menuList", menuList);
 
         // 兼容旧前端 getInfo 消费结构
@@ -284,5 +284,15 @@ public class AuthController {
         wrapper.eq(Role::getRoleName, roleName);
         Role role = roleMapper.selectOne(wrapper);
         return role != null ? role.getRoleId() : null;
+    }
+
+    private String resolveActiveRole(List<String> roles) {
+        if (roles == null || roles.isEmpty()) {
+            return "";
+        }
+        if (roles.contains("admin")) {
+            return "admin";
+        }
+        return roles.get(0);
     }
 }

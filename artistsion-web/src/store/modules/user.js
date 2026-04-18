@@ -1,4 +1,4 @@
-import { login, logout, getInfo } from '@/api/user'
+import { login, logout } from '@/api/user'
 import { authLogin as authLoginApi, getAuthMe } from '@/api/auth'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import { resetRouter } from '@/router'
@@ -84,17 +84,22 @@ const actions = {
   // get user info
   getInfo({ commit, state }) {
     return new Promise((resolve, reject) => {
-      getInfo(state.token).then(response => {
+      getAuthMe().then(response => {
         const { data } = response
 
         if (!data) {
           reject('Verification failed, please Login again.')
         }
 
-        const { name, avatar, menuList, roles, activeRole } = data
+        const profile = data.user || data.userList || {}
+        const name = data.name || profile.username || profile.name || ''
+        const avatar = data.avatar || profile.avatar || ''
+        const menuList = data.menuList || []
+        const roles = data.roles || []
+        const activeRole = data.activeRole || ''
 
-        if (data.userList && data.userList.id) {
-          commit('SET_USER_ID', data.userList.id)
+        if (profile.id) {
+          commit('SET_USER_ID', profile.id)
         }
         commit('SET_NAME', name)
         commit('SET_AVATAR', avatar)
@@ -143,4 +148,3 @@ export default {
   mutations,
   actions
 }
-

@@ -32,8 +32,6 @@ public class MyWebConfig implements WebMvcConfigurer {
                         "/sysHuagao/getzuixin",
                         "/sysHuagao/tuijianlist",
                         "/user/artists",
-                        "/user/info",
-                        "/user/logout",
                         "/oss/file/**",
                         "/error",
                         "/swagger-ui/**",

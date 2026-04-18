@@ -1,6 +1,6 @@
 # ── 本地密钥模板 ──
 # 复制此文件为 application-local.properties，填入你的真实密钥。
-# application-local.properties 已加入 .gitignore，不会被提交。
+# application-local.properties 应加入 .gitignore，不要提交真实密钥。
 
 # 数据库
 DB_USERNAME=root

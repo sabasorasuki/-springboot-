@@ -17,7 +17,6 @@ import java.util.List;
 
 @Configuration
 @EnableOpenApi
-@EnableWebMvc
 public class SwaggerConfig {
     @Bean
     public Docket api() {
@@ -41,7 +40,7 @@ public class SwaggerConfig {
                 .securityReferences(defaultAuth())
                 .operationSelector(operationContext -> {
                     String path = operationContext.requestMappingPattern();
-                    return path != null && PathSelectors.regex("^(?!auth).*$").test(path);
+                    return path != null && !path.startsWith("/auth");
                 })
                 .build();
     }

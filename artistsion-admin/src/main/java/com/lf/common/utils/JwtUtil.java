@@ -25,11 +25,14 @@ public class JwtUtil {
     @Value("${jwt.secret:123456}")
     private String jwtKey;
 
+    @Value("${jwt.expire-ms:86400000}")
+    private long jwtExpireMs;
+
     public  String createToken(Object data){
         // 当前时间
         long currentTime = System.currentTimeMillis();
         // 过期时间
-        long expTime = currentTime+JWT_EXPIRE;
+        long expTime = currentTime + jwtExpireMs;
         // 构建jwt
         JwtBuilder builder = Jwts.builder()
                 .setId(UUID.randomUUID()+"")

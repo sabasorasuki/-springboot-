@@ -84,16 +84,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        if (loginUser != null) {
+        if (loginUser != null && loginUser.getId() != null) {
+            User dbUser = userMapper.selectById(loginUser.getId());
+            if (dbUser == null || (dbUser.getDeleted() != null && dbUser.getDeleted() == 1)) {
+                return null;
+            }
+            dbUser.setPassword(null);
+
             HashMap<String, Object> data = new HashMap<>();
-            data.put("name", loginUser.getUsername());
-            data.put("avatar", loginUser.getAvatar());
-            data.put("userList", loginUser);
+            data.put("name", dbUser.getUsername());
+            data.put("avatar", dbUser.getAvatar());
+            data.put("userList", dbUser);
 
-            List<String> roleList = userMapper.getRoleNamesByUserId(loginUser.getId());
+            List<String> roleList = userMapper.getRoleNamesByUserId(dbUser.getId());
             data.put("roles", roleList);
+            data.put("activeRole", resolveActiveRole(roleList));
 
-            List<Menu> menuList = menuService.getMenuListByUserId(loginUser.getId());
+            List<Menu> menuList = menuService.getMenuListByUserId(dbUser.getId());
             data.put("menuList", menuList);
             return data;
         }
@@ -208,5 +215,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (count != null && count > 0) {
             throw new BusinessException(20006, "\u7528\u6237\u540d\u5df2\u5b58\u5728");
         }
+    }
+
+    private String resolveActiveRole(List<String> roleList) {
+        if (roleList == null || roleList.isEmpty()) {
+            return "";
+        }
+        if (roleList.contains("admin")) {
+            return "admin";
+        }
+        return roleList.get(0);
     }
 }
