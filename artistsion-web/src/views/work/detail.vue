@@ -164,7 +164,7 @@ export default {
       }
     },
     goArtist(artistId) {
-      this.$router.push('/artist/' + artistId)
+      this.$router.push('/center/profile/' + artistId)
     },
     openReportDialog() {
       this.reportVisible = true

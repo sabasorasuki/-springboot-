@@ -158,7 +158,7 @@ export default {
       return this.followingIds.has(id)
     },
     goArtist(id) {
-      this.$router.push('/artist/' + id)
+      this.$router.push('/center/profile/' + id)
     },
     async handleUnfollow(user) {
       try {

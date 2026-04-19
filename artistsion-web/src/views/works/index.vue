@@ -148,7 +148,7 @@ export default {
       const authorId = item.userids || item.userId
       if (authorId) {
         this.previewVisible = false
-        this.$router.push('/artist/' + authorId)
+        this.$router.push('/center/profile/' + authorId)
       }
     }
   }

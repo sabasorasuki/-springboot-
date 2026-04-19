@@ -143,7 +143,7 @@ export default {
     },
 
     goArtistDetail(id) {
-      this.$router.push('/artist/' + id)
+      this.$router.push('/center/profile/' + id)
     }
   }
 }
@@ -316,49 +316,6 @@ export default {
 }
 
 /* ── 响应式 ── */
-@media (max-width: 900px) {
-  .artist-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 600px) {
-  .artist-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
-  flex: 1;
-}
-
-.placeholder-line {
-  height: 12px;
-  border-radius: 6px;
-  background: #eee;
-  margin-bottom: 6px;
-
-  &.w50 { width: 50%; }
-  &.w70 { width: 70%; }
-}
-
-.artist-card__gallery {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.gallery-thumb {
-  flex: 1;
-  padding-top: 33%;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #e8e0f0 0%, #f0e8f5 100%);
-}
-
-.artist-card__tags {
-  display: flex;
-  gap: 6px;
-}
-
 @media (max-width: 900px) {
   .artist-grid {
     grid-template-columns: repeat(2, 1fr);

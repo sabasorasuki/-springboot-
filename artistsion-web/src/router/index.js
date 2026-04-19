@@ -154,16 +154,8 @@ export const constantRoutes = [
   },
   {
     path: '/artist/:id',
-    component: MainLayout,
-    hidden: true,
-    children: [
-      {
-        path: '',
-        name: 'ArtistDetail',
-        component: () => import('@/views/artists/detail'),
-        meta: { title: '画师详情' }
-      }
-    ]
+    redirect: to => `/center/profile/${to.params.id}`,
+    hidden: true
   },
   {
     path: '/project/:id',
@@ -198,7 +190,7 @@ export const constantRoutes = [
     hidden: true,
     children: [
       {
-        path: 'profile',
+        path: 'profile/:id?',
         name: 'CenterProfile',
         component: () => import('@/views/center/profile'),
         meta: { title: '个人中心' }

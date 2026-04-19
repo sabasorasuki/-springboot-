@@ -28,18 +28,10 @@
                 <i class="el-icon-bell" title="通知" />
               </el-badge>
 
-              <!-- 主操作按钮：画师模式=投稿，客户模式=发布需求 -->
-              <el-dropdown split-button type="primary" size="small" class="main-action-btn" trigger="click" @click="handleMainAction" @command="handleMainActionSub">
+              <!-- 主操作按钮：画师模式=投稿，用户模式=发布需求 -->
+              <el-button type="primary" size="small" class="main-action-btn" @click="handleMainAction">
                 {{ displayMode === 'artist' ? '投稿' : '发布需求' }}
-                <el-dropdown-menu slot="dropdown">
-                  <el-dropdown-item v-if="displayMode === 'artist'" command="publishProject">
-                    <i class="el-icon-document-add" /> 发布需求
-                  </el-dropdown-item>
-                  <el-dropdown-item v-else command="submit">
-                    <i class="el-icon-edit" /> 投稿
-                  </el-dropdown-item>
-                </el-dropdown-menu>
-              </el-dropdown>
+              </el-button>
 
               <el-dropdown trigger="click" @command="handleAvatarCommand">
                 <div class="avatar-wrapper">
@@ -66,10 +58,6 @@
                   </el-dropdown-item>
                   <el-dropdown-item command="orders">
                     <i class="el-icon-document" /> 订单
-                  </el-dropdown-item>
-                  <el-dropdown-item divided command="toggleMode">
-                    <i class="el-icon-refresh" /> 模式切换
-                    <span class="mode-badge">{{ displayMode === 'artist' ? '画师' : '客户' }}</span>
                   </el-dropdown-item>
                   <el-dropdown-item divided command="logout">
                     <i class="el-icon-switch-button" /> 退出登录
@@ -148,19 +136,6 @@ export default {
         this.$router.push('/publish/project')
       }
     },
-    handleMainActionSub(command) {
-      if (command === 'publishProject') {
-        this.$router.push('/publish/project')
-      } else if (command === 'submit') {
-        this.$router.push('/publish/work')
-      }
-    },
-    toggleDisplayMode() {
-      const next = this.displayMode === 'artist' ? 'client' : 'artist'
-      this.$store.commit('user/SET_DISPLAY_MODE', next)
-      const label = next === 'artist' ? '画师' : '客户'
-      this.$message.success(`已切换为${label}模式`)
-    },
     async handleAvatarCommand(command) {
       switch (command) {
         case 'center':
@@ -177,9 +152,6 @@ export default {
           break
         case 'orders':
           this.$router.push('/center/orders')
-          break
-        case 'toggleMode':
-          this.toggleDisplayMode()
           break
         case 'logout':
           await this.$store.dispatch('user/logout')
@@ -305,33 +277,18 @@ export default {
   }
 }
 
-.mode-badge {
-  display: inline-block;
-  margin-left: 6px;
-  padding: 1px 6px;
-  font-size: 11px;
-  color: #e17055;
-  background: #ffeee8;
-  border-radius: 8px;
-}
-
 .main-action-btn {
   margin-right: 4px;
+  min-width: 88px;
+  background: #6c5ce7;
+  border-color: #6c5ce7;
+  border-radius: 20px;
+  font-size: 13px;
 
-  ::v-deep .el-button--primary {
-    background: #6c5ce7;
-    border-color: #6c5ce7;
-    border-radius: 20px 0 0 20px;
-    font-size: 13px;
-
-    &:hover {
-      background: #5a4bd1;
-      border-color: #5a4bd1;
-    }
-  }
-
-  ::v-deep .el-button--primary:last-child {
-    border-radius: 0 20px 20px 0;
+  &:hover,
+  &:focus {
+    background: #5a4bd1;
+    border-color: #5a4bd1;
   }
 }
 

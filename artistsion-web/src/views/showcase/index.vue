@@ -117,7 +117,7 @@ export default {
     goAuthor(item) {
       const authorId = item.shangjiaids
       if (authorId) {
-        this.$router.push('/artist/' + authorId)
+        this.$router.push('/center/profile/' + authorId)
       }
     }
   }

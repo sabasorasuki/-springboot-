@@ -1,19 +1,24 @@
 <template>
   <div class="publish-work">
     <el-card class="publish-card">
-      <h2 class="publish-title">投稿发布</h2>
+      <div class="publish-header">
+        <div>
+          <h2 class="publish-title">{{ publishType === 'zuopin' ? '发布作品' : '发布橱窗' }}</h2>
+          <p class="publish-desc">
+            {{ publishType === 'zuopin' ? '在这里发布作品内容，页面内直接切换投稿类型。' : '在这里上架橱窗商品，页面内直接切换投稿类型。' }}
+          </p>
+        </div>
+
+        <el-radio-group v-model="publishType" class="publish-switch" @change="handleTypeChange">
+          <el-radio-button label="zuopin">发布作品</el-radio-button>
+          <el-radio-button label="huagao">发布橱窗</el-radio-button>
+        </el-radio-group>
+      </div>
 
       <el-form ref="form" :model="form" :rules="rules" label-width="100px">
-        <!-- 投稿类型选择 -->
-        <el-form-item label="投稿类型">
-          <el-radio-group v-model="publishType" @change="handleTypeChange">
-            <el-radio-button label="zuopin">作品</el-radio-button>
-            <el-radio-button label="huagao">橱窗</el-radio-button>
-          </el-radio-group>
-          <div class="type-hint">
-            {{ publishType === 'zuopin' ? '作品投稿无需审核，发布后直接展示' : '橱窗商品发布后直接上架' }}
-          </div>
-        </el-form-item>
+        <div class="type-hint">
+          {{ publishType === 'zuopin' ? '作品投稿无需审核，发布后直接展示。' : '橱窗商品发布后直接上架。' }}
+        </div>
 
         <!-- 通用字段：封面图 -->
         <el-form-item label="封面图" prop="photo">
@@ -279,11 +284,26 @@ export default {
 .publish-title {
   font-size: 22px;
   font-weight: 600;
-  margin-bottom: 24px;
+  margin: 0;
   color: #303133;
 }
+.publish-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.publish-desc {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #909399;
+}
+.publish-switch {
+  flex-shrink: 0;
+}
 .type-hint {
-  margin-top: 6px;
+  margin: 0 0 18px;
   font-size: 12px;
   color: #909399;
 }
@@ -309,5 +329,10 @@ export default {
   height: 178px;
   display: block;
   object-fit: cover;
+}
+@media (max-width: 768px) {
+  .publish-header {
+    flex-direction: column;
+  }
 }
 </style>
