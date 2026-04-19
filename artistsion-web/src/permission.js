@@ -110,21 +110,38 @@ router.afterEach(() => {
   NProgress.done()
 })
 
-function myFilterAsyncRoutes(menuList) {
+function myFilterAsyncRoutes(menuList, usedRouteNames = new Set()) {
   menuList.filter(menu => {
-    if (menu.component === 'Layout') {
+    const isLayoutRoute = menu.component === 'Layout'
+    menu.name = createUniqueRouteName(menu, usedRouteNames, isLayoutRoute)
+
+    if (isLayoutRoute) {
       menu.component = Layout
-      console.log(menu.component)
     } else {
       menu.component = require(`@/views/${menu.component}.vue`).default
     }
     // 递归处理子菜单
     if (menu.children && menu.children.length) {
-      menu.children = myFilterAsyncRoutes(menu.children)
+      menu.children = myFilterAsyncRoutes(menu.children, usedRouteNames)
     }
     return true
   })
   return menuList
+}
+
+function createUniqueRouteName(menu, usedRouteNames, isLayoutRoute) {
+  const rawName = (menu.name || menu.path || menu.component || 'route').replace(/[^\w-]/g, '_')
+  const baseName = isLayoutRoute ? `${rawName}_layout_${menu.menuId || 'root'}` : rawName
+  let candidate = baseName
+  let index = 1
+
+  while (usedRouteNames.has(candidate)) {
+    candidate = `${baseName}_${index}`
+    index++
+  }
+
+  usedRouteNames.add(candidate)
+  return candidate
 }
 
 function cloneMenuList(menuList) {

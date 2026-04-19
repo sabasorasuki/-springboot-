@@ -29,10 +29,13 @@ export const ossUploadImgServer = `${BASE}/oss/file/uploadImg`
 export const ossBase = BASE
 
 export function extractUploadFileName(response) {
-  if (!response || response.code !== 20000 || typeof response.data !== 'string') {
+  if (!response || response.code !== 20000) {
     return ''
   }
-  return response.data.trim()
+  const raw = typeof response.data === 'string' && response.data.trim()
+    ? response.data
+    : (typeof response.message === 'string' ? response.message : '')
+  return raw.trim()
 }
 
 export function normalizeImageUrl(value) {

@@ -15,9 +15,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -30,15 +37,67 @@ public class OSSController {
     @Value("${file.public-base-url:http://localhost:9999}")
     private String publicBaseUrl;
 
-    private String normalizeBasePath() {
-        if (basePath == null) {
+    private String normalizeBasePath(String value) {
+        if (value == null) {
             return "";
         }
-        String p = basePath.trim();
+        String p = value.trim();
+        if (p.isEmpty()) {
+            return "";
+        }
         if (!p.endsWith("/") && !p.endsWith("\\")) {
             p = p + File.separator;
         }
         return p;
+    }
+
+    private List<String> candidateBasePaths() {
+        Set<String> candidates = new LinkedHashSet<>();
+        String configuredPath = normalizeBasePath(basePath);
+        if (StringUtils.hasLength(configuredPath)) {
+            candidates.add(configuredPath);
+        }
+        String fallbackPath = normalizeBasePath(System.getProperty("user.dir") + File.separator + "uploads" + File.separator + "images");
+        candidates.add(fallbackPath);
+        return new ArrayList<>(candidates);
+    }
+
+    private File resolveWritableDirectory() throws IOException {
+        IOException lastException = null;
+        for (String candidate : candidateBasePaths()) {
+            try {
+                Path path = Paths.get(candidate);
+                Files.createDirectories(path);
+                if (Files.isDirectory(path) && Files.isWritable(path)) {
+                    return path.toFile();
+                }
+            } catch (Exception ex) {
+                lastException = ex instanceof IOException ? (IOException) ex : new IOException(ex);
+            }
+        }
+        throw lastException != null ? lastException : new IOException("No writable storage directory available");
+    }
+
+    private File resolveExistingFile(String name) throws IOException {
+        for (String candidate : candidateBasePaths()) {
+            File baseDir = new File(candidate).getCanonicalFile();
+            File target = new File(baseDir, name).getCanonicalFile();
+            if (!target.getPath().startsWith(baseDir.getPath())) {
+                continue;
+            }
+            if (target.exists() && target.isFile()) {
+                return target;
+            }
+        }
+        return null;
+    }
+
+    private String normalizeModule(String module) {
+        if (!StringUtils.hasText(module)) {
+            return "common";
+        }
+        String sanitized = module.trim().toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_-]", "");
+        return StringUtils.hasLength(sanitized) ? sanitized : "common";
     }
 
     private static String extOf(String filename) {
@@ -86,7 +145,8 @@ public class OSSController {
     }
 
     @PostMapping("/upload")
-    public Result<String> upload(MultipartFile file) {
+    public Result<String> upload(MultipartFile file,
+                                 @RequestParam(value = "module", required = false) String module) {
         if (file == null || file.isEmpty()) {
             return Result.fail(50000, "文件为空");
         }
@@ -95,19 +155,20 @@ public class OSSController {
         if (!StringUtils.hasLength(suffix)) {
             suffix = ".bin";
         }
-        String fileName = UUID.randomUUID().toString().replace("-", "") + suffix;
-        String dirPath = normalizeBasePath();
-        File dir = new File(dirPath);
-        if (!dir.exists() && !dir.mkdirs()) {
+        String fileName = normalizeModule(module) + "_" + UUID.randomUUID().toString().replace("-", "") + suffix;
+        final File dir;
+        try {
+            dir = resolveWritableDirectory();
+        } catch (IOException e) {
             return Result.fail(50000, "无法创建存储目录");
         }
         try {
-            file.transferTo(new File(dirPath + fileName));
+            file.transferTo(new File(dir, fileName));
         } catch (IOException e) {
             e.printStackTrace();
             return Result.fail(50000, "保存失败");
         }
-        return Result.success(fileName);
+        return Result.success(fileName, "上传成功");
     }
 
     @GetMapping("/download")
@@ -119,21 +180,14 @@ public class OSSController {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-        String dirPath = normalizeBasePath();
-        File baseDir;
         File target;
         try {
-            baseDir = new File(dirPath).getCanonicalFile();
-            target = new File(baseDir, name).getCanonicalFile();
-            if (!target.getPath().startsWith(baseDir.getPath())) {
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                return;
-            }
+            target = resolveExistingFile(name);
         } catch (IOException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             return;
         }
-        if (!target.exists() || !target.isFile()) {
+        if (target == null || !target.exists() || !target.isFile()) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
@@ -178,7 +232,7 @@ public class OSSController {
     public Map<String, Object> uploadImg(@RequestParam(value = "myFileName") MultipartFile file, HttpServletRequest request) {
         Map<String, Object> map = new HashMap<>();
         try {
-            Result<String> upload = this.upload(file);
+            Result<String> upload = this.upload(file, "editor");
             if (upload.getCode() == null || upload.getCode() != 20000) {
                 map.put("errno", 1);
                 map.put("message", upload.getMessage());

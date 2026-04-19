@@ -30,112 +30,72 @@
             />
           </div>
 
-          <div class="profile-summary-panel">
-            <div class="profile-summary">
-              <div class="profile-summary__top">
-                <div class="profile-title-group">
-                  <h1 class="profile-name">{{ profileDisplayName }}</h1>
-                  <div class="profile-meta">
-                    <span v-if="profile.username" class="meta-pill">@{{ profile.username }}</span>
-                    <span v-if="locationText" class="meta-pill">
-                      <i class="el-icon-location-outline" />
-                      {{ locationText }}
-                    </span>
-                  </div>
-                </div>
-
-                <div class="profile-actions">
-                  <template v-if="isSelf">
-                    <div class="profile-action-buttons">
-                      <el-button
-                        plain
-                        size="small"
-                        class="header-action-btn"
-                        @click="editDialogVisible = true"
-                      >
-                        编辑个人资料
-                      </el-button>
-
-                      <el-upload
-                        class="profile-inline-uploader"
-                        :action="ossUploadAction('avatar')"
-                        :before-upload="beforeAvatarUpload"
-                        :show-file-list="false"
-                        :on-success="handleAvatarUploadSuccess"
-                        :on-error="handleAvatarUploadError"
-                      >
-                        <el-button
-                          plain
-                          size="small"
-                          class="header-action-btn"
-                          :loading="avatarUploading"
-                        >
-                          编辑头像
-                        </el-button>
-                      </el-upload>
-
-                      <el-upload
-                        class="profile-inline-uploader"
-                        :action="ossUploadAction('cover')"
-                        :before-upload="beforeCoverUpload"
-                        :show-file-list="false"
-                        :on-success="handleCoverUploadSuccess"
-                        :on-error="handleCoverUploadError"
-                      >
-                        <el-button
-                          plain
-                          size="small"
-                          class="header-action-btn"
-                          :loading="coverUploading"
-                        >
-                          编辑背景图
-                        </el-button>
-                      </el-upload>
-                    </div>
-
-                    <div class="identity-switch">
-                      <span class="identity-switch__label">身份切换</span>
-                      <el-radio-group v-model="displayModeValue" size="small">
-                        <el-radio-button label="artist">画师</el-radio-button>
-                        <el-radio-button label="client">用户</el-radio-button>
-                      </el-radio-group>
-                    </div>
-                  </template>
-
-                  <template v-else>
-                    <el-button
-                      size="small"
-                      class="header-action-btn"
-                      :type="isFollowingProfile ? '' : 'primary'"
-                      :plain="isFollowingProfile"
-                      :loading="followLoading"
-                      @click="toggleFollowProfile"
-                    >
-                      {{ isFollowingProfile ? '已关注' : '关注' }}
-                    </el-button>
-                  </template>
+          <div class="profile-summary">
+            <div class="profile-summary__top">
+              <div class="profile-title-group">
+                <h1 class="profile-name">{{ profileDisplayName }}</h1>
+                <div class="profile-meta">
+                  <span v-if="profile.username" class="meta-pill">@{{ profile.username }}</span>
+                  <span v-if="locationText" class="meta-pill">
+                    <i class="el-icon-location-outline" />
+                    {{ locationText }}
+                  </span>
                 </div>
               </div>
 
-              <p class="profile-bio" :class="{ 'is-empty': !profile.bio }">
-                {{ profile.bio || '这个人还没有留下简介。' }}
-              </p>
+              <div class="profile-actions">
+                <template v-if="isSelf">
+                  <el-button
+                    plain
+                    size="small"
+                    class="header-action-btn"
+                    @click="openEditDialog"
+                  >
+                    编辑个人信息
+                  </el-button>
 
-              <div class="profile-stats">
-                <button type="button" class="stat-card is-link" @click="goFollows">
-                  <span class="stat-card__value">{{ followStats.following }}</span>
-                  <span class="stat-card__label">{{ isSelf ? '已关注' : '关注' }}</span>
-                </button>
+                  <div class="identity-switch">
+                    <span class="identity-switch__label">身份切换</span>
+                    <el-radio-group v-model="displayModeValue" size="small">
+                      <el-radio-button label="artist">画师</el-radio-button>
+                      <el-radio-button label="client">用户</el-radio-button>
+                    </el-radio-group>
+                  </div>
+                </template>
 
-                <button type="button" class="stat-card is-link" @click="goFollows">
-                  <span class="stat-card__value">{{ followStats.followers }}</span>
-                  <span class="stat-card__label">粉丝</span>
-                </button>
+                <template v-else>
+                  <el-button
+                    size="small"
+                    class="header-action-btn"
+                    :type="isFollowingProfile ? '' : 'primary'"
+                    :plain="isFollowingProfile"
+                    :loading="followLoading"
+                    @click="toggleFollowProfile"
+                  >
+                    {{ isFollowingProfile ? '已关注' : '关注' }}
+                  </el-button>
+                </template>
+              </div>
+            </div>
 
-                <div class="stat-card">
-                  <span class="stat-card__value">{{ portfolioCount }}</span>
-                  <span class="stat-card__label">{{ portfolioLabel }}</span>
-                </div>
+            <p class="profile-bio" :class="{ 'is-empty': !profile.bio }">
+              {{ profile.bio || '这个人还没有留下简介。' }}
+            </p>
+
+            <div class="profile-stats">
+              <button type="button" class="stat-card is-link" @click="goFollows">
+                <span class="stat-card__value">{{ followStats.following }}</span>
+                <span class="stat-card__label">{{ isSelf ? '已关注' : '关注' }}</span>
+              </button>
+
+              <button type="button" class="stat-card is-link" @click="goFollows">
+                <span class="stat-card__value">{{ followStats.followers }}</span>
+                <span class="stat-card__label">粉丝</span>
+              </button>
+
+              <div class="stat-card">
+                <span class="stat-card__value">{{ portfolioCount }}</span>
+                <span class="stat-card__label">{{ portfolioLabel }}</span>
               </div>
             </div>
           </div>
@@ -646,17 +606,63 @@
 
       <el-dialog
         :visible.sync="editDialogVisible"
-        title="编辑个人资料"
-        width="560px"
+        title="编辑个人信息"
+        width="720px"
         destroy-on-close
       >
         <el-form ref="editForm" :model="editForm" label-width="84px" class="edit-form">
-          <div class="edit-form__hint">头像和背景图请在资料头部直接上传，这里只修改基础资料。</div>
+          <div class="edit-form__hint">在同一个面板里完成基础资料、头像和头图调整。上传完成后点击保存，即会同步刷新个人中心和顶栏头像。</div>
+          <div class="edit-media-grid">
+            <section class="edit-media-card edit-media-card--avatar">
+              <div class="edit-media-card__header">
+                <span class="edit-media-card__title">头像</span>
+                <span class="edit-media-card__desc">上传后点击保存生效</span>
+              </div>
+              <div class="edit-avatar-preview">
+                <img v-if="editAvatarPreview" :src="editAvatarPreview" alt="" class="edit-avatar-preview__img">
+                <div v-else class="edit-avatar-preview__placeholder">暂无头像</div>
+              </div>
+              <el-upload
+                class="edit-upload"
+                :action="ossUploadAction('photo')"
+                :before-upload="beforeAvatarUpload"
+                :show-file-list="false"
+                :on-success="handleAvatarUploadSuccess"
+                :on-error="handleAvatarUploadError"
+              >
+                <el-button size="small" plain :loading="avatarUploading">上传新头像</el-button>
+              </el-upload>
+            </section>
+
+            <section class="edit-media-card edit-media-card--cover">
+              <div class="edit-media-card__header">
+                <span class="edit-media-card__title">背景图</span>
+                <span class="edit-media-card__desc">建议横向图片，个人主页头图会在保存后更新</span>
+              </div>
+              <div class="edit-cover-preview" :style="editCoverPreviewStyle">
+                <div class="edit-cover-preview__mask" />
+                <span v-if="!editCoverPreview" class="edit-cover-preview__placeholder">暂无背景图</span>
+              </div>
+              <el-upload
+                class="edit-upload"
+                :action="ossUploadAction('photo')"
+                :before-upload="beforeCoverUpload"
+                :show-file-list="false"
+                :on-success="handleCoverUploadSuccess"
+                :on-error="handleCoverUploadError"
+              >
+                <el-button size="small" plain :loading="coverUploading">上传新背景图</el-button>
+              </el-upload>
+            </section>
+          </div>
           <el-form-item label="用户名">
             <el-input v-model="editForm.username" disabled />
           </el-form-item>
           <el-form-item label="昵称">
             <el-input v-model="editForm.name" placeholder="请输入昵称" />
+          </el-form-item>
+          <el-form-item v-if="locationText" label="地区">
+            <el-input :value="locationText" disabled />
           </el-form-item>
           <el-form-item label="邮箱">
             <el-input v-model="editForm.email" placeholder="请输入邮箱" />
@@ -788,6 +794,20 @@ export default {
       }
       return {
         backgroundImage: `linear-gradient(135deg, rgba(14, 29, 41, 0.12), rgba(14, 29, 41, 0.42)), url("${this.profileCoverImage}")`
+      }
+    },
+    editAvatarPreview() {
+      return normalizeImageUrl(this.editForm.avatar) || this.profileAvatar
+    },
+    editCoverPreview() {
+      return normalizeImageUrl(this.editForm.coverImage) || this.profileCoverImage
+    },
+    editCoverPreviewStyle() {
+      if (!this.editCoverPreview) {
+        return {}
+      }
+      return {
+        backgroundImage: `linear-gradient(135deg, rgba(14, 29, 41, 0.14), rgba(14, 29, 41, 0.38)), url("${this.editCoverPreview}")`
       }
     },
     locationText() {
@@ -1123,6 +1143,12 @@ export default {
     handleCardImageError(item) {
       this.$set(item, 'photoBroken', true)
     },
+    openEditDialog() {
+      this.applyProfileToForm(this.profile)
+      this.avatarUploading = false
+      this.coverUploading = false
+      this.editDialogVisible = true
+    },
     beforeAvatarUpload() {
       this.avatarUploading = true
       return true
@@ -1146,8 +1172,8 @@ export default {
         phone: Object.prototype.hasOwnProperty.call(overrides, 'phone') ? overrides.phone : this.editForm.phone,
         bio: Object.prototype.hasOwnProperty.call(overrides, 'bio') ? overrides.bio : this.editForm.bio,
         styleTags: Object.prototype.hasOwnProperty.call(overrides, 'styleTags') ? overrides.styleTags : this.editForm.styleTags,
-        avatar: Object.prototype.hasOwnProperty.call(overrides, 'avatar') ? overrides.avatar : ((this.profile && this.profile.avatar) || this.editForm.avatar || ''),
-        coverImage: Object.prototype.hasOwnProperty.call(overrides, 'coverImage') ? overrides.coverImage : ((this.profile && this.profile.coverImage) || this.editForm.coverImage || '')
+        avatar: Object.prototype.hasOwnProperty.call(overrides, 'avatar') ? overrides.avatar : (this.editForm.avatar || (this.profile && this.profile.avatar) || ''),
+        coverImage: Object.prototype.hasOwnProperty.call(overrides, 'coverImage') ? overrides.coverImage : (this.editForm.coverImage || (this.profile && this.profile.coverImage) || '')
       }
     },
     syncProfileState(profile) {
@@ -1230,7 +1256,7 @@ export default {
         this.saving = false
       }
     },
-    async updateMediaField(field, response, successMessage, loadingKey) {
+    applyUploadedImage(field, response, loadingKey, successMessage) {
       const fileName = extractUploadFileName(response)
       if (!fileName) {
         this[loadingKey] = false
@@ -1245,25 +1271,19 @@ export default {
         return
       }
 
-      try {
-        await userApi.updateMyUser(this.buildProfilePayload({ [field]: nextUrl }))
-        await this.refreshSelfProfile()
-        this.$message.success(successMessage)
-      } catch (error) {
-        this.$message.error('保存失败')
-      } finally {
-        this[loadingKey] = false
-      }
+      this.editForm[field] = nextUrl
+      this[loadingKey] = false
+      this.$message.success(successMessage)
     },
     handleAvatarUploadSuccess(response) {
-      this.updateMediaField('avatar', response, '头像已更新', 'avatarUploading')
+      this.applyUploadedImage('avatar', response, 'avatarUploading', '头像上传成功，保存后生效')
     },
     handleAvatarUploadError() {
       this.avatarUploading = false
       this.$message.error('头像上传失败')
     },
     handleCoverUploadSuccess(response) {
-      this.updateMediaField('coverImage', response, '背景图已更新', 'coverUploading')
+      this.applyUploadedImage('coverImage', response, 'coverUploading', '背景图上传成功，保存后生效')
     },
     handleCoverUploadError() {
       this.coverUploading = false
@@ -1389,8 +1409,8 @@ export default {
 .profile-hero__body {
   display: flex;
   gap: 28px;
-  align-items: flex-end;
-  padding: 0 28px;
+  align-items: flex-start;
+  padding: 0 8px;
   margin-top: -72px;
   position: relative;
   z-index: 2;
@@ -1410,18 +1430,10 @@ export default {
   border: 4px solid rgba(255, 255, 255, 0.88);
 }
 
-.profile-summary-panel {
+.profile-summary {
   flex: 1;
   min-width: 0;
-  border-radius: 28px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 18px 42px rgba(34, 46, 69, 0.12);
-  backdrop-filter: blur(10px);
-}
-
-.profile-summary {
-  min-width: 0;
-  padding: 24px 28px 26px;
+  padding: 86px 20px 4px 0;
 }
 
 .profile-summary__top {
@@ -1468,23 +1480,11 @@ export default {
   justify-content: flex-end;
 }
 
-.profile-action-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-.profile-inline-uploader {
-  display: inline-flex;
-}
-
-.profile-inline-uploader ::v-deep .el-upload {
-  display: inline-flex;
-}
-
 .header-action-btn {
   border-radius: 999px;
+  min-width: 112px;
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(176, 189, 198, 0.8);
 }
 
 .identity-switch {
@@ -1552,7 +1552,7 @@ export default {
 }
 
 .profile-shell {
-  margin-top: 24px;
+  margin-top: 18px;
   background: #fff;
   border-radius: 24px;
   box-shadow: 0 14px 40px rgba(34, 46, 69, 0.08);
@@ -1929,6 +1929,95 @@ export default {
   line-height: 1.6;
 }
 
+.edit-media-grid {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.edit-media-card {
+  border-radius: 20px;
+  border: 1px solid #e7ecea;
+  background: #fbfdfc;
+  padding: 16px;
+}
+
+.edit-media-card__header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.edit-media-card__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #20313f;
+}
+
+.edit-media-card__desc {
+  font-size: 12px;
+  color: #7b8796;
+}
+
+.edit-avatar-preview {
+  width: 132px;
+  height: 132px;
+  margin-bottom: 12px;
+  border-radius: 28px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #eff3f1 0%, #f7faf8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-avatar-preview__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.edit-avatar-preview__placeholder,
+.edit-cover-preview__placeholder {
+  font-size: 13px;
+  color: #7b8796;
+}
+
+.edit-cover-preview {
+  position: relative;
+  min-height: 148px;
+  margin-bottom: 12px;
+  border-radius: 24px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(255, 203, 119, 0.9), transparent 35%),
+    radial-gradient(circle at top right, rgba(65, 184, 131, 0.22), transparent 28%),
+    linear-gradient(135deg, #1f5c4f 0%, #2e7d69 40%, #f5d48f 100%);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-cover-preview__mask {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(13, 22, 28, 0.08) 0%, rgba(13, 22, 28, 0.26) 100%);
+}
+
+.edit-cover-preview__placeholder {
+  position: relative;
+  z-index: 1;
+  color: #f5f7eb;
+}
+
+.edit-upload ::v-deep .el-upload {
+  display: inline-flex;
+}
+
 @media (max-width: 1024px) {
   .card-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1943,7 +2032,7 @@ export default {
   .profile-hero__body {
     flex-direction: column;
     align-items: stretch;
-    padding: 0 20px;
+    padding: 0;
     margin-top: -56px;
   }
 
@@ -1953,17 +2042,21 @@ export default {
     align-items: flex-start;
   }
 
+  .profile-summary {
+    padding: 20px 0 4px;
+  }
+
   .profile-actions {
     width: 100%;
     justify-content: flex-start;
   }
 
-  .profile-action-buttons {
-    justify-content: flex-start;
-  }
-
   .profile-stats,
   .overview-panels {
+    grid-template-columns: 1fr;
+  }
+
+  .edit-media-grid {
     grid-template-columns: 1fr;
   }
 
