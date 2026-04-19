@@ -23,12 +23,14 @@ public class SysProjectController {
     public Result<Map<String, Object>> getList(
             @RequestParam(value = "category", required = false) String category,
             @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "userId", required = false) Long userId,
             @RequestParam(value = "pageNo", defaultValue = "1") Long pageNo,
             @RequestParam(value = "pageSize", defaultValue = "12") Long pageSize) {
 
         LambdaQueryWrapper<SysProject> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(StringUtils.hasLength(category), SysProject::getCategory, category);
         wrapper.eq(StringUtils.hasLength(status), SysProject::getStatus, status);
+        wrapper.eq(userId != null, SysProject::getUserId, userId);
         wrapper.orderByDesc(SysProject::getId);
 
         Page<SysProject> page = new Page<>(pageNo, pageSize);

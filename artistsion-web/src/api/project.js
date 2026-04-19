@@ -9,7 +9,8 @@ export default {
         pageNo: searchModel.pageNo || 1,
         pageSize: searchModel.pageSize || 12,
         category: searchModel.category || undefined,
-        status: searchModel.status || undefined
+        status: searchModel.status || undefined,
+        userId: searchModel.userId || undefined
       }
     })
   },

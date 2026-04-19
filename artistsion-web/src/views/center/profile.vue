@@ -52,17 +52,17 @@
           <i class="el-icon-s-order" />
           <span>我的订单</span>
         </div>
-        <div class="shortcut-item" @click="$router.push('/fabusp')">
+        <div class="shortcut-item" @click="$router.push('/publish/work')">
           <i class="el-icon-edit" />
           <span>发布作品</span>
         </div>
-        <div class="shortcut-item" @click="$router.push('/myfenxiang')">
-          <i class="el-icon-share" />
-          <span>我的分享</span>
+        <div class="shortcut-item" @click="$router.push('/center/submissions')">
+          <i class="el-icon-files" />
+          <span>我的投稿</span>
         </div>
-        <div class="shortcut-item" @click="$router.push('/liaotian')">
-          <i class="el-icon-chat-dot-round" />
-          <span>我的消息</span>
+        <div class="shortcut-item" @click="$router.push('/center/favorites')">
+          <i class="el-icon-star-off" />
+          <span>我的收藏</span>
         </div>
       </div>
     </div>
