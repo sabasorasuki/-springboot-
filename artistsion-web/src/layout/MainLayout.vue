@@ -71,10 +71,6 @@
                     <i class="el-icon-refresh" /> 模式切换
                     <span class="mode-badge">{{ displayMode === 'artist' ? '画师' : '客户' }}</span>
                   </el-dropdown-item>
-                  <el-dropdown-item v-if="roles.length > 1" command="switchRole">
-                    <i class="el-icon-sort" /> 切换身份
-                    <span class="role-badge">{{ activeRoleLabel }}</span>
-                  </el-dropdown-item>
                   <el-dropdown-item divided command="logout">
                     <i class="el-icon-switch-button" /> 退出登录
                   </el-dropdown-item>
@@ -115,15 +111,8 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { switchRole } from '@/api/auth'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
-
-const ROLE_LABELS = {
-  '用户角色': '客户',
-  '画师角色': '画师',
-  'admin': '管理员'
-}
 
 export default {
   name: 'MainLayout',
@@ -141,10 +130,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['avatar', 'name', 'token', 'roles', 'activeRole', 'displayMode']),
-    activeRoleLabel() {
-      return ROLE_LABELS[this.activeRole] || this.activeRole || ''
-    }
+    ...mapGetters(['avatar', 'name', 'token', 'roles', 'displayMode'])
   },
   methods: {
     isNavActive(path) {
@@ -195,54 +181,11 @@ export default {
         case 'toggleMode':
           this.toggleDisplayMode()
           break
-        case 'switchRole':
-          await this.doSwitchRole()
-          break
         case 'logout':
           await this.$store.dispatch('user/logout')
           this.$router.push('/auth')
           break
       }
-    },
-    async doSwitchRole() {
-      const otherRoles = this.roles.filter(r => r !== this.activeRole)
-      if (otherRoles.length === 0) {
-        this.$message.warning('您当前只有一个身份')
-        return
-      }
-      // 如果只有一个可切换身份，直接切换；否则弹选择
-      const targetRole = otherRoles.length === 1
-        ? otherRoles[0]
-        : await this.promptRoleSelection(otherRoles)
-      if (!targetRole) return
-
-      try {
-        await switchRole({ role: targetRole })
-        this.$store.commit('user/SET_ACTIVE_ROLE', targetRole)
-        const label = ROLE_LABELS[targetRole] || targetRole
-        this.$message.success(`已切换为${label}`)
-      } catch (err) {
-        this.$message.error(err.message || '切换失败')
-      }
-    },
-    promptRoleSelection(availableRoles) {
-      const labels = availableRoles.map(r => ROLE_LABELS[r] || r)
-      const h = this.$createElement
-      let selectedIdx = 0
-      const radioGroup = h('el-radio-group', {
-        props: { value: 0 },
-        on: { input: val => { selectedIdx = val } },
-        style: 'display:flex;flex-direction:column;gap:10px;margin-top:10px;'
-      }, availableRoles.map((r, i) =>
-        h('el-radio', { props: { label: i } }, [labels[i]])
-      ))
-      return this.$msgbox({
-        title: '切换身份',
-        message: radioGroup,
-        showCancelButton: true,
-        confirmButtonText: '确定',
-        cancelButtonText: '取消'
-      }).then(() => availableRoles[selectedIdx]).catch(() => null)
     }
   }
 }
@@ -360,16 +303,6 @@ export default {
   &:hover {
     background: #5a4bd1;
   }
-}
-
-.role-badge {
-  display: inline-block;
-  margin-left: 6px;
-  padding: 1px 6px;
-  font-size: 11px;
-  color: #6c5ce7;
-  background: #f0ecff;
-  border-radius: 8px;
 }
 
 .mode-badge {

@@ -40,6 +40,17 @@ export default {
       }
     })
   },
+  getFriends(params) {
+    return request({
+      url: '/sysFollow/friends',
+      method: 'get',
+      params: {
+        userId: params.userId,
+        pageNo: params.pageNo || 1,
+        pageSize: params.pageSize || 20
+      }
+    })
+  },
   check(params) {
     return request({
       url: '/sysFollow/check',

@@ -11,7 +11,7 @@
             <el-radio-button label="huagao">橱窗</el-radio-button>
           </el-radio-group>
           <div class="type-hint">
-            {{ publishType === 'zuopin' ? '作品投稿无需审核，发布后直接展示' : '橱窗商品需要审核通过后才会上架' }}
+            {{ publishType === 'zuopin' ? '作品投稿无需审核，发布后直接展示' : '橱窗商品发布后直接上架' }}
           </div>
         </el-form-item>
 
@@ -86,7 +86,7 @@
 
         <el-form-item>
           <el-button type="primary" :loading="submitting" @click="handleSubmit">
-            {{ publishType === 'zuopin' ? '发布作品' : '提交审核' }}
+            {{ publishType === 'zuopin' ? '发布作品' : '发布上架' }}
           </el-button>
           <el-button @click="$router.back()">取消</el-button>
         </el-form-item>
@@ -251,11 +251,11 @@ export default {
         fujin: this.form.fujin || '',
         content: this.editor ? this.editor.txt.html() : '',
         type: '上架',
-        status: '未审核',
+        status: '审核成功',
         shangjiaids: this.userInfo.id
       }
       huagaoApi.add(data).then(res => {
-        this.$message.success(res.message || '提交审核成功')
+        this.$message.success(res.message || '发布成功')
         this.$router.push('/showcase')
       }).catch(() => {
         this.$message.error('提交失败')

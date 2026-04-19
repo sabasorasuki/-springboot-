@@ -35,6 +35,27 @@
         </template>
       </el-tab-pane>
 
+      <!-- 好友（互关） -->
+      <el-tab-pane label="好友" name="friends">
+        <div v-if="friends.loading" class="loading-box"><i class="el-icon-loading" /> 加载中…</div>
+        <template v-else>
+          <div v-if="friends.list.length" class="user-list">
+            <div v-for="user in friends.list" :key="user.id" class="user-card">
+              <img :src="user.avatar || defaultAvatar" class="user-avatar" alt="" @click="goArtist(user.id)">
+              <div class="user-info" @click="goArtist(user.id)">
+                <div class="user-name">{{ user.name || user.username }}</div>
+                <div v-if="user.bio" class="user-bio">{{ user.bio }}</div>
+              </div>
+              <el-tag size="small" type="success">互关</el-tag>
+            </div>
+          </div>
+          <el-empty v-else description="暂无互关好友" :image-size="120" />
+          <div v-if="friends.total > friends.pageSize" class="pager">
+            <el-pagination background layout="prev, pager, next" :total="friends.total" :page-size="friends.pageSize" :current-page.sync="friends.pageNo" @current-change="fetchFriends" />
+          </div>
+        </template>
+      </el-tab-pane>
+
       <!-- 粉丝 -->
       <el-tab-pane label="粉丝" name="followers">
         <div v-if="followers.loading" class="loading-box"><i class="el-icon-loading" /> 加载中…</div>
@@ -82,6 +103,7 @@ export default {
       stats: { following: 0, followers: 0 },
       followingIds: new Set(),
       following: { list: [], total: 0, pageNo: 1, pageSize: 20, loading: false },
+      friends: { list: [], total: 0, pageNo: 1, pageSize: 20, loading: false },
       followers: { list: [], total: 0, pageNo: 1, pageSize: 20, loading: false }
     }
   },
@@ -103,6 +125,7 @@ export default {
     },
     onTabChange(tab) {
       if (tab.name === 'following' && !this.following.list.length && !this.following.loading) this.fetchFollowing()
+      if (tab.name === 'friends' && !this.friends.list.length && !this.friends.loading) this.fetchFriends()
       if (tab.name === 'followers' && !this.followers.list.length && !this.followers.loading) this.fetchFollowers()
     },
     async fetchFollowing() {
@@ -122,6 +145,14 @@ export default {
         this.followers.list = res.data.rows || []
         this.followers.total = res.data.total || 0
       } finally { this.followers.loading = false }
+    },
+    async fetchFriends() {
+      this.friends.loading = true
+      try {
+        const res = await followApi.getFriends({ userId: this.userId, pageNo: this.friends.pageNo, pageSize: this.friends.pageSize })
+        this.friends.list = res.data.rows || []
+        this.friends.total = res.data.total || 0
+      } finally { this.friends.loading = false }
     },
     isFollowingUser(id) {
       return this.followingIds.has(id)

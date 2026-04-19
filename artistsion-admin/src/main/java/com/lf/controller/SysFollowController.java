@@ -118,6 +118,46 @@ public class SysFollowController {
     }
 
     /**
+     * 互关好友列表（双向关注）
+     */
+    @GetMapping("/friends")
+    public Result<Map<String, Object>> friends(
+            @RequestParam Long userId,
+            @RequestParam(defaultValue = "1") Long pageNo,
+            @RequestParam(defaultValue = "20") Long pageSize) {
+        // 我关注的人
+        List<Long> followingIds = followService.list(
+                new LambdaQueryWrapper<SysFollow>().eq(SysFollow::getFollowerId, userId)
+        ).stream().map(SysFollow::getFollowingId).collect(Collectors.toList());
+
+        if (followingIds.isEmpty()) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("total", 0);
+            data.put("rows", Collections.emptyList());
+            return Result.success(data);
+        }
+
+        // 在我关注的人中，找出也关注了我的（互关）
+        List<Long> friendIds = followService.list(
+                new LambdaQueryWrapper<SysFollow>()
+                        .eq(SysFollow::getFollowingId, userId)
+                        .in(SysFollow::getFollowerId, followingIds)
+        ).stream().map(SysFollow::getFollowerId).collect(Collectors.toList());
+
+        int total = friendIds.size();
+        // 手动分页
+        int start = (int) ((pageNo - 1) * pageSize);
+        int end = Math.min(start + pageSize.intValue(), total);
+        List<Long> pageIds = start >= total ? Collections.emptyList() : friendIds.subList(start, end);
+        List<User> users = pageIds.isEmpty() ? Collections.emptyList() : userService.listByIds(pageIds);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("total", total);
+        data.put("rows", users);
+        return Result.success(data);
+    }
+
+    /**
      * 关注/粉丝计数
      */
     @GetMapping("/count")

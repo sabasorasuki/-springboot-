@@ -2,32 +2,84 @@
   <div class="center-favorites-page">
     <h1 class="page-title">我的收藏</h1>
 
-    <div v-if="loading" class="loading-box"><i class="el-icon-loading" /> 加载中…</div>
-    <template v-else>
-      <div v-if="list.length" class="fav-grid">
-        <div v-for="item in list" :key="item.id" class="fav-card">
-          <div class="fav-thumb-wrap" @click="goDetail(item)">
-            <img v-if="item.photo" :src="item.photo" class="fav-thumb" alt="">
-            <div v-else class="fav-thumb fav-thumb--empty"><i class="el-icon-picture-outline" /></div>
-            <span v-if="item.price" class="price-badge">¥{{ item.price }}</span>
-          </div>
-          <div class="fav-info">
-            <div class="fav-title">{{ item.title || '未命名' }}</div>
-            <div class="fav-meta">
-              <span v-if="item.fenlei" class="fav-tag">{{ item.fenlei }}</span>
+    <el-tabs v-model="activeTab" type="card">
+      <!-- 作品 -->
+      <el-tab-pane :label="`作品 (${worksList.length})`" name="works">
+        <div v-if="loading" class="loading-box"><i class="el-icon-loading" /> 加载中…</div>
+        <template v-else>
+          <div v-if="worksList.length" class="fav-grid">
+            <div v-for="item in worksList" :key="item.id" class="fav-card">
+              <div class="fav-thumb-wrap" @click="goDetail(item, 'works')">
+                <img v-if="item.photo" :src="item.photo" class="fav-thumb" alt="">
+                <div v-else class="fav-thumb fav-thumb--empty"><i class="el-icon-picture-outline" /></div>
+              </div>
+              <div class="fav-info">
+                <div class="fav-title">{{ item.title || '未命名' }}</div>
+                <div class="fav-meta">
+                  <span v-if="item.fenlei" class="fav-tag">{{ item.fenlei }}</span>
+                </div>
+                <el-button type="text" size="mini" class="unfav-btn" @click="handleUnfav(item)">
+                  <i class="el-icon-star-on" /> 取消收藏
+                </el-button>
+              </div>
             </div>
-            <el-button type="text" size="mini" class="unfav-btn" @click="handleUnfav(item)">
-              <i class="el-icon-star-on" /> 取消收藏
-            </el-button>
           </div>
-        </div>
-      </div>
-      <el-empty v-else description="还没有收藏内容" :image-size="120" />
+          <el-empty v-else description="暂无收藏作品" :image-size="120" />
+        </template>
+      </el-tab-pane>
 
-      <div v-if="total > pageSize" class="pager">
-        <el-pagination background layout="prev, pager, next" :total="total" :page-size="pageSize" :current-page.sync="pageNo" @current-change="fetchList" />
-      </div>
-    </template>
+      <!-- 橱窗 -->
+      <el-tab-pane :label="`橱窗 (${showcaseList.length})`" name="showcase">
+        <div v-if="loading" class="loading-box"><i class="el-icon-loading" /> 加载中…</div>
+        <template v-else>
+          <div v-if="showcaseList.length" class="fav-grid">
+            <div v-for="item in showcaseList" :key="item.id" class="fav-card">
+              <div class="fav-thumb-wrap" @click="goDetail(item, 'showcase')">
+                <img v-if="item.photo" :src="item.photo" class="fav-thumb" alt="">
+                <div v-else class="fav-thumb fav-thumb--empty"><i class="el-icon-picture-outline" /></div>
+                <span v-if="item.price" class="price-badge">¥{{ item.price }}</span>
+              </div>
+              <div class="fav-info">
+                <div class="fav-title">{{ item.title || '未命名' }}</div>
+                <div class="fav-meta">
+                  <span v-if="item.fenlei" class="fav-tag">{{ item.fenlei }}</span>
+                </div>
+                <el-button type="text" size="mini" class="unfav-btn" @click="handleUnfav(item)">
+                  <i class="el-icon-star-on" /> 取消收藏
+                </el-button>
+              </div>
+            </div>
+          </div>
+          <el-empty v-else description="暂无收藏橱窗商品" :image-size="120" />
+        </template>
+      </el-tab-pane>
+
+      <!-- 企划 -->
+      <el-tab-pane :label="`企划 (${projectList.length})`" name="projects">
+        <div v-if="loading" class="loading-box"><i class="el-icon-loading" /> 加载中…</div>
+        <template v-else>
+          <div v-if="projectList.length" class="fav-grid">
+            <div v-for="item in projectList" :key="item.id" class="fav-card">
+              <div class="fav-thumb-wrap" @click="goDetail(item, 'projects')">
+                <img v-if="item.photo" :src="item.photo" class="fav-thumb" alt="">
+                <div v-else class="fav-thumb fav-thumb--empty"><i class="el-icon-picture-outline" /></div>
+              </div>
+              <div class="fav-info">
+                <div class="fav-title">{{ item.title || '未命名' }}</div>
+                <el-button type="text" size="mini" class="unfav-btn" @click="handleUnfav(item)">
+                  <i class="el-icon-star-on" /> 取消收藏
+                </el-button>
+              </div>
+            </div>
+          </div>
+          <el-empty v-else description="暂无收藏企划" :image-size="120" />
+        </template>
+      </el-tab-pane>
+    </el-tabs>
+
+    <div v-if="total > pageSize" class="pager">
+      <el-pagination background layout="prev, pager, next" :total="total" :page-size="pageSize" :current-page.sync="pageNo" @current-change="fetchList" />
+    </div>
   </div>
 </template>
 
@@ -40,16 +92,29 @@ export default {
   name: 'CenterFavorites',
   data() {
     return {
+      activeTab: 'works',
       loading: false,
-      list: [],
+      allList: [],
       total: 0,
       pageNo: 1,
-      pageSize: 12,
+      pageSize: 99,
       userId: null
     }
   },
   computed: {
-    ...mapGetters(['token'])
+    ...mapGetters(['token']),
+    // 有 price 字段且不为空 → 橱窗收藏
+    showcaseList() {
+      return this.allList.filter(item => item.price && Number(item.price) > 0)
+    },
+    // 无 price → 作品收藏（排除标记为企划的）
+    worksList() {
+      return this.allList.filter(item => (!item.price || Number(item.price) === 0) && item.fenlei !== '企划')
+    },
+    // fenlei === '企划' → 企划收藏
+    projectList() {
+      return this.allList.filter(item => item.fenlei === '企划')
+    }
   },
   async created() {
     const res = await userApi.getInfo(this.token)
@@ -61,14 +126,19 @@ export default {
       this.loading = true
       try {
         const res = await shoucangApi.getList({ userids: this.userId, pageNo: this.pageNo, pageSize: this.pageSize })
-        this.list = res.data.rows || []
+        this.allList = res.data.rows || []
         this.total = res.data.total || 0
       } finally { this.loading = false }
     },
-    goDetail(item) {
-      // wzids 存的是对应物品的 id — 如果有 price 字段就当橱窗商品跳详情
-      if (item.wzids) {
+    goDetail(item, type) {
+      if (!item.wzids) return
+      if (type === 'showcase') {
         this.$router.push('/work/' + item.wzids)
+      } else if (type === 'projects') {
+        this.$router.push('/project/' + item.wzids)
+      } else {
+        // 作品使用弹窗，但从收藏页直接跳作品频道更合理
+        this.$router.push('/works')
       }
     },
     async handleUnfav(item) {

@@ -9,6 +9,11 @@
           <div class="profile-role">
             <span v-for="role in roles" :key="role" class="role-badge">{{ role }}</span>
           </div>
+          <div class="follow-stats" @click="$router.push('/center/follows')">
+            <span class="stat-link">关注 <strong>{{ followStats.following }}</strong></span>
+            <span class="stat-sep">|</span>
+            <span class="stat-link">粉丝 <strong>{{ followStats.followers }}</strong></span>
+          </div>
         </div>
       </div>
     </div>
@@ -73,6 +78,7 @@
 import { mapGetters } from 'vuex'
 import { getInfo } from '@/api/user'
 import userManageApi from '@/api/userManage'
+import followApi from '@/api/follow'
 
 export default {
   name: 'CenterProfile',
@@ -88,7 +94,8 @@ export default {
         bio: '',
         styleTags: ''
       },
-      saving: false
+      saving: false,
+      followStats: { following: 0, followers: 0 }
     }
   },
   computed: {
@@ -112,6 +119,7 @@ export default {
             this.form.address = u.address || ''
             this.form.bio = u.bio || ''
             this.form.styleTags = u.styleTags || ''
+            this.fetchFollowStats(u.id)
           }
         }
       } catch (e) {
@@ -130,6 +138,12 @@ export default {
       } finally {
         this.saving = false
       }
+    },
+    async fetchFollowStats(userId) {
+      try {
+        const res = await followApi.count(userId)
+        this.followStats = res.data || { following: 0, followers: 0 }
+      } catch { /* ignore */ }
     }
   }
 }
@@ -182,6 +196,18 @@ export default {
   padding: 2px 10px;
   border-radius: 4px;
 }
+
+.follow-stats {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+  transition: color 0.2s;
+  strong { color: #333; font-size: 16px; }
+  &:hover { color: #6c5ce7; }
+}
+.stat-link { cursor: pointer; }
+.stat-sep { margin: 0 10px; color: #ddd; }
 
 /* ── 编辑卡 ── */
 .edit-card, .shortcut-card {
