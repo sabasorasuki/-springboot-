@@ -1,5 +1,5 @@
 <template>
-  <div class="dashboard-page" v-loading="loading">
+  <div v-loading="loading" class="dashboard-page">
     <section class="dashboard-hero">
       <div class="hero-copy">
         <p class="hero-kicker">Admin Console</p>

@@ -105,6 +105,11 @@ export default {
 
     }
   },
+  computed: {
+    ...mapGetters([
+      'token'
+    ])
+  },
   mounted() {
     this.setWangEditor()
   },
@@ -136,6 +141,7 @@ export default {
     this.loadAllClasses()
   },
   methods: {
+    ossUploadAction,
     loadAllClasses() {
       this.allClasses = []
       fenleiApi.getList1().then(response => {
@@ -237,11 +243,6 @@ export default {
       // alert(this.editor.txt.text())
     }
 
-  },
-  computed: {
-    ...mapGetters([
-      'token'
-    ])
   }
 
 }

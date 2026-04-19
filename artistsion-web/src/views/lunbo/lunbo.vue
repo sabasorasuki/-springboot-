@@ -119,11 +119,17 @@ export default {
       }
     }
   },
+  computed: {
+    ...mapGetters([
+      'token'
+    ])
+  },
   created() {
     this.getList()
     // this.getInfo(this.token);
   },
   methods: {
+    ossUploadAction,
 
     handleAvatarSuccess(res, file) {
       console.log(res, 'oss1')
@@ -221,11 +227,6 @@ export default {
         console.log(response, 'response')
       })
     }
-  },
-  computed: {
-    ...mapGetters([
-      'token'
-    ])
   }
 }
 </script>

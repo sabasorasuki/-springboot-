@@ -101,6 +101,16 @@ export default {
       forms: {}
     }
   },
+  computed: {
+    ...mapGetters(['token']),
+    ossHost() {
+      const b = (this.baseApi && String(this.baseApi).trim()) || ''
+      return b.replace(/\/$/, '') || ossBase
+    },
+    uploadActionPhoto() {
+      return `${this.ossHost}/oss/file/upload?module=photo`
+    }
+  },
   created() {
     this.id = this.$route.params.id
     this.form.tsids = this.id
@@ -115,16 +125,6 @@ export default {
   },
   beforeDestroy() {
     this.clearTimer()
-  },
-  computed: {
-    ...mapGetters(['token']),
-    ossHost() {
-      const b = (this.baseApi && String(this.baseApi).trim()) || ''
-      return b.replace(/\/$/, '') || ossBase
-    },
-    uploadActionPhoto() {
-      return `${this.ossHost}/oss/file/upload?module=photo`
-    }
   },
   methods: {
     extractUploadStoredName(res) {

@@ -75,14 +75,14 @@ export default {
       worksPage: 1
     }
   },
-  created() {
-    this.fetchArtist()
-  },
   computed: {
     styleTagList() {
       if (!this.artist || !this.artist.styleTags) return []
       return this.artist.styleTags.split(',').map(s => s.trim()).filter(Boolean)
     }
+  },
+  created() {
+    this.fetchArtist()
   },
   methods: {
     async fetchArtist() {

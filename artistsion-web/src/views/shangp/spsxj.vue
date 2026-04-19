@@ -84,6 +84,11 @@ export default {
       }
     }
   },
+  computed: {
+    ...mapGetters([
+      'token'
+    ])
+  },
   created() {
     //   this.getList();
     this.getInfo(this.token)
@@ -191,11 +196,6 @@ export default {
         console.log(response, 'response')
       })
     }
-  },
-  computed: {
-    ...mapGetters([
-      'token'
-    ])
   }
 }
 </script>

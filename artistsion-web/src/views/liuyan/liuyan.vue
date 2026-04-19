@@ -107,15 +107,15 @@ export default {
       focusTicketId: ''
     }
   },
-  created() {
-    this.applyFocusQuery()
-    this.getList()
-  },
   watch: {
     '$route.query.focusId'() {
       this.applyFocusQuery()
       this.getList()
     }
+  },
+  created() {
+    this.applyFocusQuery()
+    this.getList()
   },
   methods: {
     applyFocusQuery() {

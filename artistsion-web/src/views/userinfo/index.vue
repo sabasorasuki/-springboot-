@@ -66,6 +66,11 @@ export default {
 
     }
   },
+  computed: {
+    ...mapGetters([
+      'token'
+    ])
+  },
   created() {
     console.log(this.token)
     this.getInfo(this.token)
@@ -116,11 +121,6 @@ export default {
       sessionStorage.removeItem('tabViews')
       this.$router.push(`/auth?redirect=/admin`)
     }
-  },
-  computed: {
-    ...mapGetters([
-      'token'
-    ])
   }
 }
 </script>
