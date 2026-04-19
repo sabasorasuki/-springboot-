@@ -42,8 +42,17 @@
                   <el-dropdown-item command="center">
                     <i class="el-icon-user" /> 个人中心
                   </el-dropdown-item>
+                  <el-dropdown-item command="submissions">
+                    <i class="el-icon-edit" /> 投稿
+                  </el-dropdown-item>
+                  <el-dropdown-item command="favorites">
+                    <i class="el-icon-star-off" /> 收藏
+                  </el-dropdown-item>
+                  <el-dropdown-item command="cart">
+                    <i class="el-icon-shopping-cart-2" /> 购物车
+                  </el-dropdown-item>
                   <el-dropdown-item command="orders">
-                    <i class="el-icon-document" /> 订单中心
+                    <i class="el-icon-document" /> 订单
                   </el-dropdown-item>
                   <el-dropdown-item v-if="roles.length > 1" divided command="switchRole">
                     <i class="el-icon-sort" /> 切换身份
@@ -108,7 +117,9 @@ export default {
       navItems: [
         { path: '/home', label: '首页' },
         { path: '/artists', label: '画师' },
-        { path: '/projects', label: '企划' }
+        { path: '/projects', label: '企划' },
+        { path: '/works', label: '作品' },
+        { path: '/showcase', label: '橱窗' }
       ]
     }
   },
@@ -131,6 +142,15 @@ export default {
       switch (command) {
         case 'center':
           this.$router.push('/center/profile')
+          break
+        case 'submissions':
+          this.$router.push('/center/submissions')
+          break
+        case 'favorites':
+          this.$router.push('/center/favorites')
+          break
+        case 'cart':
+          this.$router.push('/center/cart')
           break
         case 'orders':
           this.$router.push('/center/orders')

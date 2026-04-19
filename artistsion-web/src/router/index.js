@@ -92,6 +92,32 @@ export const constantRoutes = [
       }
     ]
   },
+  {
+    path: '/works',
+    component: MainLayout,
+    hidden: true,
+    children: [
+      {
+        path: '',
+        name: 'Works',
+        component: () => import('@/views/works/index'),
+        meta: { title: '作品' }
+      }
+    ]
+  },
+  {
+    path: '/showcase',
+    component: MainLayout,
+    hidden: true,
+    children: [
+      {
+        path: '',
+        name: 'Showcase',
+        component: () => import('@/views/showcase/index'),
+        meta: { title: '橱窗' }
+      }
+    ]
+  },
   // ── 详情页 & 个人中心（MainLayout） ──
   {
     path: '/work/:id',
@@ -162,6 +188,30 @@ export const constantRoutes = [
         name: 'CenterOrders',
         component: () => import('@/views/center/orders'),
         meta: { title: '我的订单' }
+      },
+      {
+        path: 'submissions',
+        name: 'CenterSubmissions',
+        component: () => import('@/views/center/submissions'),
+        meta: { title: '投稿管理' }
+      },
+      {
+        path: 'favorites',
+        name: 'CenterFavorites',
+        component: () => import('@/views/center/favorites'),
+        meta: { title: '我的收藏' }
+      },
+      {
+        path: 'cart',
+        name: 'CenterCart',
+        component: () => import('@/views/center/cart'),
+        meta: { title: '购物车' }
+      },
+      {
+        path: 'follows',
+        name: 'CenterFollows',
+        component: () => import('@/views/center/follows'),
+        meta: { title: '关注' }
       }
     ]
   },
