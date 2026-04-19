@@ -13,6 +13,9 @@ Artistsion 是一个画师约稿 / 作品交易 / 社区内容平台。当前仍
 - `artistsion-admin`：后端应用
 - `artistsion.sql`：主数据库导出
 - `artistsion-admin/sql`：增量 SQL 补丁
+- `tools/db_readonly.py`：仓库内置的只读 MySQL 检查脚本，仅允许 `SELECT`
+- `tools/db_readonly.local.env.example`：只读查库本地配置示例
+- `.agents/skills/db-reader/SKILL.md`：Codex 只读查库 skill
 - `docs/PROJECT_MAP.md`：静态结构
 - `docs/SESSION_HANDOFF.md`：当前动态状态
 
@@ -36,6 +39,13 @@ Artistsion 是一个画师约稿 / 作品交易 / 社区内容平台。当前仍
 - `artistsion-admin/src/main/java/com/lf/config/MyWebConfig.java`：白名单与跨域
 - `artistsion-admin/src/main/java/com/lf/interceptor/JwtValidateInterceptor.java`：JWT 校验
 - `artistsion-admin/src/main/resources/mapper`：SQL 映射
+
+## 仓库内置调试能力
+
+- 数据库排查优先使用 `python tools/db_readonly.py tables|schema|sample|sql`
+- `tools/db_readonly.py` 统一输出 JSON，并且会拒绝 `INSERT`、`UPDATE`、`DELETE`、`DROP`、`ALTER`、`TRUNCATE`、`CREATE`
+- 本地测试连接优先读取机器本地的 `tools/db_readonly.local.env`，示例见 `tools/db_readonly.local.env.example`
+- 需要让 Codex 查库时，优先走 `.agents/skills/db-reader/SKILL.md` 中定义的只读流程
 
 ## 核心数据表与业务模块映射
 

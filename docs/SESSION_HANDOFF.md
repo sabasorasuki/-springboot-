@@ -16,6 +16,18 @@
 - 举报中心已落地：`sys_report`、`/sysReport/*`、`src/views/report/index.vue`、`src/components/ReportDialog` 都已接通。
 - 用户名唯一性修复、OSS URL 集中化、作品详情收藏/购物车接线等关键补洞已完成。
 
+## 当前可用的只读查库能力
+
+- 仓库已内置 `tools/db_readonly.py`，用于查看表、看结构、抽样数据、执行小范围只读 `SELECT`
+- 脚本输出统一为 JSON，并严格拒绝写操作；排查登录、角色、菜单、订单、举报等数据问题时应优先使用它
+- 常用命令：
+  - `python tools/db_readonly.py tables`
+  - `python tools/db_readonly.py schema x_user`
+  - `python tools/db_readonly.py sample x_user 10`
+  - `python tools/db_readonly.py sql "SELECT ..."`
+- 本地测试连接优先读取 `tools/db_readonly.local.env`；示例文件是 `tools/db_readonly.local.env.example`，因此新会话通常不需要每次手动设置 `DB_*` 环境变量
+- Codex 查库时优先使用 `.agents/skills/db-reader/SKILL.md`，并遵循“先看结构，再看样本，再做小范围 SELECT”的流程
+
 ## 当前 admin 已完成到什么程度
 
 - 已具备控制台首页、用户与权限、作品审核、订单总览、社区内容管理、反馈工单、举报审核、分类、统计、日志、轮播运营。
@@ -42,4 +54,5 @@
 - 当前前端白名单只有 `/auth`，所以虽然部分后端内容接口支持匿名访问，主站路由层面仍然是登录优先；改访问策略时要同时看 `permission.js` 和 `MyWebConfig.java`。
 - `application.properties` 仍含数据库、JWT、支付、AI、邮件、文件存储等敏感配置；生产部署前必须替换默认或测试密钥。
 - 支付、上传、AI、订单相关改动要额外检查现有前端 API 包装、页面硬编码和后端返回结构，避免只改一层。
+- 数据库排查默认应走 `tools/db_readonly.py`，不要在新会话里直接假设可以安全写库或绕过只读脚本执行数据库命令。
 - 文档首读路径现在应固定为：`CLAUDE.md` -> 子系统 `CLAUDE.md` -> `docs/PROJECT_MAP.md` -> `docs/SESSION_HANDOFF.md`

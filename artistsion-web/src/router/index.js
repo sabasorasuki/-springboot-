@@ -118,6 +118,26 @@ export const constantRoutes = [
       }
     ]
   },
+  // ── 发布页（MainLayout） ──
+  {
+    path: '/publish',
+    component: MainLayout,
+    hidden: true,
+    children: [
+      {
+        path: 'work',
+        name: 'PublishWork',
+        component: () => import('@/views/publish/work'),
+        meta: { title: '投稿发布' }
+      },
+      {
+        path: 'project',
+        name: 'PublishProject',
+        component: () => import('@/views/publish/project'),
+        meta: { title: '发布企划' }
+      }
+    ]
+  },
   // ── 详情页 & 个人中心（MainLayout） ──
   {
     path: '/work/:id',

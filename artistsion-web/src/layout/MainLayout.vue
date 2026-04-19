@@ -157,16 +157,16 @@ export default {
     },
     handleMainAction() {
       if (this.displayMode === 'artist') {
-        this.$router.push('/center/submissions')
+        this.$router.push('/publish/work')
       } else {
-        this.$router.push('/projects') // TODO Phase 4: 跳发布需求表单
+        this.$router.push('/publish/project')
       }
     },
     handleMainActionSub(command) {
       if (command === 'publishProject') {
-        this.$router.push('/projects') // TODO Phase 4: 跳发布需求表单
+        this.$router.push('/publish/project')
       } else if (command === 'submit') {
-        this.$router.push('/center/submissions')
+        this.$router.push('/publish/work')
       }
     },
     toggleDisplayMode() {
