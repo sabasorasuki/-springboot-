@@ -3,6 +3,8 @@ import { authLogin as authLoginApi, getAuthMe } from '@/api/auth'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import { resetRouter } from '@/router'
 
+const DISPLAY_MODE_KEY = 'artistsion_display_mode'
+
 const getDefaultState = () => {
   return {
     token: getToken(),
@@ -11,7 +13,8 @@ const getDefaultState = () => {
     avatar: '',
     menuList: [],
     roles: [],
-    activeRole: ''
+    activeRole: '',
+    displayMode: localStorage.getItem(DISPLAY_MODE_KEY) || 'client'
   }
 }
 
@@ -41,6 +44,10 @@ const mutations = {
   },
   SET_ACTIVE_ROLE: (state, activeRole) => {
     state.activeRole = activeRole
+  },
+  SET_DISPLAY_MODE: (state, mode) => {
+    state.displayMode = mode
+    localStorage.setItem(DISPLAY_MODE_KEY, mode)
   }
 }
 

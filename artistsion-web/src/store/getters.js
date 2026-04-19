@@ -8,6 +8,7 @@ const getters = {
   menuList: state => state.user.menuList,
   roles: state => state.user.roles,
   activeRole: state => state.user.activeRole,
+  displayMode: state => state.user.displayMode,
 
   visitedViews: state => state.tagsView.visitedViews,
   cachedViews: state => state.tagsView.cachedViews,
