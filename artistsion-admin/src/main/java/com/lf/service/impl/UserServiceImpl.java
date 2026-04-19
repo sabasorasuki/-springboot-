@@ -94,6 +94,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             HashMap<String, Object> data = new HashMap<>();
             data.put("name", dbUser.getUsername());
             data.put("avatar", dbUser.getAvatar());
+            data.put("coverImage", dbUser.getCoverImage());
             data.put("userList", dbUser);
 
             List<String> roleList = userMapper.getRoleNamesByUserId(dbUser.getId());

@@ -13,68 +13,129 @@
 
     <template v-else-if="profile">
       <section class="profile-hero">
-        <div class="profile-hero__cover" />
+        <div class="profile-hero__cover" :style="profileCoverStyle">
+          <div class="profile-hero__cover-mask" />
+          <div v-if="!profileCoverImage" class="profile-hero__cover-empty">
+            <span>{{ isSelf ? '上传背景图，让你的主页更完整' : 'TA 还没有设置头图' }}</span>
+          </div>
+        </div>
 
         <div class="profile-hero__body">
-          <el-avatar
-            :size="104"
-            :src="profileAvatar"
-            icon="el-icon-user"
-            class="profile-avatar"
-          />
+          <div class="profile-avatar-shell">
+            <el-avatar
+              :size="112"
+              :src="profileAvatar"
+              icon="el-icon-user"
+              class="profile-avatar"
+            />
+          </div>
 
-          <div class="profile-summary">
-            <div class="profile-summary__top">
-              <div class="profile-title-group">
-                <h1 class="profile-name">{{ profileDisplayName }}</h1>
-                <div class="profile-meta">
-                  <span v-if="profile.username" class="meta-pill">@{{ profile.username }}</span>
-                  <span v-if="locationText" class="meta-pill">
-                    <i class="el-icon-location-outline" />
-                    {{ locationText }}
-                  </span>
+          <div class="profile-summary-panel">
+            <div class="profile-summary">
+              <div class="profile-summary__top">
+                <div class="profile-title-group">
+                  <h1 class="profile-name">{{ profileDisplayName }}</h1>
+                  <div class="profile-meta">
+                    <span v-if="profile.username" class="meta-pill">@{{ profile.username }}</span>
+                    <span v-if="locationText" class="meta-pill">
+                      <i class="el-icon-location-outline" />
+                      {{ locationText }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="profile-actions">
+                  <template v-if="isSelf">
+                    <div class="profile-action-buttons">
+                      <el-button
+                        plain
+                        size="small"
+                        class="header-action-btn"
+                        @click="editDialogVisible = true"
+                      >
+                        编辑个人资料
+                      </el-button>
+
+                      <el-upload
+                        class="profile-inline-uploader"
+                        :action="ossUploadAction('avatar')"
+                        :before-upload="beforeAvatarUpload"
+                        :show-file-list="false"
+                        :on-success="handleAvatarUploadSuccess"
+                        :on-error="handleAvatarUploadError"
+                      >
+                        <el-button
+                          plain
+                          size="small"
+                          class="header-action-btn"
+                          :loading="avatarUploading"
+                        >
+                          编辑头像
+                        </el-button>
+                      </el-upload>
+
+                      <el-upload
+                        class="profile-inline-uploader"
+                        :action="ossUploadAction('cover')"
+                        :before-upload="beforeCoverUpload"
+                        :show-file-list="false"
+                        :on-success="handleCoverUploadSuccess"
+                        :on-error="handleCoverUploadError"
+                      >
+                        <el-button
+                          plain
+                          size="small"
+                          class="header-action-btn"
+                          :loading="coverUploading"
+                        >
+                          编辑背景图
+                        </el-button>
+                      </el-upload>
+                    </div>
+
+                    <div class="identity-switch">
+                      <span class="identity-switch__label">身份切换</span>
+                      <el-radio-group v-model="displayModeValue" size="small">
+                        <el-radio-button label="artist">画师</el-radio-button>
+                        <el-radio-button label="client">用户</el-radio-button>
+                      </el-radio-group>
+                    </div>
+                  </template>
+
+                  <template v-else>
+                    <el-button
+                      size="small"
+                      class="header-action-btn"
+                      :type="isFollowingProfile ? '' : 'primary'"
+                      :plain="isFollowingProfile"
+                      :loading="followLoading"
+                      @click="toggleFollowProfile"
+                    >
+                      {{ isFollowingProfile ? '已关注' : '关注' }}
+                    </el-button>
+                  </template>
                 </div>
               </div>
 
-              <div class="profile-actions">
-                <el-button
-                  v-if="isSelf"
-                  plain
-                  size="small"
-                  class="header-action-btn"
-                  @click="editDialogVisible = true"
-                >
-                  编辑个人资料
-                </el-button>
+              <p class="profile-bio" :class="{ 'is-empty': !profile.bio }">
+                {{ profile.bio || '这个人还没有留下简介。' }}
+              </p>
 
-                <div v-if="isSelf" class="identity-switch">
-                  <span class="identity-switch__label">身份切换</span>
-                  <el-radio-group v-model="displayModeValue" size="small">
-                    <el-radio-button label="artist">画师</el-radio-button>
-                    <el-radio-button label="client">用户</el-radio-button>
-                  </el-radio-group>
+              <div class="profile-stats">
+                <button type="button" class="stat-card is-link" @click="goFollows">
+                  <span class="stat-card__value">{{ followStats.following }}</span>
+                  <span class="stat-card__label">{{ isSelf ? '已关注' : '关注' }}</span>
+                </button>
+
+                <button type="button" class="stat-card is-link" @click="goFollows">
+                  <span class="stat-card__value">{{ followStats.followers }}</span>
+                  <span class="stat-card__label">粉丝</span>
+                </button>
+
+                <div class="stat-card">
+                  <span class="stat-card__value">{{ portfolioCount }}</span>
+                  <span class="stat-card__label">{{ portfolioLabel }}</span>
                 </div>
-              </div>
-            </div>
-
-            <p class="profile-bio" :class="{ 'is-empty': !profile.bio }">
-              {{ profile.bio || '这个人还没有留下简介。' }}
-            </p>
-
-            <div class="profile-stats">
-              <button type="button" class="stat-card is-link" @click="goFollows">
-                <span class="stat-card__value">{{ followStats.following }}</span>
-                <span class="stat-card__label">{{ isSelf ? '已关注' : '关注' }}</span>
-              </button>
-
-              <button type="button" class="stat-card is-link" @click="goFollows">
-                <span class="stat-card__value">{{ followStats.followers }}</span>
-                <span class="stat-card__label">粉丝</span>
-              </button>
-
-              <div class="stat-card">
-                <span class="stat-card__value">{{ portfolioCount }}</span>
-                <span class="stat-card__label">{{ portfolioLabel }}</span>
               </div>
             </div>
           </div>
@@ -128,8 +189,14 @@
                 <div v-else-if="works.list.length" class="card-grid">
                   <article v-for="item in works.list" :key="item.id" class="content-card">
                     <div class="content-card__cover">
-                      <img v-if="item.photo" :src="item.photo" alt="" class="cover-img">
-                      <div v-else class="cover-fallback" />
+                      <img
+                        v-if="item.photoUrl && !item.photoBroken"
+                        :src="item.photoUrl"
+                        alt=""
+                        class="cover-img"
+                        @error="handleCardImageError(item)"
+                      >
+                      <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
                     </div>
                     <div class="content-card__body">
                       <div class="content-card__title">{{ item.title || '未命名作品' }}</div>
@@ -153,8 +220,14 @@
                     @click="goShowcaseDetail(item.id)"
                   >
                     <div class="content-card__cover">
-                      <img v-if="item.photo" :src="item.photo" alt="" class="cover-img">
-                      <div v-else class="cover-fallback" />
+                      <img
+                        v-if="item.photoUrl && !item.photoBroken"
+                        :src="item.photoUrl"
+                        alt=""
+                        class="cover-img"
+                        @error="handleCardImageError(item)"
+                      >
+                      <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
                       <span v-if="item.price" class="cover-price">¥{{ item.price }}</span>
                     </div>
                     <div class="content-card__body">
@@ -206,8 +279,14 @@
                   <div v-if="favoriteWorks.length" class="card-grid">
                     <article v-for="item in favoriteWorks" :key="item.id" class="content-card">
                       <div class="content-card__cover">
-                        <img v-if="item.photo" :src="item.photo" alt="" class="cover-img">
-                        <div v-else class="cover-fallback" />
+                        <img
+                          v-if="item.photoUrl && !item.photoBroken"
+                          :src="item.photoUrl"
+                          alt=""
+                          class="cover-img"
+                          @error="handleCardImageError(item)"
+                        >
+                        <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
                       </div>
                       <div class="content-card__body">
                         <div class="content-card__title">{{ item.title || '未命名作品' }}</div>
@@ -229,8 +308,14 @@
                       @click="goShowcaseDetail(item.wzids)"
                     >
                       <div class="content-card__cover">
-                        <img v-if="item.photo" :src="item.photo" alt="" class="cover-img">
-                        <div v-else class="cover-fallback" />
+                        <img
+                          v-if="item.photoUrl && !item.photoBroken"
+                          :src="item.photoUrl"
+                          alt=""
+                          class="cover-img"
+                          @error="handleCardImageError(item)"
+                        >
+                        <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
                         <span v-if="item.price" class="cover-price">¥{{ item.price }}</span>
                       </div>
                       <div class="content-card__body">
@@ -275,8 +360,16 @@
               <div v-if="cart.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
               <div v-else-if="cart.list.length" class="stack-list">
                 <article v-for="item in cart.list" :key="item.id" class="stack-card">
-                  <img v-if="item.photo" :src="item.photo" class="stack-card__thumb" alt="">
-                  <div v-else class="stack-card__thumb stack-card__thumb--empty" />
+                  <img
+                    v-if="item.photoUrl && !item.photoBroken"
+                    :src="item.photoUrl"
+                    class="stack-card__thumb"
+                    alt=""
+                    @error="handleCardImageError(item)"
+                  >
+                  <div v-else class="stack-card__thumb stack-card__thumb--empty">
+                    <span class="stack-card__thumb-label">暂无封面</span>
+                  </div>
                   <div class="stack-card__main">
                     <div class="stack-card__title">{{ item.name || '未命名商品' }}</div>
                     <div class="stack-card__meta">
@@ -366,8 +459,14 @@
                   <div v-else-if="works.list.length" class="card-grid">
                     <article v-for="item in works.list.slice(0, 4)" :key="item.id" class="content-card">
                       <div class="content-card__cover">
-                        <img v-if="item.photo" :src="item.photo" alt="" class="cover-img">
-                        <div v-else class="cover-fallback" />
+                        <img
+                          v-if="item.photoUrl && !item.photoBroken"
+                          :src="item.photoUrl"
+                          alt=""
+                          class="cover-img"
+                          @error="handleCardImageError(item)"
+                        >
+                        <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
                       </div>
                       <div class="content-card__body">
                         <div class="content-card__title">{{ item.title || '未命名作品' }}</div>
@@ -394,8 +493,14 @@
                       @click="goShowcaseDetail(item.id)"
                     >
                       <div class="content-card__cover">
-                        <img v-if="item.photo" :src="item.photo" alt="" class="cover-img">
-                        <div v-else class="cover-fallback" />
+                        <img
+                          v-if="item.photoUrl && !item.photoBroken"
+                          :src="item.photoUrl"
+                          alt=""
+                          class="cover-img"
+                          @error="handleCardImageError(item)"
+                        >
+                        <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
                         <span v-if="item.price" class="cover-price">¥{{ item.price }}</span>
                       </div>
                       <div class="content-card__body">
@@ -449,8 +554,14 @@
               <div v-else-if="works.list.length" class="card-grid">
                 <article v-for="item in works.list" :key="item.id" class="content-card">
                   <div class="content-card__cover">
-                    <img v-if="item.photo" :src="item.photo" alt="" class="cover-img">
-                    <div v-else class="cover-fallback" />
+                    <img
+                      v-if="item.photoUrl && !item.photoBroken"
+                      :src="item.photoUrl"
+                      alt=""
+                      class="cover-img"
+                      @error="handleCardImageError(item)"
+                    >
+                    <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
                   </div>
                   <div class="content-card__body">
                     <div class="content-card__title">{{ item.title || '未命名作品' }}</div>
@@ -480,8 +591,14 @@
                   @click="goShowcaseDetail(item.id)"
                 >
                   <div class="content-card__cover">
-                    <img v-if="item.photo" :src="item.photo" alt="" class="cover-img">
-                    <div v-else class="cover-fallback" />
+                    <img
+                      v-if="item.photoUrl && !item.photoBroken"
+                      :src="item.photoUrl"
+                      alt=""
+                      class="cover-img"
+                      @error="handleCardImageError(item)"
+                    >
+                    <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
                     <span v-if="item.price" class="cover-price">¥{{ item.price }}</span>
                   </div>
                   <div class="content-card__body">
@@ -534,6 +651,7 @@
         destroy-on-close
       >
         <el-form ref="editForm" :model="editForm" label-width="84px" class="edit-form">
+          <div class="edit-form__hint">头像和背景图请在资料头部直接上传，这里只修改基础资料。</div>
           <el-form-item label="用户名">
             <el-input v-model="editForm.username" disabled />
           </el-form-item>
@@ -582,6 +700,7 @@ import huagaoApi from '@/api/huagao'
 import projectApi from '@/api/project'
 import shoucangApi from '@/api/shoucang'
 import orderApi from '@/api/order'
+import { extractUploadFileName, normalizeImageUrl, ossUploadAction } from '@/utils/oss'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
@@ -609,6 +728,10 @@ export default {
       isSelf: false,
       editDialogVisible: false,
       saving: false,
+      avatarUploading: false,
+      coverUploading: false,
+      followLoading: false,
+      isFollowingProfile: false,
       editForm: {
         id: null,
         username: '',
@@ -616,7 +739,9 @@ export default {
         email: '',
         phone: '',
         bio: '',
-        styleTags: ''
+        styleTags: '',
+        avatar: '',
+        coverImage: ''
       },
       followStats: {
         following: 0,
@@ -651,7 +776,19 @@ export default {
       return this.profile.name || this.profile.username || '用户'
     },
     profileAvatar() {
-      return this.profile && this.profile.avatar ? this.profile.avatar : this.defaultAvatar
+      return normalizeImageUrl(this.profile && this.profile.avatar) || this.defaultAvatar
+    },
+    profileCoverImage() {
+      if (!this.profile) return ''
+      return normalizeImageUrl(this.profile.coverImage || this.profile.cover || this.profile.backgroundImage || this.profile.background)
+    },
+    profileCoverStyle() {
+      if (!this.profileCoverImage) {
+        return {}
+      }
+      return {
+        backgroundImage: `linear-gradient(135deg, rgba(14, 29, 41, 0.12), rgba(14, 29, 41, 0.42)), url("${this.profileCoverImage}")`
+      }
     },
     locationText() {
       if (!this.profile) return ''
@@ -729,12 +866,15 @@ export default {
     }
   },
   methods: {
+    ossUploadAction,
     async initializePage() {
       this.pageLoading = true
       this.pageError = ''
       this.profile = null
       this.profileUserId = null
       this.isSelf = false
+      this.isFollowingProfile = false
+      this.followLoading = false
       this.editDialogVisible = false
       this.resetContentState()
 
@@ -775,6 +915,10 @@ export default {
           this.fetchShowcase(),
           this.fetchProjects()
         ])
+
+        if (!this.isSelf) {
+          await this.checkFollowStatus()
+        }
 
         if (!this.isSelf && this.activePrimaryTab === 'projects' && !this.hasPublicProjects) {
           this.activePrimaryTab = 'home'
@@ -823,7 +967,9 @@ export default {
         email: profile && profile.email ? profile.email : '',
         phone: profile && profile.phone ? profile.phone : '',
         bio: profile && profile.bio ? profile.bio : '',
-        styleTags: profile && profile.styleTags ? profile.styleTags : ''
+        styleTags: profile && profile.styleTags ? profile.styleTags : '',
+        avatar: profile && profile.avatar ? profile.avatar : '',
+        coverImage: profile && profile.coverImage ? profile.coverImage : ''
       }
     },
     async fetchFollowStats() {
@@ -835,6 +981,16 @@ export default {
         this.followStats = { following: 0, followers: 0 }
       }
     },
+    normalizeMediaItem(item) {
+      return {
+        ...item,
+        photoUrl: normalizeImageUrl(item && item.photo),
+        photoBroken: false
+      }
+    },
+    normalizeMediaList(list) {
+      return Array.isArray(list) ? list.map(item => this.normalizeMediaItem(item)) : []
+    },
     async fetchWorks() {
       this.works.loading = true
       try {
@@ -843,7 +999,7 @@ export default {
           pageNo: this.works.pageNo,
           pageSize: this.works.pageSize
         })
-        this.works.list = res.data.rows || []
+        this.works.list = this.normalizeMediaList(res.data.rows || [])
         this.works.total = res.data.total || 0
         this.works.loaded = true
       } finally {
@@ -865,7 +1021,7 @@ export default {
         }
 
         const res = await huagaoApi.getList(params)
-        this.showcase.list = res.data.rows || []
+        this.showcase.list = this.normalizeMediaList(res.data.rows || [])
         this.showcase.total = res.data.total || 0
         this.showcase.loaded = true
       } finally {
@@ -896,7 +1052,7 @@ export default {
           pageNo: this.favorites.pageNo,
           pageSize: this.favorites.pageSize
         })
-        this.favorites.list = res.data.rows || []
+        this.favorites.list = this.normalizeMediaList(res.data.rows || [])
         this.favorites.total = res.data.total || 0
         this.favorites.loaded = true
       } finally {
@@ -913,7 +1069,7 @@ export default {
           pageNo: this.cart.pageNo,
           pageSize: this.cart.pageSize
         })
-        this.cart.list = res.data.rows || []
+        this.cart.list = this.normalizeMediaList(res.data.rows || [])
         this.cart.total = res.data.total || 0
         this.cart.loaded = true
       } finally {
@@ -964,27 +1120,159 @@ export default {
     setSecondaryTab(tabKey) {
       this.activeSecondaryTab = tabKey
     },
+    handleCardImageError(item) {
+      this.$set(item, 'photoBroken', true)
+    },
+    beforeAvatarUpload() {
+      this.avatarUploading = true
+      return true
+    },
+    beforeCoverUpload() {
+      this.coverUploading = true
+      return true
+    },
     handleDisplayModeChange(nextMode) {
       if (nextMode === this.displayMode) return
       this.$store.commit('user/SET_DISPLAY_MODE', nextMode)
       const label = nextMode === 'artist' ? '画师' : '用户'
       this.$message.success(`已切换为${label}视图`)
     },
-    async handleSaveProfile() {
+    buildProfilePayload(overrides = {}) {
+      return {
+        id: this.profile && this.profile.id ? this.profile.id : this.editForm.id,
+        username: (this.profile && this.profile.username) || this.editForm.username || '',
+        name: Object.prototype.hasOwnProperty.call(overrides, 'name') ? overrides.name : this.editForm.name,
+        email: Object.prototype.hasOwnProperty.call(overrides, 'email') ? overrides.email : this.editForm.email,
+        phone: Object.prototype.hasOwnProperty.call(overrides, 'phone') ? overrides.phone : this.editForm.phone,
+        bio: Object.prototype.hasOwnProperty.call(overrides, 'bio') ? overrides.bio : this.editForm.bio,
+        styleTags: Object.prototype.hasOwnProperty.call(overrides, 'styleTags') ? overrides.styleTags : this.editForm.styleTags,
+        avatar: Object.prototype.hasOwnProperty.call(overrides, 'avatar') ? overrides.avatar : ((this.profile && this.profile.avatar) || this.editForm.avatar || ''),
+        coverImage: Object.prototype.hasOwnProperty.call(overrides, 'coverImage') ? overrides.coverImage : ((this.profile && this.profile.coverImage) || this.editForm.coverImage || '')
+      }
+    },
+    syncProfileState(profile) {
+      if (!profile) return
+      const nextProfile = { ...profile }
+      this.profile = nextProfile
+      if (this.isSelf) {
+        this.currentUser = nextProfile
+      }
+      this.applyProfileToForm(nextProfile)
+    },
+    async refreshSelfProfile() {
+      await this.$store.dispatch('user/getInfo')
+      const res = await userApi.getInfo(this.token)
+      const user = res && res.data ? res.data.userList : null
+      if (user) {
+        this.syncProfileState(user)
+      }
+    },
+    async checkFollowStatus() {
+      const followerId = this.userId || (this.currentUser && this.currentUser.id)
+      if (!this.token || !followerId || !this.profileUserId || this.isSelf) {
+        this.isFollowingProfile = false
+        return
+      }
+
+      try {
+        const res = await followApi.check({
+          followerId,
+          followingId: this.profileUserId
+        })
+        this.isFollowingProfile = !!(res && res.data)
+      } catch (error) {
+        this.isFollowingProfile = false
+      }
+    },
+    async toggleFollowProfile() {
+      const followerId = this.userId || (this.currentUser && this.currentUser.id)
+      if (!this.token || !followerId) {
+        this.$message.warning('请先登录')
+        return
+      }
+      if (!this.profileUserId || this.isSelf) return
+
+      this.followLoading = true
+      try {
+        if (this.isFollowingProfile) {
+          await followApi.unfollow({
+            followerId,
+            followingId: this.profileUserId
+          })
+          this.isFollowingProfile = false
+          this.$message.success('已取消关注')
+        } else {
+          await followApi.follow({
+            followerId,
+            followingId: this.profileUserId
+          })
+          this.isFollowingProfile = true
+          this.$message.success('关注成功')
+        }
+        await this.fetchFollowStats()
+      } catch (error) {
+        this.$message.error('操作失败')
+      } finally {
+        this.followLoading = false
+      }
+    },
+    async saveProfilePatch(overrides, successMessage) {
       this.saving = true
       try {
-        await userApi.updateMyUser(this.editForm)
-        await this.$store.dispatch('user/getInfo')
-        this.currentUser = null
-        await this.ensureCurrentUser()
-        this.profile = { ...this.currentUser }
-        this.applyProfileToForm(this.profile)
-        this.editDialogVisible = false
-        this.$message.success('个人资料已更新')
+        await userApi.updateMyUser(this.buildProfilePayload(overrides))
+        await this.refreshSelfProfile()
+        this.$message.success(successMessage)
+        return true
+      } catch (error) {
+        this.$message.error('保存失败')
+        return false
+      } finally {
+        this.saving = false
+      }
+    },
+    async updateMediaField(field, response, successMessage, loadingKey) {
+      const fileName = extractUploadFileName(response)
+      if (!fileName) {
+        this[loadingKey] = false
+        this.$message.error((response && response.message) || '上传失败')
+        return
+      }
+
+      const nextUrl = normalizeImageUrl(fileName)
+      if (!nextUrl) {
+        this[loadingKey] = false
+        this.$message.error('上传返回的图片地址无效')
+        return
+      }
+
+      try {
+        await userApi.updateMyUser(this.buildProfilePayload({ [field]: nextUrl }))
+        await this.refreshSelfProfile()
+        this.$message.success(successMessage)
       } catch (error) {
         this.$message.error('保存失败')
       } finally {
-        this.saving = false
+        this[loadingKey] = false
+      }
+    },
+    handleAvatarUploadSuccess(response) {
+      this.updateMediaField('avatar', response, '头像已更新', 'avatarUploading')
+    },
+    handleAvatarUploadError() {
+      this.avatarUploading = false
+      this.$message.error('头像上传失败')
+    },
+    handleCoverUploadSuccess(response) {
+      this.updateMediaField('coverImage', response, '背景图已更新', 'coverUploading')
+    },
+    handleCoverUploadError() {
+      this.coverUploading = false
+      this.$message.error('背景图上传失败')
+    },
+    async handleSaveProfile() {
+      const success = await this.saveProfilePatch({}, '个人资料已更新')
+      if (success) {
+        this.editDialogVisible = false
       }
     },
     goFollows() {
@@ -1060,36 +1348,80 @@ export default {
 }
 
 .profile-hero {
-  overflow: hidden;
-  border-radius: 24px;
-  background: #fff;
-  box-shadow: 0 14px 40px rgba(34, 46, 69, 0.08);
+  overflow: visible;
 }
 
 .profile-hero__cover {
-  height: 140px;
+  position: relative;
+  height: 260px;
+  border-radius: 30px;
+  overflow: hidden;
   background:
     radial-gradient(circle at top left, rgba(255, 203, 119, 0.9), transparent 35%),
     radial-gradient(circle at top right, rgba(65, 184, 131, 0.22), transparent 28%),
     linear-gradient(135deg, #1f5c4f 0%, #2e7d69 40%, #f5d48f 100%);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 18px 42px rgba(34, 46, 69, 0.14);
+}
+
+.profile-hero__cover-mask {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(13, 22, 28, 0.12) 0%, rgba(13, 22, 28, 0.34) 100%);
+}
+
+.profile-hero__cover-empty {
+  position: absolute;
+  right: 28px;
+  bottom: 24px;
+  z-index: 1;
+  display: inline-flex;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(12px);
+  color: #fff7e2;
+  font-size: 13px;
 }
 
 .profile-hero__body {
   display: flex;
   gap: 28px;
-  padding: 0 32px 32px;
-  margin-top: -52px;
+  align-items: flex-end;
+  padding: 0 28px;
+  margin-top: -72px;
+  position: relative;
+  z-index: 2;
+}
+
+.profile-avatar-shell {
+  flex-shrink: 0;
+  align-self: flex-start;
+  padding: 8px;
+  border-radius: 32px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 20px 38px rgba(34, 46, 69, 0.18);
 }
 
 .profile-avatar {
-  flex-shrink: 0;
-  border: 6px solid #fff;
-  box-shadow: 0 12px 24px rgba(34, 46, 69, 0.16);
+  display: block;
+  border: 4px solid rgba(255, 255, 255, 0.88);
+}
+
+.profile-summary-panel {
+  flex: 1;
+  min-width: 0;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 42px rgba(34, 46, 69, 0.12);
+  backdrop-filter: blur(10px);
 }
 
 .profile-summary {
-  flex: 1;
   min-width: 0;
+  padding: 24px 28px 26px;
 }
 
 .profile-summary__top {
@@ -1134,6 +1466,21 @@ export default {
   gap: 12px;
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+.profile-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.profile-inline-uploader {
+  display: inline-flex;
+}
+
+.profile-inline-uploader ::v-deep .el-upload {
+  display: inline-flex;
 }
 
 .header-action-btn {
@@ -1336,9 +1683,18 @@ export default {
 }
 
 .cover-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background:
     radial-gradient(circle at top left, rgba(245, 212, 143, 0.75), transparent 35%),
     linear-gradient(135deg, #dbe8e2 0%, #eef3f1 100%);
+}
+
+.cover-fallback__label {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #6f7d88;
 }
 
 .cover-price {
@@ -1470,9 +1826,17 @@ export default {
 }
 
 .stack-card__thumb--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background:
     radial-gradient(circle at top left, rgba(245, 212, 143, 0.75), transparent 35%),
     linear-gradient(135deg, #dbe8e2 0%, #eef3f1 100%);
+}
+
+.stack-card__thumb-label {
+  font-size: 12px;
+  color: #6f7d88;
 }
 
 .stack-card__meta {
@@ -1555,6 +1919,16 @@ export default {
   padding-top: 8px;
 }
 
+.edit-form__hint {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f7faf9;
+  color: #70808c;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
 @media (max-width: 1024px) {
   .card-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1562,9 +1936,15 @@ export default {
 }
 
 @media (max-width: 768px) {
+  .profile-hero__cover {
+    height: 210px;
+  }
+
   .profile-hero__body {
     flex-direction: column;
-    padding: 0 20px 24px;
+    align-items: stretch;
+    padding: 0 20px;
+    margin-top: -56px;
   }
 
   .profile-summary__top,
@@ -1575,6 +1955,10 @@ export default {
 
   .profile-actions {
     width: 100%;
+    justify-content: flex-start;
+  }
+
+  .profile-action-buttons {
     justify-content: flex-start;
   }
 

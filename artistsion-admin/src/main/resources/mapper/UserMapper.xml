@@ -13,11 +13,14 @@
         <result column="avatar" property="avatar" />
         <result column="deleted" property="deleted" />
         <result column="name" property="name" />
+        <result column="bio" property="bio" />
+        <result column="style_tags" property="styleTags" />
+        <result column="cover_image" property="coverImage" />
     </resultMap>
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, username, password, email, phone, status, avatar, deleted,name
+        id, username, password, email, phone, status, avatar, deleted, name, bio, style_tags, cover_image
     </sql>
 
     <select id="getRoleNamesByUserId" parameterType="Integer" resultType="String">

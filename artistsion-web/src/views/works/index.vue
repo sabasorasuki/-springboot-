@@ -31,8 +31,16 @@
           @click="openPreview(item)"
         >
           <div class="card-cover">
-            <img v-if="item.photo" :src="item.photo" alt="" class="cover-img">
-            <div v-else class="cover-placeholder" />
+            <img
+              v-if="item.photoUrl && !item.photoBroken"
+              :src="item.photoUrl"
+              alt=""
+              class="cover-img"
+              @error="handleImageError(item)"
+            >
+            <div v-else class="cover-placeholder">
+              <span class="cover-placeholder__label">暂无封面</span>
+            </div>
           </div>
           <div class="card-body">
             <div v-if="item.title" class="card-title">{{ item.title }}</div>
@@ -63,11 +71,25 @@
     >
       <div v-if="previewItem" class="preview-content">
         <div class="preview-image">
-          <img :src="previewItem.photo" alt="" class="preview-img">
+          <img
+            v-if="previewItem.photoUrl && !previewItem.photoBroken"
+            :src="previewItem.photoUrl"
+            alt=""
+            class="preview-img"
+            @error="handlePreviewImageError"
+          >
+          <div v-else class="preview-image__placeholder">
+            <span>暂无可预览图片</span>
+          </div>
         </div>
         <div class="preview-info">
           <div class="preview-author" @click="goAuthor(previewItem)">
-            <img :src="previewItem.userAvatar || defaultAvatar" class="author-avatar" alt="">
+            <img
+              :src="previewItem.userAvatarUrl || defaultAvatar"
+              class="author-avatar"
+              alt=""
+              @error="handleAuthorAvatarError"
+            >
             <span class="author-name">{{ previewItem.username || '匿名' }}</span>
           </div>
           <h2 v-if="previewItem.title" class="preview-title">{{ previewItem.title }}</h2>
@@ -84,6 +106,7 @@
 <script>
 import fenxiangApi from '@/api/fenxiang'
 import fenleiApi from '@/api/fenlei'
+import { normalizeImageUrl } from '@/utils/oss'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
@@ -107,6 +130,15 @@ export default {
     this.fetchWorks()
   },
   methods: {
+    normalizeWork(item) {
+      return {
+        ...item,
+        photoUrl: normalizeImageUrl(item && item.photo),
+        userAvatarUrl: normalizeImageUrl(item && item.userAvatar),
+        photoBroken: false,
+        userAvatarBroken: false
+      }
+    },
     fetchCategories() {
       fenleiApi.getList1().then(res => {
         const cats = (res.data.rows || []).map(c => c.fenlei)
@@ -124,7 +156,8 @@ export default {
       }
       fenxiangApi.getList(params).then(res => {
         const rows = res.data.rows || []
-        this.works = this.pageNo === 1 ? rows : this.works.concat(rows)
+        const normalizedRows = rows.map(this.normalizeWork)
+        this.works = this.pageNo === 1 ? normalizedRows : this.works.concat(normalizedRows)
         this.total = res.data.total || 0
       }).catch(() => {}).finally(() => {
         this.loading = false
@@ -141,8 +174,21 @@ export default {
       this.fetchWorks()
     },
     openPreview(item) {
-      this.previewItem = item
+      this.previewItem = this.normalizeWork(item)
       this.previewVisible = true
+    },
+    handleImageError(item) {
+      this.$set(item, 'photoBroken', true)
+    },
+    handlePreviewImageError() {
+      if (this.previewItem) {
+        this.$set(this.previewItem, 'photoBroken', true)
+      }
+    },
+    handleAuthorAvatarError() {
+      if (this.previewItem) {
+        this.$set(this.previewItem, 'userAvatarUrl', '')
+      }
     },
     goAuthor(item) {
       const authorId = item.userids || item.userId
@@ -253,7 +299,16 @@ export default {
   position: absolute;
   top: 0; left: 0;
   width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: linear-gradient(135deg, #e8e0f0 0%, #f0e8f5 100%);
+}
+
+.cover-placeholder__label {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #7b8796;
 }
 
 .card-body {
@@ -338,6 +393,15 @@ export default {
   width: 100%;
   max-height: 420px;
   object-fit: contain;
+}
+
+.preview-image__placeholder {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7b8796;
+  background: linear-gradient(135deg, #efe7f5 0%, #f6f2f8 100%);
 }
 
 .preview-info {

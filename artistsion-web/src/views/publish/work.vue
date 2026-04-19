@@ -27,9 +27,13 @@
             :action="ossUploadAction('photo')"
             :show-file-list="false"
             :on-success="handlePhotoSuccess"
+            :on-error="handlePhotoError"
           >
-            <img v-if="form.photo" :src="form.photo" class="avatar-preview">
-            <i v-else class="el-icon-plus avatar-uploader-icon" />
+            <img v-if="previewPhoto" :src="previewPhoto" class="avatar-preview" @error="handlePreviewError">
+            <div v-else class="avatar-placeholder">
+              <i class="el-icon-plus avatar-uploader-icon" />
+              <span class="avatar-placeholder__text">上传可直接展示的封面图</span>
+            </div>
           </el-upload>
         </el-form-item>
 
@@ -102,7 +106,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { ossDownloadUrl, ossUploadAction, ossUploadImgServer } from '@/utils/oss'
+import { extractUploadFileName, normalizeImageUrl, ossDownloadUrl, ossUploadAction, ossUploadImgServer } from '@/utils/oss'
 import fenxiangApi from '@/api/fenxiang'
 import huagaoApi from '@/api/huagao'
 import fenleiApi from '@/api/fenlei'
@@ -134,7 +138,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['token'])
+    ...mapGetters(['token']),
+    previewPhoto() {
+      return normalizeImageUrl(this.form.photo)
+    }
   },
   created() {
     this.loadCategories()
@@ -198,11 +205,26 @@ export default {
       })
     },
     handlePhotoSuccess(res) {
-      const name = (res && res.data) || (res && res.message) || ''
-      if (name) {
-        this.form.photo = ossDownloadUrl(name)
-        this.$refs.form && this.$refs.form.validateField('photo')
+      const name = extractUploadFileName(res)
+      if (!name) {
+        this.$message.error((res && res.message) || '封面上传失败')
+        return
       }
+
+      const finalUrl = normalizeImageUrl(name)
+      if (!finalUrl) {
+        this.$message.error('封面地址无效，请重新上传')
+        return
+      }
+
+      this.form.photo = finalUrl
+      this.$refs.form && this.$refs.form.validateField('photo')
+    },
+    handlePhotoError() {
+      this.$message.error('封面上传失败，请稍后重试')
+    },
+    handlePreviewError() {
+      this.form.photo = ''
     },
     handleSubmit() {
       this.$refs.form.validate(valid => {
@@ -221,7 +243,7 @@ export default {
       }
       this.submitting = true
       const data = {
-        photo: this.form.photo,
+        photo: normalizeImageUrl(this.form.photo),
         title: this.form.title || '',
         fenlei: this.form.fenlei || '',
         content: this.form.content || '',
@@ -249,7 +271,7 @@ export default {
       this.submitting = true
       const data = {
         name: this.form.name,
-        photo: this.form.photo,
+        photo: normalizeImageUrl(this.form.photo),
         price: this.form.price || 0,
         zhekou: this.form.zhekou || 0,
         fenlei: this.form.fenlei || '',
@@ -323,6 +345,23 @@ export default {
   height: 178px;
   line-height: 178px;
   text-align: center;
+}
+.avatar-placeholder {
+  width: 178px;
+  height: 178px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #f3efe8 0%, #f8f6f1 100%);
+}
+.avatar-placeholder__text {
+  width: 132px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #909399;
 }
 .avatar-preview {
   width: 178px;

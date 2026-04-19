@@ -36,7 +36,7 @@
               <el-dropdown trigger="click" @command="handleAvatarCommand">
                 <div class="avatar-wrapper">
                   <img
-                    :src="avatar || defaultAvatar"
+                    :src="headerAvatar"
                     class="avatar-img"
                     alt="avatar"
                   >
@@ -99,6 +99,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import { normalizeImageUrl } from '@/utils/oss'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
@@ -118,7 +119,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['avatar', 'name', 'token', 'roles', 'displayMode'])
+    ...mapGetters(['avatar', 'name', 'token', 'roles', 'displayMode']),
+    headerAvatar() {
+      return normalizeImageUrl(this.avatar) || this.defaultAvatar
+    }
   },
   methods: {
     isNavActive(path) {

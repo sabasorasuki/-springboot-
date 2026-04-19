@@ -55,6 +55,8 @@ public class User implements Serializable {
 
     private String styleTags;
 
+    private String coverImage;
+
     @TableField(exist = false)
     private Integer role;
 

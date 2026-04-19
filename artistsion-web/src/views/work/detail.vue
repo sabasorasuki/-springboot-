@@ -8,8 +8,16 @@
       <div class="detail-main">
         <!-- 左：大图 -->
         <div class="detail-cover">
-          <img v-if="work.photo" :src="work.photo" alt="" class="cover-img">
-          <div v-else class="cover-placeholder" />
+          <img
+            v-if="workPhotoUrl && !photoBroken"
+            :src="workPhotoUrl"
+            alt=""
+            class="cover-img"
+            @error="handlePhotoError"
+          >
+          <div v-else class="cover-placeholder">
+            <span class="cover-placeholder__label">暂无封面</span>
+          </div>
         </div>
         <!-- 右：信息 -->
         <div class="detail-info">
@@ -66,6 +74,7 @@ import huagaoApi from '@/api/huagao'
 import shoucangApi from '@/api/shoucang'
 import orderApi from '@/api/order'
 import ReportDialog from '@/components/ReportDialog'
+import { normalizeImageUrl } from '@/utils/oss'
 
 export default {
   name: 'WorkDetail',
@@ -76,6 +85,7 @@ export default {
     return {
       loading: true,
       work: null,
+      photoBroken: false,
       isFav: false,
       favId: null,
       favLoading: false,
@@ -84,7 +94,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['userId'])
+    ...mapGetters(['userId']),
+    workPhotoUrl() {
+      return normalizeImageUrl(this.work && this.work.photo)
+    }
   },
   created() {
     this.fetchWork()
@@ -97,6 +110,7 @@ export default {
         const res = await huagaoApi.getById(id)
         if (res.data && res.code === 20000) {
           this.work = res.data
+          this.photoBroken = false
           this.checkFav()
         }
       } catch (e) {
@@ -129,7 +143,7 @@ export default {
           await shoucangApi.add({
             title: this.work.name,
             wzids: String(this.work.id),
-            photo: this.work.photo,
+            photo: this.workPhotoUrl || this.work.photo || '',
             fenlei: this.work.fenlei,
             price: String(this.work.price),
             userids: String(this.userId)
@@ -149,7 +163,7 @@ export default {
       try {
         await orderApi.add({
           name: this.work.name,
-          photo: this.work.photo,
+          photo: this.workPhotoUrl || this.work.photo || '',
           price: this.work.price,
           spids: String(this.work.id),
           shangjiaids: this.work.shangjiaids,
@@ -165,6 +179,9 @@ export default {
     },
     goArtist(artistId) {
       this.$router.push('/center/profile/' + artistId)
+    },
+    handlePhotoError() {
+      this.photoBroken = true
     },
     openReportDialog() {
       this.reportVisible = true
@@ -211,7 +228,15 @@ export default {
 .cover-placeholder {
   width: 100%;
   height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: linear-gradient(135deg, #e8e0f0 0%, #f0e8f5 100%);
+}
+
+.cover-placeholder__label {
+  font-size: 13px;
+  color: #7b8796;
 }
 
 .detail-info {

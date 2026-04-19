@@ -108,6 +108,9 @@ public class AuthController {
         userInfo.put("email", loginUser.getEmail());
         userInfo.put("name", loginUser.getName());
         userInfo.put("avatar", loginUser.getAvatar());
+        userInfo.put("bio", loginUser.getBio());
+        userInfo.put("styleTags", loginUser.getStyleTags());
+        userInfo.put("coverImage", loginUser.getCoverImage());
         data.put("user", userInfo);
 
         data.put("roles", roles);
@@ -230,6 +233,9 @@ public class AuthController {
         userInfo.put("email", dbUser.getEmail());
         userInfo.put("name", dbUser.getName());
         userInfo.put("avatar", dbUser.getAvatar());
+        userInfo.put("bio", dbUser.getBio());
+        userInfo.put("styleTags", dbUser.getStyleTags());
+        userInfo.put("coverImage", dbUser.getCoverImage());
         data.put("user", userInfo);
 
         data.put("roles", roles);
@@ -239,6 +245,7 @@ public class AuthController {
         // 兼容旧前端 getInfo 消费结构
         data.put("name", dbUser.getUsername());
         data.put("avatar", dbUser.getAvatar());
+        data.put("coverImage", dbUser.getCoverImage());
 
         return Result.success(data);
     }

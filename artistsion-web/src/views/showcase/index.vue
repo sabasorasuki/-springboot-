@@ -31,8 +31,16 @@
           @click="goDetail(item.id)"
         >
           <div class="card-cover">
-            <img v-if="item.photo" :src="item.photo" alt="" class="cover-img">
-            <div v-else class="cover-placeholder" />
+            <img
+              v-if="item.photoUrl && !item.photoBroken"
+              :src="item.photoUrl"
+              alt=""
+              class="cover-img"
+              @error="handleImageError(item)"
+            >
+            <div v-else class="cover-placeholder">
+              <span class="cover-placeholder__label">暂无封面</span>
+            </div>
             <div v-if="item.price" class="price-badge">¥{{ item.price }}</div>
           </div>
           <div class="card-body">
@@ -58,6 +66,7 @@
 <script>
 import huagaoApi from '@/api/huagao'
 import fenleiApi from '@/api/fenlei'
+import { normalizeImageUrl } from '@/utils/oss'
 
 export default {
   name: 'ShowcasePage',
@@ -76,6 +85,13 @@ export default {
     this.fetchItems()
   },
   methods: {
+    normalizeItem(item) {
+      return {
+        ...item,
+        photoUrl: normalizeImageUrl(item && item.photo),
+        photoBroken: false
+      }
+    },
     fetchCategories() {
       fenleiApi.getList1().then(res => {
         const cats = (res.data.rows || []).map(c => c.fenlei)
@@ -95,7 +111,8 @@ export default {
       }
       huagaoApi.getList(params).then(res => {
         const rows = res.data.rows || []
-        this.items = this.pageNo === 1 ? rows : this.items.concat(rows)
+        const normalizedRows = rows.map(this.normalizeItem)
+        this.items = this.pageNo === 1 ? normalizedRows : this.items.concat(normalizedRows)
         this.total = res.data.total || 0
       }).catch(() => {}).finally(() => {
         this.loading = false
@@ -113,6 +130,9 @@ export default {
     },
     goDetail(id) {
       this.$router.push('/work/' + id)
+    },
+    handleImageError(item) {
+      this.$set(item, 'photoBroken', true)
     },
     goAuthor(item) {
       const authorId = item.shangjiaids
@@ -222,7 +242,16 @@ export default {
   position: absolute;
   top: 0; left: 0;
   width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: linear-gradient(135deg, #e8e0f0 0%, #f0e8f5 100%);
+}
+
+.cover-placeholder__label {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #7b8796;
 }
 
 .price-badge {
