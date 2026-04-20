@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <p>
@@ -70,6 +72,7 @@ public class SysHuagaoController {
 
         Page<SysHuagao> page = new Page<>(pageNo, pageSize);
         service.page(page, wrapper);
+        populateArtistNames(page.getRecords());
 
         Map<String, Object> data = new HashMap<>();
         data.put("total", page.getTotal());
@@ -87,6 +90,7 @@ public class SysHuagaoController {
         wrapper.orderByDesc(SysHuagao::getId);
         Page<SysHuagao> page = new Page<>(1,3);
         service.page(page, wrapper);
+        populateArtistNames(page.getRecords());
         Map<String,Object> data = new HashMap<>();
         data.put("total",page.getTotal());
         data.put("rows",page.getRecords());
@@ -117,6 +121,7 @@ public class SysHuagaoController {
 
         Page<SysHuagao> page = new Page<>(pageNo,pageSize);
         service.page(page, wrapper);
+        populateArtistNames(page.getRecords());
 
         Map<String,Object> data = new HashMap<>();
         data.put("total",page.getTotal());
@@ -145,14 +150,7 @@ public class SysHuagaoController {
     @GetMapping("/getById/{id}")
     public Result<SysHuagao> getById(@PathVariable("id") Integer id){
         SysHuagao shetuan = service.getById(id);
-        if (shetuan != null && StringUtils.hasLength(shetuan.getShangjiaids())) {
-            try {
-                User artist = userMapper.selectById(Integer.parseInt(shetuan.getShangjiaids()));
-                if (artist != null) {
-                    shetuan.setArtistName(artist.getName() != null ? artist.getName() : artist.getUsername());
-                }
-            } catch (NumberFormatException ignored) {}
-        }
+        populateArtistName(shetuan);
         return Result.success(shetuan);
     }
 
@@ -179,6 +177,69 @@ public class SysHuagaoController {
 
         service.removeById(id);
         return Result.success("删除成功");
+    }
+
+    private void populateArtistNames(List<SysHuagao> records) {
+        if (records == null || records.isEmpty()) {
+            return;
+        }
+
+        Set<Integer> artistIds = new LinkedHashSet<>();
+        for (SysHuagao record : records) {
+            Integer artistId = parseArtistId(record);
+            if (artistId != null) {
+                artistIds.add(artistId);
+            }
+        }
+
+        if (artistIds.isEmpty()) {
+            return;
+        }
+
+        List<User> artists = userMapper.selectBatchIds(artistIds);
+        Map<Integer, String> artistNames = new HashMap<>();
+        for (User artist : artists) {
+            if (artist == null || artist.getId() == null) {
+                continue;
+            }
+            artistNames.put(artist.getId(), resolveArtistName(artist));
+        }
+
+        for (SysHuagao record : records) {
+            Integer artistId = parseArtistId(record);
+            if (artistId != null) {
+                record.setArtistName(artistNames.get(artistId));
+            }
+        }
+    }
+
+    private void populateArtistName(SysHuagao record) {
+        Integer artistId = parseArtistId(record);
+        if (artistId == null) {
+            return;
+        }
+        User artist = userMapper.selectById(artistId);
+        if (artist != null) {
+            record.setArtistName(resolveArtistName(artist));
+        }
+    }
+
+    private Integer parseArtistId(SysHuagao record) {
+        if (record == null || !StringUtils.hasLength(record.getShangjiaids())) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(record.getShangjiaids());
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private String resolveArtistName(User artist) {
+        if (artist == null) {
+            return null;
+        }
+        return StringUtils.hasLength(artist.getName()) ? artist.getName() : artist.getUsername();
     }
 
 

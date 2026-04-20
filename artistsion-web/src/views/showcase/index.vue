@@ -48,7 +48,7 @@
             <div class="card-meta">
               <span v-if="item.fenlei" class="card-tag">{{ item.fenlei }}</span>
               <span class="card-author" @click.stop="goAuthor(item)">
-                {{ item.shangjiaids_name || '画师' }}
+                {{ getAuthorName(item) }}
               </span>
             </div>
           </div>
@@ -64,10 +64,11 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import huagaoApi from '@/api/huagao'
 import fenleiApi from '@/api/fenlei'
 import { normalizeImageUrl } from '@/utils/oss'
-import { buildOtherArtistProfileRoute } from '@/utils/centerProfile'
+import { buildCenterProfileRoute, buildOtherArtistProfileRoute } from '@/utils/centerProfile'
 
 export default {
   name: 'ShowcasePage',
@@ -80,6 +81,9 @@ export default {
       filterTags: ['全部'],
       activeFilter: '全部'
     }
+  },
+  computed: {
+    ...mapGetters(['userId'])
   },
   created() {
     this.fetchCategories()
@@ -135,11 +139,22 @@ export default {
     handleImageError(item) {
       this.$set(item, 'photoBroken', true)
     },
+    getAuthorName(item) {
+      return (item && item.artistName) || '画师'
+    },
     goAuthor(item) {
-      const authorId = item.shangjiaids
-      if (authorId) {
-        this.$router.push(buildOtherArtistProfileRoute(authorId, 'showcase'))
+      const authorId = item && item.shangjiaids ? String(item.shangjiaids) : ''
+      if (!authorId) return
+      if (this.userId && String(this.userId) === authorId) {
+        this.$router.push(buildCenterProfileRoute({
+          isSelf: true,
+          viewMode: 'artist',
+          tab: 'submissions',
+          sub: 'showcase'
+        }))
+        return
       }
+      this.$router.push(buildOtherArtistProfileRoute(authorId, 'showcase'))
     }
   }
 }

@@ -367,6 +367,16 @@ export default {
       }
     },
     goArtist(artistId) {
+      if (!artistId) return
+      if (this.userId && String(this.userId) === String(artistId)) {
+        this.$router.push(buildCenterProfileRoute({
+          isSelf: true,
+          viewMode: 'artist',
+          tab: 'submissions',
+          sub: 'showcase'
+        }))
+        return
+      }
       this.$router.push(buildOtherArtistProfileRoute(artistId, 'showcase'))
     },
     handlePhotoError() {
