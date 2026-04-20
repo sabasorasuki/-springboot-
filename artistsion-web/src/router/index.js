@@ -1,7 +1,17 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+import { buildCenterProfileRoute, getPersistedDisplayMode } from '@/utils/centerProfile'
 
 Vue.use(Router)
+
+function buildSelfCenterRedirect(tab, sub, mode = getPersistedDisplayMode()) {
+  return buildCenterProfileRoute({
+    isSelf: true,
+    viewMode: mode,
+    tab,
+    sub
+  })
+}
 
 /* Layout */
 import Layout from '@/layout'
@@ -154,7 +164,13 @@ export const constantRoutes = [
   },
   {
     path: '/artist/:id',
-    redirect: to => `/center/profile/${to.params.id}`,
+    redirect: to => buildCenterProfileRoute({
+      isSelf: false,
+      userId: Number(to.params.id),
+      viewMode: to.query.view,
+      tab: to.query.tab,
+      sub: to.query.sub
+    }),
     hidden: true
   },
   {
@@ -186,7 +202,7 @@ export const constantRoutes = [
   {
     path: '/center',
     component: MainLayout,
-    redirect: '/center/profile',
+    redirect: () => buildSelfCenterRedirect(),
     hidden: true,
     children: [
       {
@@ -197,27 +213,28 @@ export const constantRoutes = [
       },
       {
         path: 'orders',
-        name: 'CenterOrders',
-        component: () => import('@/views/center/orders'),
+        redirect: () => buildSelfCenterRedirect('orders'),
         meta: { title: '我的订单' }
       },
       {
         path: 'submissions',
-        name: 'CenterSubmissions',
-        component: () => import('@/views/center/submissions'),
+        redirect: () => buildSelfCenterRedirect('submissions', 'works', 'artist'),
         meta: { title: '投稿管理' }
       },
       {
         path: 'favorites',
-        name: 'CenterFavorites',
-        component: () => import('@/views/center/favorites'),
+        redirect: () => buildSelfCenterRedirect('favorites', getPersistedDisplayMode() === 'artist' ? 'projects' : 'works'),
         meta: { title: '我的收藏' }
       },
       {
         path: 'cart',
-        name: 'CenterCart',
-        component: () => import('@/views/center/cart'),
+        redirect: () => buildSelfCenterRedirect('cart', '', 'client'),
         meta: { title: '购物车' }
+      },
+      {
+        path: 'projects',
+        redirect: () => buildSelfCenterRedirect('projects', '', 'client'),
+        meta: { title: '我的企划' }
       },
       {
         path: 'follows',

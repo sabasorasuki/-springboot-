@@ -44,37 +44,35 @@
               </div>
 
               <div class="profile-actions">
-                <template v-if="isSelf">
-                  <el-button
-                    plain
-                    size="small"
-                    class="header-action-btn"
-                    @click="openEditDialog"
-                  >
-                    编辑个人信息
-                  </el-button>
+                <el-button
+                  v-if="isSelf"
+                  plain
+                  size="small"
+                  class="header-action-btn"
+                  @click="openEditDialog"
+                >
+                  编辑个人信息
+                </el-button>
 
-                  <div class="identity-switch">
-                    <span class="identity-switch__label">身份切换</span>
-                    <el-radio-group v-model="displayModeValue" size="small">
-                      <el-radio-button label="artist">画师</el-radio-button>
-                      <el-radio-button label="client">用户</el-radio-button>
-                    </el-radio-group>
-                  </div>
-                </template>
+                <div class="identity-switch">
+                  <span class="identity-switch__label">{{ isSelf ? '身份切换' : '查看身份' }}</span>
+                  <el-radio-group v-model="profileViewModeValue" size="small">
+                    <el-radio-button label="artist">画师</el-radio-button>
+                    <el-radio-button label="client">用户</el-radio-button>
+                  </el-radio-group>
+                </div>
 
-                <template v-else>
-                  <el-button
-                    size="small"
-                    class="header-action-btn"
-                    :type="isFollowingProfile ? '' : 'primary'"
-                    :plain="isFollowingProfile"
-                    :loading="followLoading"
-                    @click="toggleFollowProfile"
-                  >
-                    {{ isFollowingProfile ? '已关注' : '关注' }}
-                  </el-button>
-                </template>
+                <el-button
+                  v-if="!isSelf"
+                  size="small"
+                  class="header-action-btn"
+                  :type="isFollowingProfile ? '' : 'primary'"
+                  :plain="isFollowingProfile"
+                  :loading="followLoading"
+                  @click="toggleFollowProfile"
+                >
+                  {{ isFollowingProfile ? '已关注' : '关注' }}
+                </el-button>
               </div>
             </div>
 
@@ -133,14 +131,14 @@
               <div class="section-heading">
                 <div>
                   <h2 class="section-heading__title">我的投稿</h2>
-                  <p class="section-heading__desc">统一查看作品、橱窗与企划内容。</p>
+                  <p class="section-heading__desc">画师身份下管理自己的作品与橱窗。</p>
                 </div>
                 <el-button
                   size="small"
                   type="primary"
                   @click="goPublishEntry(activeSecondaryTab)"
                 >
-                  {{ activeSecondaryTab === 'projects' ? '发布企划' : '去投稿' }}
+                  {{ activeSecondaryTab === 'showcase' ? '发布橱窗' : '发布作品' }}
                 </el-button>
               </div>
 
@@ -170,7 +168,7 @@
                 <el-empty v-else description="还没有投稿作品" :image-size="110" />
               </div>
 
-              <div v-else-if="activeSecondaryTab === 'showcase'">
+              <div v-else>
                 <div v-if="showcase.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
                 <div v-else-if="showcase.list.length" class="card-grid">
                   <article
@@ -201,41 +199,68 @@
                 </div>
                 <el-empty v-else description="还没有橱窗投稿" :image-size="110" />
               </div>
+            </section>
 
-              <div v-else>
-                <div v-if="projects.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
-                <div v-else-if="projects.list.length" class="project-list">
-                  <article
-                    v-for="item in projects.list"
-                    :key="item.id"
-                    class="project-card is-clickable"
-                    @click="goProjectDetail(item.id)"
-                  >
-                    <div class="project-card__main">
-                      <div class="project-card__title">{{ item.title }}</div>
-                      <p class="project-card__desc">{{ item.description || '暂无企划描述' }}</p>
-                    </div>
-                    <div class="project-card__side">
-                      <span v-if="item.status" class="project-status">{{ item.status }}</span>
-                      <span class="project-budget">{{ formatBudget(item) }}</span>
-                    </div>
-                  </article>
+            <section v-else-if="activePrimaryTab === 'projects'" class="content-section">
+              <div class="section-heading">
+                <div>
+                  <h2 class="section-heading__title">我的企划</h2>
+                  <p class="section-heading__desc">用户身份下查看和管理自己发布的企划。</p>
                 </div>
-                <el-empty v-else description="还没有发布企划" :image-size="110" />
+                <el-button size="small" type="primary" @click="goPublishEntry('projects')">发布企划</el-button>
               </div>
+
+              <div v-if="projects.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
+              <div v-else-if="projects.list.length" class="project-list">
+                <article
+                  v-for="item in projects.list"
+                  :key="item.id"
+                  class="project-card is-clickable"
+                  @click="goProjectDetail(item.id)"
+                >
+                  <div class="project-card__main">
+                    <div class="project-card__title">{{ item.title }}</div>
+                    <p class="project-card__desc">{{ item.description || '暂无企划描述' }}</p>
+                  </div>
+                  <div class="project-card__side">
+                    <span v-if="item.status" class="project-status">{{ item.status }}</span>
+                    <span class="project-budget">{{ formatBudget(item) }}</span>
+                  </div>
+                </article>
+              </div>
+              <el-empty v-else description="还没有发布企划" :image-size="110" />
             </section>
 
             <section v-else-if="activePrimaryTab === 'favorites'" class="content-section">
               <div class="section-heading">
                 <div>
                   <h2 class="section-heading__title">我的收藏</h2>
-                  <p class="section-heading__desc">按内容类型集中查看收藏记录。</p>
+                  <p class="section-heading__desc">
+                    {{ isArtistView ? '画师身份下只展示收藏的企划。' : '用户身份下按作品与橱窗分类查看收藏。' }}
+                  </p>
                 </div>
               </div>
 
               <div v-if="favorites.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
               <template v-else>
-                <div v-if="activeSecondaryTab === 'works'">
+                <div v-if="activeSecondaryTab === 'projects'">
+                  <div v-if="favoriteProjects.length" class="project-list">
+                    <article
+                      v-for="item in favoriteProjects"
+                      :key="item.id"
+                      class="project-card is-clickable"
+                      @click="goProjectDetail(item.wzids)"
+                    >
+                      <div class="project-card__main">
+                        <div class="project-card__title">{{ item.title || '未命名企划' }}</div>
+                        <p class="project-card__desc">收藏的企划条目</p>
+                      </div>
+                    </article>
+                  </div>
+                  <el-empty v-else description="还没有收藏企划" :image-size="110" />
+                </div>
+
+                <div v-else-if="activeSecondaryTab === 'works'">
                   <div v-if="favoriteWorks.length" class="card-grid">
                     <article v-for="item in favoriteWorks" :key="item.id" class="content-card">
                       <div class="content-card__cover">
@@ -259,7 +284,7 @@
                   <el-empty v-else description="还没有收藏作品" :image-size="110" />
                 </div>
 
-                <div v-else-if="activeSecondaryTab === 'showcase'">
+                <div v-else>
                   <div v-if="favoriteShowcase.length" class="card-grid">
                     <article
                       v-for="item in favoriteShowcase"
@@ -287,23 +312,6 @@
                     </article>
                   </div>
                   <el-empty v-else description="还没有收藏橱窗" :image-size="110" />
-                </div>
-
-                <div v-else>
-                  <div v-if="favoriteProjects.length" class="project-list">
-                    <article
-                      v-for="item in favoriteProjects"
-                      :key="item.id"
-                      class="project-card is-clickable"
-                      @click="goProjectDetail(item.wzids)"
-                    >
-                      <div class="project-card__main">
-                        <div class="project-card__title">{{ item.title || '未命名企划' }}</div>
-                        <p class="project-card__desc">收藏的企划条目</p>
-                      </div>
-                    </article>
-                  </div>
-                  <el-empty v-else description="还没有收藏企划" :image-size="110" />
                 </div>
               </template>
             </section>
@@ -383,130 +391,11 @@
           </template>
 
           <template v-else>
-            <section v-if="activePrimaryTab === 'home'" class="content-section">
+            <section v-if="activePrimaryTab === 'featuredWorks'" class="content-section">
               <div class="section-heading">
                 <div>
-                  <h2 class="section-heading__title">主页</h2>
-                  <p class="section-heading__desc">公开展示该用户的资料与内容概览。</p>
-                </div>
-              </div>
-
-              <div class="overview-panels">
-                <article class="overview-panel">
-                  <div class="overview-panel__label">公开作品</div>
-                  <div class="overview-panel__value">{{ works.total }}</div>
-                  <el-button type="text" @click="activePrimaryTab = 'works'">查看作品</el-button>
-                </article>
-                <article class="overview-panel">
-                  <div class="overview-panel__label">公开橱窗</div>
-                  <div class="overview-panel__value">{{ showcase.total }}</div>
-                  <el-button type="text" @click="activePrimaryTab = 'showcase'">查看橱窗</el-button>
-                </article>
-                <article v-if="hasPublicProjects" class="overview-panel">
-                  <div class="overview-panel__label">公开企划</div>
-                  <div class="overview-panel__value">{{ projects.total }}</div>
-                  <el-button type="text" @click="activePrimaryTab = 'projects'">查看企划</el-button>
-                </article>
-              </div>
-
-              <div class="home-sections">
-                <div class="home-block">
-                  <div class="home-block__header">
-                    <h3>作品</h3>
-                    <button type="button" class="link-btn" @click="activePrimaryTab = 'works'">全部作品</button>
-                  </div>
-                  <div v-if="works.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
-                  <div v-else-if="works.list.length" class="card-grid">
-                    <article v-for="item in works.list.slice(0, 4)" :key="item.id" class="content-card">
-                      <div class="content-card__cover">
-                        <img
-                          v-if="item.photoUrl && !item.photoBroken"
-                          :src="item.photoUrl"
-                          alt=""
-                          class="cover-img"
-                          @error="handleCardImageError(item)"
-                        >
-                        <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
-                      </div>
-                      <div class="content-card__body">
-                        <div class="content-card__title">{{ item.title || '未命名作品' }}</div>
-                        <div class="content-card__meta">
-                          <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
-                        </div>
-                      </div>
-                    </article>
-                  </div>
-                  <el-empty v-else description="暂无公开作品" :image-size="100" />
-                </div>
-
-                <div class="home-block">
-                  <div class="home-block__header">
-                    <h3>橱窗</h3>
-                    <button type="button" class="link-btn" @click="activePrimaryTab = 'showcase'">全部橱窗</button>
-                  </div>
-                  <div v-if="showcase.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
-                  <div v-else-if="showcase.list.length" class="card-grid">
-                    <article
-                      v-for="item in showcase.list.slice(0, 4)"
-                      :key="item.id"
-                      class="content-card is-clickable"
-                      @click="goShowcaseDetail(item.id)"
-                    >
-                      <div class="content-card__cover">
-                        <img
-                          v-if="item.photoUrl && !item.photoBroken"
-                          :src="item.photoUrl"
-                          alt=""
-                          class="cover-img"
-                          @error="handleCardImageError(item)"
-                        >
-                        <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
-                        <span v-if="item.price" class="cover-price">¥{{ item.price }}</span>
-                      </div>
-                      <div class="content-card__body">
-                        <div class="content-card__title">{{ item.name || '未命名橱窗' }}</div>
-                        <div class="content-card__meta">
-                          <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
-                        </div>
-                      </div>
-                    </article>
-                  </div>
-                  <el-empty v-else description="暂无公开橱窗" :image-size="100" />
-                </div>
-
-                <div v-if="hasPublicProjects" class="home-block">
-                  <div class="home-block__header">
-                    <h3>企划</h3>
-                    <button type="button" class="link-btn" @click="activePrimaryTab = 'projects'">全部企划</button>
-                  </div>
-                  <div v-if="projects.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
-                  <div v-else-if="projects.list.length" class="project-list">
-                    <article
-                      v-for="item in projects.list.slice(0, 3)"
-                      :key="item.id"
-                      class="project-card is-clickable"
-                      @click="goProjectDetail(item.id)"
-                    >
-                      <div class="project-card__main">
-                        <div class="project-card__title">{{ item.title }}</div>
-                        <p class="project-card__desc">{{ item.description || '暂无企划描述' }}</p>
-                      </div>
-                      <div class="project-card__side">
-                        <span v-if="item.status" class="project-status">{{ item.status }}</span>
-                        <span class="project-budget">{{ formatBudget(item) }}</span>
-                      </div>
-                    </article>
-                  </div>
-                  <el-empty v-else description="暂无公开企划" :image-size="100" />
-                </div>
-              </div>
-            </section>
-
-            <section v-else-if="activePrimaryTab === 'works'" class="content-section">
-              <div class="section-heading">
-                <div>
-                  <h2 class="section-heading__title">作品</h2>
-                  <p class="section-heading__desc">公开作品列表。</p>
+                  <h2 class="section-heading__title">精选作品</h2>
+                  <p class="section-heading__desc">以画师身份查看该用户公开展示的作品。</p>
                 </div>
               </div>
 
@@ -538,7 +427,7 @@
               <div class="section-heading">
                 <div>
                   <h2 class="section-heading__title">橱窗</h2>
-                  <p class="section-heading__desc">公开上架中的橱窗内容。</p>
+                  <p class="section-heading__desc">以画师身份查看该用户公开上架的橱窗内容。</p>
                 </div>
               </div>
 
@@ -576,7 +465,7 @@
               <div class="section-heading">
                 <div>
                   <h2 class="section-heading__title">企划</h2>
-                  <p class="section-heading__desc">公开企划列表。</p>
+                  <p class="section-heading__desc">以用户身份查看该用户公开发布的企划。</p>
                 </div>
               </div>
 
@@ -707,6 +596,12 @@ import projectApi from '@/api/project'
 import shoucangApi from '@/api/shoucang'
 import orderApi from '@/api/order'
 import { extractUploadFileName, normalizeImageUrl, ossUploadAction } from '@/utils/oss'
+import {
+  buildCenterProfileRoute,
+  getCenterProfileConfig,
+  normalizeProfileViewMode,
+  resolveCenterProfileState
+} from '@/utils/centerProfile'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
@@ -721,6 +616,20 @@ function createListState(pageSize = 8) {
   }
 }
 
+function isSameRouteQueryValue(left, right) {
+  return (left || '') === (right || '')
+}
+
+function isSameProfileLocation(route, target) {
+  const currentQuery = route.query || {}
+  const targetQuery = target.query || {}
+
+  return route.path === target.path &&
+    isSameRouteQueryValue(currentQuery.view, targetQuery.view) &&
+    isSameRouteQueryValue(currentQuery.tab, targetQuery.tab) &&
+    isSameRouteQueryValue(currentQuery.sub, targetQuery.sub)
+}
+
 export default {
   name: 'CenterProfile',
   data() {
@@ -732,6 +641,7 @@ export default {
       profile: null,
       profileUserId: null,
       isSelf: false,
+      otherDisplayMode: 'artist',
       editDialogVisible: false,
       saving: false,
       avatarUploading: false,
@@ -766,16 +676,29 @@ export default {
   },
   computed: {
     ...mapGetters(['token', 'userId', 'displayMode', 'roles', 'activeRole']),
-    displayModeValue: {
+    profileViewModeValue: {
       get() {
-        return this.displayMode || 'client'
+        return this.isSelf
+          ? normalizeProfileViewMode(this.displayMode, 'client')
+          : this.otherDisplayMode
       },
       set(nextMode) {
-        this.handleDisplayModeChange(nextMode)
+        this.handleProfileModeChange(nextMode)
       }
     },
     hasArtistRole() {
       return Array.isArray(this.roles) && this.roles.includes('画师角色')
+    },
+    currentViewMode() {
+      return this.isSelf
+        ? normalizeProfileViewMode(this.displayMode, 'client')
+        : this.otherDisplayMode
+    },
+    isArtistView() {
+      return this.currentViewMode === 'artist'
+    },
+    profileSchema() {
+      return getCenterProfileConfig(this.isSelf, this.currentViewMode)
     },
     profileDisplayName() {
       if (!this.profile) return '用户'
@@ -815,45 +738,22 @@ export default {
       return this.profile.location || this.profile.region || this.profile.address || ''
     },
     portfolioCount() {
-      if (this.isSelf) {
-        return this.works.total + this.showcase.total + this.projects.total
+      if (this.currentViewMode === 'artist') {
+        return this.works.total + this.showcase.total
       }
-      return this.works.total + this.showcase.total
+      return this.projects.total
     },
     portfolioLabel() {
-      return this.isSelf ? '投稿数' : '作品数'
+      if (this.currentViewMode === 'artist') {
+        return this.isSelf ? '投稿数' : '作品数'
+      }
+      return '企划数'
     },
     primaryTabs() {
-      if (this.isSelf) {
-        return [
-          { key: 'submissions', label: '投稿' },
-          { key: 'favorites', label: '收藏' },
-          { key: 'cart', label: '购物车' },
-          { key: 'orders', label: '订单' }
-        ]
-      }
-
-      const tabs = [
-        { key: 'home', label: '主页' },
-        { key: 'works', label: '作品' },
-        { key: 'showcase', label: '橱窗' }
-      ]
-
-      if (this.hasPublicProjects) {
-        tabs.push({ key: 'projects', label: '企划' })
-      }
-
-      return tabs
+      return this.profileSchema.primaryTabs || []
     },
     secondaryTabs() {
-      if (!this.isSelf) return []
-      if (this.activePrimaryTab !== 'submissions' && this.activePrimaryTab !== 'favorites') return []
-
-      return [
-        { key: 'works', label: '作品' },
-        { key: 'showcase', label: '橱窗' },
-        { key: 'projects', label: '企划' }
-      ]
+      return (this.profileSchema.secondaryTabs[this.activePrimaryTab] || []).map(item => ({ ...item }))
     },
     favoriteWorks() {
       return this.favorites.list.filter(item => (!item.price || Number(item.price) === 0) && item.fenlei !== '企划')
@@ -872,11 +772,8 @@ export default {
     '$route.fullPath': {
       immediate: true,
       handler() {
-        this.initializePage()
+        this.handleRouteChange()
       }
-    },
-    activePrimaryTab() {
-      this.ensureSectionData()
     },
     orderViewRole(newValue, oldValue) {
       if (newValue !== oldValue && this.isSelf && this.activePrimaryTab === 'orders') {
@@ -887,66 +784,143 @@ export default {
   },
   methods: {
     ossUploadAction,
-    async initializePage() {
-      this.pageLoading = true
-      this.pageError = ''
-      this.profile = null
-      this.profileUserId = null
-      this.isSelf = false
-      this.isFollowingProfile = false
-      this.followLoading = false
-      this.editDialogVisible = false
-      this.resetContentState()
+    async handleRouteChange() {
+      const previousProfileUserId = this.profileUserId
+      const previousIsSelf = this.isSelf
 
       try {
         await this.ensureCurrentUser()
 
-        const routeId = this.normalizeUserId(this.$route.params.id)
-        const currentUserId = this.currentUser && this.currentUser.id ? Number(this.currentUser.id) : null
+        const context = this.resolveProfileContext()
+        if (context.shouldCanonicalizeSelfPath) {
+          this.replaceProfileRoute({
+            viewMode: this.$route.query.view || normalizeProfileViewMode(this.displayMode, 'client'),
+            tab: this.$route.query.tab,
+            sub: this.$route.query.sub
+          })
+          return
+        }
 
-        if (!routeId || (currentUserId && routeId === currentUserId)) {
-          if (routeId && currentUserId && String(this.$route.params.id) === String(currentUserId)) {
-            this.$router.replace('/center/profile')
-            return
+        const shouldReloadProfile = !this.profile ||
+          previousProfileUserId !== context.profileUserId ||
+          previousIsSelf !== context.isSelf
+
+        if (shouldReloadProfile) {
+          this.pageLoading = true
+          this.pageError = ''
+          this.profile = null
+          this.profileUserId = context.profileUserId
+          this.isSelf = context.isSelf
+          this.isFollowingProfile = false
+          this.followLoading = false
+          this.editDialogVisible = false
+          this.resetContentState()
+
+          if (context.isSelf) {
+            this.profile = { ...this.currentUser }
+            this.orderViewRole = this.getDefaultOrderRole(normalizeProfileViewMode(this.displayMode, 'client'))
+          } else {
+            this.profile = await this.fetchOtherProfile(context.profileUserId)
+            this.orderViewRole = '用户角色'
           }
 
-          if (!this.currentUser) {
-            throw new Error('请先登录后再查看个人中心')
+          this.applyProfileToForm(this.profile)
+
+          await Promise.all([
+            this.fetchFollowStats(),
+            this.fetchWorks(),
+            this.fetchShowcase(),
+            this.fetchProjects()
+          ])
+
+          if (!context.isSelf) {
+            await this.checkFollowStatus()
           }
-
-          this.isSelf = true
-          this.profileUserId = Number(this.currentUser.id)
-          this.profile = { ...this.currentUser }
-          this.orderViewRole = this.activeRole === '画师角色' && this.hasArtistRole ? '画师角色' : '用户角色'
-        } else {
-          this.isSelf = false
-          this.profileUserId = routeId
-          this.profile = await this.fetchOtherProfile(routeId)
-          this.orderViewRole = '用户角色'
         }
 
-        this.applyProfileToForm(this.profile)
-        this.activePrimaryTab = this.isSelf ? 'submissions' : 'home'
-        this.activeSecondaryTab = 'works'
-
-        await Promise.all([
-          this.fetchFollowStats(),
-          this.fetchWorks(),
-          this.fetchShowcase(),
-          this.fetchProjects()
-        ])
-
-        if (!this.isSelf) {
-          await this.checkFollowStatus()
-        }
-
-        if (!this.isSelf && this.activePrimaryTab === 'projects' && !this.hasPublicProjects) {
-          this.activePrimaryTab = 'home'
-        }
+        this.applyRouteState()
+        this.ensureSectionData()
       } catch (error) {
         this.pageError = error && error.message ? error.message : '个人中心加载失败'
       } finally {
         this.pageLoading = false
+      }
+    },
+    resolveProfileContext() {
+      const routeId = this.normalizeUserId(this.$route.params.id)
+      const currentUserId = this.currentUser && this.currentUser.id ? Number(this.currentUser.id) : null
+
+      if (!routeId) {
+        if (!currentUserId) {
+          throw new Error('请先登录后再查看个人中心')
+        }
+        return {
+          isSelf: true,
+          profileUserId: currentUserId,
+          shouldCanonicalizeSelfPath: false
+        }
+      }
+
+      if (currentUserId && routeId === currentUserId) {
+        return {
+          isSelf: true,
+          profileUserId: currentUserId,
+          shouldCanonicalizeSelfPath: true
+        }
+      }
+
+      return {
+        isSelf: false,
+        profileUserId: routeId,
+        shouldCanonicalizeSelfPath: false
+      }
+    },
+    resolveDefaultOtherViewMode() {
+      if (this.projects.total > 0 && this.works.total === 0 && this.showcase.total === 0) {
+        return 'client'
+      }
+      return 'artist'
+    },
+    applyRouteState() {
+      const fallbackMode = this.isSelf
+        ? normalizeProfileViewMode(this.displayMode, 'client')
+        : this.resolveDefaultOtherViewMode()
+      const resolvedState = resolveCenterProfileState({
+        isSelf: this.isSelf,
+        viewMode: this.$route.query.view || fallbackMode,
+        tab: this.$route.query.tab,
+        sub: this.$route.query.sub
+      })
+
+      if (this.isSelf) {
+        const nextMode = normalizeProfileViewMode(resolvedState.viewMode, 'client')
+        if (nextMode !== this.displayMode) {
+          this.$store.commit('user/SET_DISPLAY_MODE', nextMode)
+        }
+        this.orderViewRole = this.getDefaultOrderRole(nextMode)
+      } else {
+        this.otherDisplayMode = resolvedState.viewMode
+      }
+
+      this.activePrimaryTab = resolvedState.tab
+      this.activeSecondaryTab = resolvedState.sub
+
+      this.replaceProfileRoute(resolvedState)
+    },
+    getDefaultOrderRole(viewMode) {
+      return viewMode === 'artist' && this.hasArtistRole ? '画师角色' : '用户角色'
+    },
+    replaceProfileRoute(state) {
+      const target = buildCenterProfileRoute({
+        isSelf: this.isSelf,
+        userId: this.isSelf ? null : this.profileUserId,
+        viewMode: state.viewMode || this.currentViewMode,
+        tab: state.tab || this.activePrimaryTab,
+        sub: Object.prototype.hasOwnProperty.call(state, 'sub') ? state.sub : this.activeSecondaryTab
+      })
+
+      if (!isSameProfileLocation(this.$route, target)) {
+        this.$router.replace(target).catch(() => {})
       }
     },
     resetContentState() {
@@ -1113,32 +1087,44 @@ export default {
       }
     },
     ensureSectionData() {
-      if (!this.isSelf) return
-
-      if ((this.activePrimaryTab === 'submissions' || this.activePrimaryTab === 'favorites') && !this.activeSecondaryTab) {
-        this.activeSecondaryTab = 'works'
-      }
-
-      if (this.activePrimaryTab === 'favorites' && !this.favorites.loaded && !this.favorites.loading) {
+      if (this.isSelf && this.activePrimaryTab === 'favorites' && !this.favorites.loaded && !this.favorites.loading) {
         this.fetchFavorites()
       }
 
-      if (this.activePrimaryTab === 'cart' && !this.cart.loaded && !this.cart.loading) {
+      if (this.isSelf && this.activePrimaryTab === 'cart' && !this.cart.loaded && !this.cart.loading) {
         this.fetchCart()
       }
 
-      if (this.activePrimaryTab === 'orders' && !this.orders.loaded && !this.orders.loading) {
+      if (this.isSelf && this.activePrimaryTab === 'orders' && !this.orders.loaded && !this.orders.loading) {
         this.fetchOrders()
       }
     },
     handlePrimaryTabChange() {
-      if (this.isSelf && (this.activePrimaryTab === 'submissions' || this.activePrimaryTab === 'favorites')) {
-        this.activeSecondaryTab = this.activeSecondaryTab || 'works'
-      }
+      const resolvedState = resolveCenterProfileState({
+        isSelf: this.isSelf,
+        viewMode: this.currentViewMode,
+        tab: this.activePrimaryTab,
+        sub: this.activeSecondaryTab
+      })
+      this.activePrimaryTab = resolvedState.tab
+      this.activeSecondaryTab = resolvedState.sub
       this.ensureSectionData()
+      this.replaceProfileRoute(resolvedState)
+    },
+    setPrimaryTab(tabKey) {
+      if (tabKey === this.activePrimaryTab) return
+      this.activePrimaryTab = tabKey
+      this.handlePrimaryTabChange()
     },
     setSecondaryTab(tabKey) {
+      if (tabKey === this.activeSecondaryTab) return
       this.activeSecondaryTab = tabKey
+      this.ensureSectionData()
+      this.replaceProfileRoute({
+        viewMode: this.currentViewMode,
+        tab: this.activePrimaryTab,
+        sub: this.activeSecondaryTab
+      })
     },
     handleCardImageError(item) {
       this.$set(item, 'photoBroken', true)
@@ -1157,10 +1143,30 @@ export default {
       this.coverUploading = true
       return true
     },
-    handleDisplayModeChange(nextMode) {
-      if (nextMode === this.displayMode) return
-      this.$store.commit('user/SET_DISPLAY_MODE', nextMode)
-      const label = nextMode === 'artist' ? '画师' : '用户'
+    handleProfileModeChange(nextMode) {
+      const resolvedMode = normalizeProfileViewMode(nextMode, this.currentViewMode)
+      if (resolvedMode === this.currentViewMode) return
+
+      if (this.isSelf) {
+        this.$store.commit('user/SET_DISPLAY_MODE', resolvedMode)
+        this.orderViewRole = this.getDefaultOrderRole(resolvedMode)
+      } else {
+        this.otherDisplayMode = resolvedMode
+      }
+
+      const resolvedState = resolveCenterProfileState({
+        isSelf: this.isSelf,
+        viewMode: resolvedMode,
+        tab: this.activePrimaryTab,
+        sub: this.activeSecondaryTab
+      })
+
+      this.activePrimaryTab = resolvedState.tab
+      this.activeSecondaryTab = resolvedState.sub
+      this.ensureSectionData()
+      this.replaceProfileRoute(resolvedState)
+
+      const label = resolvedMode === 'artist' ? '画师' : '用户'
       this.$message.success(`已切换为${label}视图`)
     },
     buildProfilePayload(overrides = {}) {
@@ -1316,7 +1322,7 @@ export default {
     },
     openOrdersTab() {
       const wasOrdersTab = this.activePrimaryTab === 'orders'
-      this.activePrimaryTab = 'orders'
+      this.setPrimaryTab('orders')
       if (wasOrdersTab) {
         this.fetchOrders()
       }

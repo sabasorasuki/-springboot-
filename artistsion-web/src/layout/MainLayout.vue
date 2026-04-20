@@ -44,20 +44,12 @@
                   <i class="el-icon-arrow-down" />
                 </div>
                 <el-dropdown-menu slot="dropdown">
-                  <el-dropdown-item command="center">
-                    <i class="el-icon-user" /> 个人中心
-                  </el-dropdown-item>
-                  <el-dropdown-item command="submissions">
-                    <i class="el-icon-edit" /> 投稿
-                  </el-dropdown-item>
-                  <el-dropdown-item command="favorites">
-                    <i class="el-icon-star-off" /> 收藏
-                  </el-dropdown-item>
-                  <el-dropdown-item command="cart">
-                    <i class="el-icon-shopping-cart-2" /> 购物车
-                  </el-dropdown-item>
-                  <el-dropdown-item command="orders">
-                    <i class="el-icon-document" /> 订单
+                  <el-dropdown-item
+                    v-for="item in avatarDropdownItems"
+                    :key="item.command"
+                    :command="item.command"
+                  >
+                    <i :class="item.icon" /> {{ item.label }}
                   </el-dropdown-item>
                   <el-dropdown-item divided command="logout">
                     <i class="el-icon-switch-button" /> 退出登录
@@ -100,6 +92,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import { normalizeImageUrl } from '@/utils/oss'
+import { getCenterDropdownItems, getCenterDropdownRoute } from '@/utils/centerProfile'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
@@ -122,6 +115,9 @@ export default {
     ...mapGetters(['avatar', 'name', 'token', 'roles', 'displayMode']),
     headerAvatar() {
       return normalizeImageUrl(this.avatar) || this.defaultAvatar
+    },
+    avatarDropdownItems() {
+      return getCenterDropdownItems(this.displayMode)
     }
   },
   methods: {
@@ -141,27 +137,14 @@ export default {
       }
     },
     async handleAvatarCommand(command) {
-      switch (command) {
-        case 'center':
-          this.$router.push('/center/profile')
-          break
-        case 'submissions':
-          this.$router.push('/center/submissions')
-          break
-        case 'favorites':
-          this.$router.push('/center/favorites')
-          break
-        case 'cart':
-          this.$router.push('/center/cart')
-          break
-        case 'orders':
-          this.$router.push('/center/orders')
-          break
-        case 'logout':
-          await this.$store.dispatch('user/logout')
-          this.$router.push('/auth')
-          break
+      if (command === 'logout') {
+        await this.$store.dispatch('user/logout')
+        this.$router.push('/auth')
+        return
       }
+
+      const target = getCenterDropdownRoute(command, this.displayMode)
+      this.$router.push(target).catch(() => {})
     }
   }
 }
