@@ -212,31 +212,6 @@ export const constantRoutes = [
         meta: { title: '个人中心' }
       },
       {
-        path: 'orders',
-        redirect: () => buildSelfCenterRedirect('orders'),
-        meta: { title: '我的订单' }
-      },
-      {
-        path: 'submissions',
-        redirect: () => buildSelfCenterRedirect('submissions', 'works', 'artist'),
-        meta: { title: '投稿管理' }
-      },
-      {
-        path: 'favorites',
-        redirect: () => buildSelfCenterRedirect('favorites', getPersistedDisplayMode() === 'artist' ? 'projects' : 'works'),
-        meta: { title: '我的收藏' }
-      },
-      {
-        path: 'cart',
-        redirect: () => buildSelfCenterRedirect('cart', '', 'client'),
-        meta: { title: '购物车' }
-      },
-      {
-        path: 'projects',
-        redirect: () => buildSelfCenterRedirect('projects', '', 'client'),
-        meta: { title: '我的企划' }
-      },
-      {
         path: 'follows',
         name: 'CenterFollows',
         component: () => import('@/views/center/follows'),
