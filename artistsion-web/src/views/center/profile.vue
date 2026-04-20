@@ -1,5 +1,5 @@
 <template>
-  <div class="center-profile-page">
+  <div class="profile-page">
     <div v-if="pageLoading" class="page-loading">
       <i class="el-icon-loading" />
       <span>个人中心加载中…</span>
@@ -11,394 +11,156 @@
       :image-size="120"
     />
 
-    <template v-else-if="profile">
-      <section class="profile-hero">
-        <div class="profile-hero__cover" :style="profileCoverStyle">
-          <div class="profile-hero__cover-mask" />
-          <div v-if="!profileCoverImage" class="profile-hero__cover-empty">
+    <div v-else-if="profile" class="profile-container">
+      <section class="profile-banner">
+        <div class="profile-banner__surface">
+          <img
+            v-if="profileCoverImage"
+            :src="profileCoverImage"
+            alt=""
+            class="profile-banner__cover-img"
+          >
+          <div v-else class="profile-banner__fallback">
             <span>{{ isSelf ? '上传背景图，让你的主页更完整' : 'TA 还没有设置头图' }}</span>
           </div>
+          <div class="profile-banner__overlay" />
         </div>
+      </section>
 
-        <div class="profile-hero__body">
-          <div class="profile-avatar-shell">
+      <section class="profile-header">
+        <div class="profile-left">
+          <div class="profile-avatar">
             <el-avatar
-              :size="112"
+              :size="116"
               :src="profileAvatar"
               icon="el-icon-user"
-              class="profile-avatar"
+              class="profile-avatar__image"
             />
           </div>
 
-          <div class="profile-summary">
-            <div class="profile-summary__top">
-              <div class="profile-title-group">
-                <h1 class="profile-name">{{ profileDisplayName }}</h1>
-                <div class="profile-meta">
-                  <span v-if="profile.username" class="meta-pill">@{{ profile.username }}</span>
-                  <span v-if="locationText" class="meta-pill">
-                    <i class="el-icon-location-outline" />
-                    {{ locationText }}
-                  </span>
-                </div>
+          <div class="profile-meta">
+            <h1 class="profile-name">{{ profileDisplayName }}</h1>
+
+            <div class="profile-handle-row">
+              <span v-if="profile.username" class="profile-handle">@{{ profile.username }}</span>
+              <span v-if="locationText" class="profile-location">
+                <i class="el-icon-location-outline" />
+                {{ locationText }}
+              </span>
+            </div>
+
+            <div class="profile-stats">
+              <button type="button" class="profile-stat is-link" @click="goFollows">
+                <span class="profile-stat__value">{{ followStats.following }}</span>
+                <span class="profile-stat__label">{{ isSelf ? '已关注' : '关注' }}</span>
+              </button>
+
+              <button type="button" class="profile-stat is-link" @click="goFollows">
+                <span class="profile-stat__value">{{ followStats.followers }}</span>
+                <span class="profile-stat__label">粉丝</span>
+              </button>
+
+              <div class="profile-stat">
+                <span class="profile-stat__value">{{ portfolioCount }}</span>
+                <span class="profile-stat__label">{{ portfolioLabel }}</span>
               </div>
+            </div>
 
-              <div class="profile-actions">
-                <el-button
-                  v-if="isSelf"
-                  plain
-                  size="small"
-                  class="header-action-btn"
-                  @click="openEditDialog"
-                >
-                  编辑个人信息
-                </el-button>
-
-                <div class="identity-switch">
-                  <span class="identity-switch__label">{{ isSelf ? '身份切换' : '查看身份' }}</span>
-                  <el-radio-group v-model="profileViewModeValue" size="small">
-                    <el-radio-button label="artist">画师</el-radio-button>
-                    <el-radio-button label="client">用户</el-radio-button>
-                  </el-radio-group>
-                </div>
-
-                <el-button
-                  v-if="!isSelf"
-                  size="small"
-                  class="header-action-btn"
-                  :type="isFollowingProfile ? '' : 'primary'"
-                  :plain="isFollowingProfile"
-                  :loading="followLoading"
-                  @click="toggleFollowProfile"
-                >
-                  {{ isFollowingProfile ? '已关注' : '关注' }}
-                </el-button>
-              </div>
+            <div v-if="styleTagList.length" class="profile-extra">
+              <span
+                v-for="tag in styleTagList"
+                :key="tag"
+                class="profile-extra__tag"
+              >
+                {{ tag }}
+              </span>
             </div>
 
             <p class="profile-bio" :class="{ 'is-empty': !profile.bio }">
               {{ profile.bio || '这个人还没有留下简介。' }}
             </p>
-
-            <div class="profile-stats">
-              <button type="button" class="stat-card is-link" @click="goFollows">
-                <span class="stat-card__value">{{ followStats.following }}</span>
-                <span class="stat-card__label">{{ isSelf ? '已关注' : '关注' }}</span>
-              </button>
-
-              <button type="button" class="stat-card is-link" @click="goFollows">
-                <span class="stat-card__value">{{ followStats.followers }}</span>
-                <span class="stat-card__label">粉丝</span>
-              </button>
-
-              <div class="stat-card">
-                <span class="stat-card__value">{{ portfolioCount }}</span>
-                <span class="stat-card__label">{{ portfolioLabel }}</span>
-              </div>
-            </div>
           </div>
+        </div>
+
+        <div class="profile-actions">
+          <el-button
+            v-if="isSelf"
+            plain
+            size="small"
+            class="profile-action-btn"
+            @click="openEditDialog"
+          >
+            编辑个人信息
+          </el-button>
+
+          <div class="profile-action-switch">
+            <span class="profile-action-switch__label">{{ isSelf ? '身份切换' : '查看身份' }}</span>
+            <el-radio-group v-model="profileViewModeValue" size="small">
+              <el-radio-button label="artist">画师</el-radio-button>
+              <el-radio-button label="client">用户</el-radio-button>
+            </el-radio-group>
+          </div>
+
+          <el-button
+            v-if="!isSelf"
+            size="small"
+            class="profile-action-btn"
+            :type="isFollowingProfile ? '' : 'primary'"
+            :plain="isFollowingProfile"
+            :loading="followLoading"
+            @click="toggleFollowProfile"
+          >
+            {{ isFollowingProfile ? '已关注' : '关注' }}
+          </el-button>
         </div>
       </section>
 
-      <section class="profile-shell">
-        <div class="profile-shell__tabs">
-          <el-tabs v-model="activePrimaryTab" @tab-click="handlePrimaryTabChange">
-            <el-tab-pane
-              v-for="tab in primaryTabs"
-              :key="tab.key"
-              :label="tab.label"
-              :name="tab.key"
-            />
-          </el-tabs>
+      <section class="profile-tabs-wrap">
+        <nav class="profile-tabs" aria-label="个人中心分类">
+          <button
+            v-for="tab in primaryTabs"
+            :key="tab.key"
+            type="button"
+            class="profile-tabs__item"
+            :class="{ 'is-active': activePrimaryTab === tab.key }"
+            @click="setPrimaryTab(tab.key)"
+          >
+            {{ tab.label }}
+          </button>
+        </nav>
 
-          <div v-if="secondaryTabs.length" class="secondary-tabs">
-            <button
-              v-for="tab in secondaryTabs"
-              :key="tab.key"
-              type="button"
-              class="secondary-tab"
-              :class="{ 'is-active': activeSecondaryTab === tab.key }"
-              @click="setSecondaryTab(tab.key)"
-            >
-              {{ tab.label }}
-            </button>
-          </div>
+        <div v-if="secondaryTabs.length" class="profile-subtabs">
+          <button
+            v-for="tab in secondaryTabs"
+            :key="tab.key"
+            type="button"
+            class="profile-subtabs__item"
+            :class="{ 'is-active': activeSecondaryTab === tab.key }"
+            @click="setSecondaryTab(tab.key)"
+          >
+            {{ tab.label }}
+          </button>
         </div>
+      </section>
 
-        <div class="profile-shell__content">
-          <template v-if="isSelf">
-            <section v-if="activePrimaryTab === 'submissions'" class="content-section">
-              <div class="section-heading">
-                <div>
-                  <h2 class="section-heading__title">我的投稿</h2>
-                  <p class="section-heading__desc">画师身份下管理自己的作品与橱窗。</p>
-                </div>
-                <el-button
-                  size="small"
-                  type="primary"
-                  @click="goPublishEntry(activeSecondaryTab)"
-                >
-                  {{ activeSecondaryTab === 'showcase' ? '发布橱窗' : '发布作品' }}
-                </el-button>
+      <section class="profile-content">
+        <template v-if="isSelf">
+          <section v-if="activePrimaryTab === 'submissions'" class="content-section">
+            <div class="section-heading">
+              <div>
+                <h2 class="section-heading__title">我的投稿</h2>
+                <p class="section-heading__desc">画师身份下管理自己的作品与橱窗。</p>
               </div>
+              <el-button
+                size="small"
+                type="primary"
+                @click="goPublishEntry(activeSecondaryTab)"
+              >
+                {{ activeSecondaryTab === 'showcase' ? '发布橱窗' : '发布作品' }}
+              </el-button>
+            </div>
 
-              <div v-if="activeSecondaryTab === 'works'">
-                <div v-if="works.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
-                <div v-else-if="works.list.length" class="card-grid">
-                  <article v-for="item in works.list" :key="item.id" class="content-card">
-                    <div class="content-card__cover">
-                      <img
-                        v-if="item.photoUrl && !item.photoBroken"
-                        :src="item.photoUrl"
-                        alt=""
-                        class="cover-img"
-                        @error="handleCardImageError(item)"
-                      >
-                      <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
-                    </div>
-                    <div class="content-card__body">
-                      <div class="content-card__title">{{ item.title || '未命名作品' }}</div>
-                      <div class="content-card__meta">
-                        <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
-                        <span v-if="item.fbdate" class="meta-note">{{ item.fbdate }}</span>
-                      </div>
-                    </div>
-                  </article>
-                </div>
-                <el-empty v-else description="还没有投稿作品" :image-size="110" />
-              </div>
-
-              <div v-else>
-                <div v-if="showcase.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
-                <div v-else-if="showcase.list.length" class="card-grid">
-                  <article
-                    v-for="item in showcase.list"
-                    :key="item.id"
-                    class="content-card is-clickable"
-                    @click="goShowcaseDetail(item.id)"
-                  >
-                    <div class="content-card__cover">
-                      <img
-                        v-if="item.photoUrl && !item.photoBroken"
-                        :src="item.photoUrl"
-                        alt=""
-                        class="cover-img"
-                        @error="handleCardImageError(item)"
-                      >
-                      <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
-                      <span v-if="item.price" class="cover-price">¥{{ item.price }}</span>
-                    </div>
-                    <div class="content-card__body">
-                      <div class="content-card__title">{{ item.name || '未命名橱窗' }}</div>
-                      <div class="content-card__meta">
-                        <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
-                        <span v-if="item.status" class="meta-note">{{ item.status }}</span>
-                      </div>
-                    </div>
-                  </article>
-                </div>
-                <el-empty v-else description="还没有橱窗投稿" :image-size="110" />
-              </div>
-            </section>
-
-            <section v-else-if="activePrimaryTab === 'projects'" class="content-section">
-              <div class="section-heading">
-                <div>
-                  <h2 class="section-heading__title">我的企划</h2>
-                  <p class="section-heading__desc">用户身份下查看和管理自己发布的企划。</p>
-                </div>
-                <el-button size="small" type="primary" @click="goPublishEntry('projects')">发布企划</el-button>
-              </div>
-
-              <div v-if="projects.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
-              <div v-else-if="projects.list.length" class="project-list">
-                <article
-                  v-for="item in projects.list"
-                  :key="item.id"
-                  class="project-card is-clickable"
-                  @click="goProjectDetail(item.id)"
-                >
-                  <div class="project-card__main">
-                    <div class="project-card__title">{{ item.title }}</div>
-                    <p class="project-card__desc">{{ item.description || '暂无企划描述' }}</p>
-                  </div>
-                  <div class="project-card__side">
-                    <span v-if="item.status" class="project-status">{{ item.status }}</span>
-                    <span class="project-budget">{{ formatBudget(item) }}</span>
-                  </div>
-                </article>
-              </div>
-              <el-empty v-else description="还没有发布企划" :image-size="110" />
-            </section>
-
-            <section v-else-if="activePrimaryTab === 'favorites'" class="content-section">
-              <div class="section-heading">
-                <div>
-                  <h2 class="section-heading__title">我的收藏</h2>
-                  <p class="section-heading__desc">
-                    {{ isArtistView ? '画师身份下只展示收藏的企划。' : '用户身份下按作品与橱窗分类查看收藏。' }}
-                  </p>
-                </div>
-              </div>
-
-              <div v-if="favorites.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
-              <template v-else>
-                <div v-if="activeSecondaryTab === 'projects'">
-                  <div v-if="favoriteProjects.length" class="project-list">
-                    <article
-                      v-for="item in favoriteProjects"
-                      :key="item.id"
-                      class="project-card is-clickable"
-                      @click="goProjectDetail(item.wzids)"
-                    >
-                      <div class="project-card__main">
-                        <div class="project-card__title">{{ item.title || '未命名企划' }}</div>
-                        <p class="project-card__desc">收藏的企划条目</p>
-                      </div>
-                    </article>
-                  </div>
-                  <el-empty v-else description="还没有收藏企划" :image-size="110" />
-                </div>
-
-                <div v-else-if="activeSecondaryTab === 'works'">
-                  <div v-if="favoriteWorks.length" class="card-grid">
-                    <article v-for="item in favoriteWorks" :key="item.id" class="content-card">
-                      <div class="content-card__cover">
-                        <img
-                          v-if="item.photoUrl && !item.photoBroken"
-                          :src="item.photoUrl"
-                          alt=""
-                          class="cover-img"
-                          @error="handleCardImageError(item)"
-                        >
-                        <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
-                      </div>
-                      <div class="content-card__body">
-                        <div class="content-card__title">{{ item.title || '未命名作品' }}</div>
-                        <div class="content-card__meta">
-                          <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
-                        </div>
-                      </div>
-                    </article>
-                  </div>
-                  <el-empty v-else description="还没有收藏作品" :image-size="110" />
-                </div>
-
-                <div v-else>
-                  <div v-if="favoriteShowcase.length" class="card-grid">
-                    <article
-                      v-for="item in favoriteShowcase"
-                      :key="item.id"
-                      class="content-card is-clickable"
-                      @click="goShowcaseDetail(item.wzids)"
-                    >
-                      <div class="content-card__cover">
-                        <img
-                          v-if="item.photoUrl && !item.photoBroken"
-                          :src="item.photoUrl"
-                          alt=""
-                          class="cover-img"
-                          @error="handleCardImageError(item)"
-                        >
-                        <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
-                        <span v-if="item.price" class="cover-price">¥{{ item.price }}</span>
-                      </div>
-                      <div class="content-card__body">
-                        <div class="content-card__title">{{ item.title || '未命名橱窗' }}</div>
-                        <div class="content-card__meta">
-                          <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
-                        </div>
-                      </div>
-                    </article>
-                  </div>
-                  <el-empty v-else description="还没有收藏橱窗" :image-size="110" />
-                </div>
-              </template>
-            </section>
-
-            <section v-else-if="activePrimaryTab === 'cart'" class="content-section">
-              <div class="section-heading">
-                <div>
-                  <h2 class="section-heading__title">购物车</h2>
-                  <p class="section-heading__desc">这里只展示加入购物车的橱窗商品。</p>
-                </div>
-                <el-button size="small" plain @click="$router.push('/showcase')">去逛橱窗</el-button>
-              </div>
-
-              <div v-if="cart.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
-              <div v-else-if="cart.list.length" class="stack-list">
-                <article v-for="item in cart.list" :key="item.id" class="stack-card">
-                  <img
-                    v-if="item.photoUrl && !item.photoBroken"
-                    :src="item.photoUrl"
-                    class="stack-card__thumb"
-                    alt=""
-                    @error="handleCardImageError(item)"
-                  >
-                  <div v-else class="stack-card__thumb stack-card__thumb--empty">
-                    <span class="stack-card__thumb-label">暂无封面</span>
-                  </div>
-                  <div class="stack-card__main">
-                    <div class="stack-card__title">{{ item.name || '未命名商品' }}</div>
-                    <div class="stack-card__meta">
-                      <span class="price-text">¥{{ item.price || 0 }}</span>
-                      <span v-if="item.xddate" class="meta-note">{{ item.xddate }}</span>
-                    </div>
-                  </div>
-                  <div class="stack-card__actions">
-                    <el-button size="mini" type="primary" @click="openOrdersTab">去支付</el-button>
-                    <el-button size="mini" type="text" @click="removeCartItem(item)">移除</el-button>
-                  </div>
-                </article>
-              </div>
-              <el-empty v-else description="购物车还是空的" :image-size="110" />
-            </section>
-
-            <section v-else class="content-section">
-              <div class="section-heading">
-                <div>
-                  <h2 class="section-heading__title">订单</h2>
-                  <p class="section-heading__desc">统一查看买家或画师视角下的订单记录。</p>
-                </div>
-
-                <el-radio-group
-                  v-if="hasArtistRole"
-                  v-model="orderViewRole"
-                  size="small"
-                >
-                  <el-radio-button label="用户角色">买家</el-radio-button>
-                  <el-radio-button label="画师角色">画师</el-radio-button>
-                </el-radio-group>
-              </div>
-
-              <div v-if="orders.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
-              <el-table v-else-if="orders.list.length" :data="orders.list" class="orders-table">
-                <el-table-column prop="name" label="订单内容" min-width="160" show-overflow-tooltip />
-                <el-table-column label="价格" width="110">
-                  <template slot-scope="{ row }">
-                    <span class="price-text">¥{{ row.price || 0 }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="status" label="状态" width="120">
-                  <template slot-scope="{ row }">
-                    <el-tag size="small" :type="statusTagType(row.status)">{{ row.status }}</el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="xddate" label="时间" min-width="160" />
-              </el-table>
-              <el-empty v-else description="还没有订单记录" :image-size="110" />
-            </section>
-          </template>
-
-          <template v-else>
-            <section v-if="activePrimaryTab === 'featuredWorks'" class="content-section">
-              <div class="section-heading">
-                <div>
-                  <h2 class="section-heading__title">精选作品</h2>
-                  <p class="section-heading__desc">以画师身份查看该用户公开展示的作品。</p>
-                </div>
-              </div>
-
+            <div v-if="activeSecondaryTab === 'works'">
               <div v-if="works.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
               <div v-else-if="works.list.length" class="card-grid">
                 <article v-for="item in works.list" :key="item.id" class="content-card">
@@ -416,21 +178,15 @@
                     <div class="content-card__title">{{ item.title || '未命名作品' }}</div>
                     <div class="content-card__meta">
                       <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
+                      <span v-if="item.fbdate" class="meta-note">{{ item.fbdate }}</span>
                     </div>
                   </div>
                 </article>
               </div>
-              <el-empty v-else description="暂无公开作品" :image-size="110" />
-            </section>
+              <el-empty v-else description="还没有投稿作品" :image-size="110" />
+            </div>
 
-            <section v-else-if="activePrimaryTab === 'showcase'" class="content-section">
-              <div class="section-heading">
-                <div>
-                  <h2 class="section-heading__title">橱窗</h2>
-                  <p class="section-heading__desc">以画师身份查看该用户公开上架的橱窗内容。</p>
-                </div>
-              </div>
-
+            <div v-else>
               <div v-if="showcase.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
               <div v-else-if="showcase.list.length" class="card-grid">
                 <article
@@ -454,43 +210,304 @@
                     <div class="content-card__title">{{ item.name || '未命名橱窗' }}</div>
                     <div class="content-card__meta">
                       <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
+                      <span v-if="item.status" class="meta-note">{{ item.status }}</span>
                     </div>
                   </div>
                 </article>
               </div>
-              <el-empty v-else description="暂无公开橱窗" :image-size="110" />
-            </section>
+              <el-empty v-else description="还没有橱窗投稿" :image-size="110" />
+            </div>
+          </section>
 
-            <section v-else class="content-section">
-              <div class="section-heading">
-                <div>
-                  <h2 class="section-heading__title">企划</h2>
-                  <p class="section-heading__desc">以用户身份查看该用户公开发布的企划。</p>
+          <section v-else-if="activePrimaryTab === 'projects'" class="content-section">
+            <div class="section-heading">
+              <div>
+                <h2 class="section-heading__title">我的企划</h2>
+                <p class="section-heading__desc">用户身份下查看和管理自己发布的企划。</p>
+              </div>
+              <el-button size="small" type="primary" @click="goPublishEntry('projects')">发布企划</el-button>
+            </div>
+
+            <div v-if="projects.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
+            <div v-else-if="projects.list.length" class="project-list">
+              <article
+                v-for="item in projects.list"
+                :key="item.id"
+                class="project-card is-clickable"
+                @click="goProjectDetail(item.id)"
+              >
+                <div class="project-card__main">
+                  <div class="project-card__title">{{ item.title }}</div>
+                  <p class="project-card__desc">{{ item.description || '暂无企划描述' }}</p>
                 </div>
+                <div class="project-card__side">
+                  <span v-if="item.status" class="project-status">{{ item.status }}</span>
+                  <span class="project-budget">{{ formatBudget(item) }}</span>
+                </div>
+              </article>
+            </div>
+            <el-empty v-else description="还没有发布企划" :image-size="110" />
+          </section>
+
+          <section v-else-if="activePrimaryTab === 'favorites'" class="content-section">
+            <div class="section-heading">
+              <div>
+                <h2 class="section-heading__title">我的收藏</h2>
+                <p class="section-heading__desc">
+                  {{ isArtistView ? '画师身份下只展示收藏的企划。' : '用户身份下按作品与橱窗分类查看收藏。' }}
+                </p>
+              </div>
+            </div>
+
+            <div v-if="favorites.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
+            <template v-else>
+              <div v-if="activeSecondaryTab === 'projects'">
+                <div v-if="favoriteProjects.length" class="project-list">
+                  <article
+                    v-for="item in favoriteProjects"
+                    :key="item.id"
+                    class="project-card is-clickable"
+                    @click="goProjectDetail(item.wzids)"
+                  >
+                    <div class="project-card__main">
+                      <div class="project-card__title">{{ item.title || '未命名企划' }}</div>
+                      <p class="project-card__desc">收藏的企划条目</p>
+                    </div>
+                  </article>
+                </div>
+                <el-empty v-else description="还没有收藏企划" :image-size="110" />
               </div>
 
-              <div v-if="projects.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
-              <div v-else-if="projects.list.length" class="project-list">
-                <article
-                  v-for="item in projects.list"
-                  :key="item.id"
-                  class="project-card is-clickable"
-                  @click="goProjectDetail(item.id)"
-                >
-                  <div class="project-card__main">
-                    <div class="project-card__title">{{ item.title }}</div>
-                    <p class="project-card__desc">{{ item.description || '暂无企划描述' }}</p>
-                  </div>
-                  <div class="project-card__side">
-                    <span v-if="item.status" class="project-status">{{ item.status }}</span>
-                    <span class="project-budget">{{ formatBudget(item) }}</span>
-                  </div>
-                </article>
+              <div v-else-if="activeSecondaryTab === 'works'">
+                <div v-if="favoriteWorks.length" class="card-grid">
+                  <article v-for="item in favoriteWorks" :key="item.id" class="content-card">
+                    <div class="content-card__cover">
+                      <img
+                        v-if="item.photoUrl && !item.photoBroken"
+                        :src="item.photoUrl"
+                        alt=""
+                        class="cover-img"
+                        @error="handleCardImageError(item)"
+                      >
+                      <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
+                    </div>
+                    <div class="content-card__body">
+                      <div class="content-card__title">{{ item.title || '未命名作品' }}</div>
+                      <div class="content-card__meta">
+                        <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+                <el-empty v-else description="还没有收藏作品" :image-size="110" />
               </div>
-              <el-empty v-else description="暂无公开企划" :image-size="110" />
-            </section>
-          </template>
-        </div>
+
+              <div v-else>
+                <div v-if="favoriteShowcase.length" class="card-grid">
+                  <article
+                    v-for="item in favoriteShowcase"
+                    :key="item.id"
+                    class="content-card is-clickable"
+                    @click="goShowcaseDetail(item.wzids)"
+                  >
+                    <div class="content-card__cover">
+                      <img
+                        v-if="item.photoUrl && !item.photoBroken"
+                        :src="item.photoUrl"
+                        alt=""
+                        class="cover-img"
+                        @error="handleCardImageError(item)"
+                      >
+                      <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
+                      <span v-if="item.price" class="cover-price">¥{{ item.price }}</span>
+                    </div>
+                    <div class="content-card__body">
+                      <div class="content-card__title">{{ item.title || '未命名橱窗' }}</div>
+                      <div class="content-card__meta">
+                        <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+                <el-empty v-else description="还没有收藏橱窗" :image-size="110" />
+              </div>
+            </template>
+          </section>
+
+          <section v-else-if="activePrimaryTab === 'cart'" class="content-section">
+            <div class="section-heading">
+              <div>
+                <h2 class="section-heading__title">购物车</h2>
+                <p class="section-heading__desc">这里只展示加入购物车的橱窗商品。</p>
+              </div>
+              <el-button size="small" plain @click="$router.push('/showcase')">去逛橱窗</el-button>
+            </div>
+
+            <div v-if="cart.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
+            <div v-else-if="cart.list.length" class="stack-list">
+              <article v-for="item in cart.list" :key="item.id" class="stack-card">
+                <img
+                  v-if="item.photoUrl && !item.photoBroken"
+                  :src="item.photoUrl"
+                  class="stack-card__thumb"
+                  alt=""
+                  @error="handleCardImageError(item)"
+                >
+                <div v-else class="stack-card__thumb stack-card__thumb--empty">
+                  <span class="stack-card__thumb-label">暂无封面</span>
+                </div>
+                <div class="stack-card__main">
+                  <div class="stack-card__title">{{ item.name || '未命名商品' }}</div>
+                  <div class="stack-card__meta">
+                    <span class="price-text">¥{{ item.price || 0 }}</span>
+                    <span v-if="item.xddate" class="meta-note">{{ item.xddate }}</span>
+                  </div>
+                </div>
+                <div class="stack-card__actions">
+                  <el-button size="mini" type="primary" @click="openOrdersTab">去支付</el-button>
+                  <el-button size="mini" type="text" @click="removeCartItem(item)">移除</el-button>
+                </div>
+              </article>
+            </div>
+            <el-empty v-else description="购物车还是空的" :image-size="110" />
+          </section>
+
+          <section v-else class="content-section">
+            <div class="section-heading">
+              <div>
+                <h2 class="section-heading__title">订单</h2>
+                <p class="section-heading__desc">统一查看买家或画师视角下的订单记录。</p>
+              </div>
+
+              <el-radio-group
+                v-if="hasArtistRole"
+                v-model="orderViewRole"
+                size="small"
+              >
+                <el-radio-button label="用户角色">买家</el-radio-button>
+                <el-radio-button label="画师角色">画师</el-radio-button>
+              </el-radio-group>
+            </div>
+
+            <div v-if="orders.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
+            <el-table v-else-if="orders.list.length" :data="orders.list" class="orders-table">
+              <el-table-column prop="name" label="订单内容" min-width="160" show-overflow-tooltip />
+              <el-table-column label="价格" width="110">
+                <template slot-scope="{ row }">
+                  <span class="price-text">¥{{ row.price || 0 }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="status" label="状态" width="120">
+                <template slot-scope="{ row }">
+                  <el-tag size="small" :type="statusTagType(row.status)">{{ row.status }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="xddate" label="时间" min-width="160" />
+            </el-table>
+            <el-empty v-else description="还没有订单记录" :image-size="110" />
+          </section>
+        </template>
+
+        <template v-else>
+          <section v-if="activePrimaryTab === 'featuredWorks'" class="content-section">
+            <div class="section-heading">
+              <div>
+                <h2 class="section-heading__title">精选作品</h2>
+                <p class="section-heading__desc">以画师身份查看该用户公开展示的作品。</p>
+              </div>
+            </div>
+
+            <div v-if="works.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
+            <div v-else-if="works.list.length" class="card-grid">
+              <article v-for="item in works.list" :key="item.id" class="content-card">
+                <div class="content-card__cover">
+                  <img
+                    v-if="item.photoUrl && !item.photoBroken"
+                    :src="item.photoUrl"
+                    alt=""
+                    class="cover-img"
+                    @error="handleCardImageError(item)"
+                  >
+                  <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
+                </div>
+                <div class="content-card__body">
+                  <div class="content-card__title">{{ item.title || '未命名作品' }}</div>
+                  <div class="content-card__meta">
+                    <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <el-empty v-else description="暂无公开作品" :image-size="110" />
+          </section>
+
+          <section v-else-if="activePrimaryTab === 'showcase'" class="content-section">
+            <div class="section-heading">
+              <div>
+                <h2 class="section-heading__title">橱窗</h2>
+                <p class="section-heading__desc">以画师身份查看该用户公开上架的橱窗内容。</p>
+              </div>
+            </div>
+
+            <div v-if="showcase.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
+            <div v-else-if="showcase.list.length" class="card-grid">
+              <article
+                v-for="item in showcase.list"
+                :key="item.id"
+                class="content-card is-clickable"
+                @click="goShowcaseDetail(item.id)"
+              >
+                <div class="content-card__cover">
+                  <img
+                    v-if="item.photoUrl && !item.photoBroken"
+                    :src="item.photoUrl"
+                    alt=""
+                    class="cover-img"
+                    @error="handleCardImageError(item)"
+                  >
+                  <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
+                  <span v-if="item.price" class="cover-price">¥{{ item.price }}</span>
+                </div>
+                <div class="content-card__body">
+                  <div class="content-card__title">{{ item.name || '未命名橱窗' }}</div>
+                  <div class="content-card__meta">
+                    <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <el-empty v-else description="暂无公开橱窗" :image-size="110" />
+          </section>
+
+          <section v-else class="content-section">
+            <div class="section-heading">
+              <div>
+                <h2 class="section-heading__title">企划</h2>
+                <p class="section-heading__desc">以用户身份查看该用户公开发布的企划。</p>
+              </div>
+            </div>
+
+            <div v-if="projects.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
+            <div v-else-if="projects.list.length" class="project-list">
+              <article
+                v-for="item in projects.list"
+                :key="item.id"
+                class="project-card is-clickable"
+                @click="goProjectDetail(item.id)"
+              >
+                <div class="project-card__main">
+                  <div class="project-card__title">{{ item.title }}</div>
+                  <p class="project-card__desc">{{ item.description || '暂无企划描述' }}</p>
+                </div>
+                <div class="project-card__side">
+                  <span v-if="item.status" class="project-status">{{ item.status }}</span>
+                  <span class="project-budget">{{ formatBudget(item) }}</span>
+                </div>
+              </article>
+            </div>
+            <el-empty v-else description="暂无公开企划" :image-size="110" />
+          </section>
+        </template>
       </section>
 
       <el-dialog
@@ -582,7 +599,7 @@
           <el-button type="primary" :loading="saving" @click="handleSaveProfile">保存</el-button>
         </div>
       </el-dialog>
-    </template>
+    </div>
   </div>
 </template>
 
@@ -675,7 +692,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['token', 'userId', 'displayMode', 'roles', 'activeRole']),
+    ...mapGetters(['token', 'userId', 'displayMode', 'roles']),
     profileViewModeValue: {
       get() {
         return this.isSelf
@@ -710,14 +727,6 @@ export default {
     profileCoverImage() {
       if (!this.profile) return ''
       return normalizeImageUrl(this.profile.coverImage || this.profile.cover || this.profile.backgroundImage || this.profile.background)
-    },
-    profileCoverStyle() {
-      if (!this.profileCoverImage) {
-        return {}
-      }
-      return {
-        backgroundImage: `linear-gradient(135deg, rgba(14, 29, 41, 0.12), rgba(14, 29, 41, 0.42)), url("${this.profileCoverImage}")`
-      }
     },
     editAvatarPreview() {
       return normalizeImageUrl(this.editForm.avatar) || this.profileAvatar
@@ -764,8 +773,13 @@ export default {
     favoriteProjects() {
       return this.favorites.list.filter(item => item.fenlei === '企划')
     },
-    hasPublicProjects() {
-      return this.projects.total > 0 || this.projects.list.length > 0
+    styleTagList() {
+      const rawTags = (this.profile && this.profile.styleTags) || ''
+      return rawTags
+        .split(/[,，]/)
+        .map(tag => tag.trim())
+        .filter(Boolean)
+        .slice(0, 6)
     }
   },
   watch: {
@@ -1359,8 +1373,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.center-profile-page {
-  padding: 12px 0 40px;
+.profile-page {
+  padding: 0 0 56px;
+  background: #f7f8fb;
 }
 
 .page-loading {
@@ -1373,249 +1388,323 @@ export default {
   font-size: 15px;
 }
 
-.profile-hero {
-  overflow: visible;
+.profile-container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 0 0;
 }
 
-.profile-hero__cover {
+.profile-banner {
+  width: 100%;
+}
+
+.profile-banner__surface {
   position: relative;
-  height: 260px;
-  border-radius: 30px;
+  width: 100%;
+  height: 228px;
   overflow: hidden;
-  background:
-    radial-gradient(circle at top left, rgba(255, 203, 119, 0.9), transparent 35%),
-    radial-gradient(circle at top right, rgba(65, 184, 131, 0.22), transparent 28%),
-    linear-gradient(135deg, #1f5c4f 0%, #2e7d69 40%, #f5d48f 100%);
-  background-size: cover;
-  background-position: center;
-  box-shadow: 0 18px 42px rgba(34, 46, 69, 0.14);
+  border-radius: 24px;
+  background: linear-gradient(135deg, #d6def5 0%, #f2d4dc 50%, #d8e3fb 100%);
 }
 
-.profile-hero__cover-mask {
+.profile-banner__cover-img,
+.profile-banner__fallback,
+.profile-banner__overlay {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, rgba(13, 22, 28, 0.12) 0%, rgba(13, 22, 28, 0.34) 100%);
 }
 
-.profile-hero__cover-empty {
-  position: absolute;
-  right: 28px;
-  bottom: 24px;
-  z-index: 1;
-  display: inline-flex;
-  padding: 10px 16px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(12px);
-  color: #fff7e2;
+.profile-banner__cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-banner__fallback {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 20px 24px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.32), transparent 28%),
+    radial-gradient(circle at right center, rgba(120, 155, 255, 0.18), transparent 30%),
+    linear-gradient(135deg, #d9dff1 0%, #f2dde1 48%, #d8e4fd 100%);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 13px;
 }
 
-.profile-hero__body {
+.profile-banner__fallback span {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(54, 66, 98, 0.2);
+  backdrop-filter: blur(12px);
+}
+
+.profile-banner__overlay {
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.04) 0%, rgba(17, 24, 39, 0.22) 100%);
+  pointer-events: none;
+}
+
+.profile-header {
   display: flex;
-  gap: 28px;
+  justify-content: space-between;
   align-items: flex-start;
-  padding: 0 8px;
-  margin-top: -72px;
+  gap: 32px;
+  padding: 0 28px 24px;
+  margin-top: -42px;
   position: relative;
   z-index: 2;
 }
 
-.profile-avatar-shell {
-  flex-shrink: 0;
-  align-self: flex-start;
-  padding: 8px;
-  border-radius: 32px;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 20px 38px rgba(34, 46, 69, 0.18);
+.profile-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  min-width: 0;
+  flex: 1;
 }
 
 .profile-avatar {
+  width: 124px;
+  height: 124px;
+  flex-shrink: 0;
+  margin-top: -10px;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(28, 39, 67, 0.14);
+  overflow: hidden;
+}
+
+.profile-avatar__image {
   display: block;
-  border: 4px solid rgba(255, 255, 255, 0.88);
+  width: 100%;
+  height: 100%;
 }
 
-.profile-summary {
-  flex: 1;
+.profile-meta {
   min-width: 0;
-  padding: 86px 20px 4px 0;
-}
-
-.profile-summary__top {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-}
-
-.profile-title-group {
-  min-width: 0;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 52px;
 }
 
 .profile-name {
   margin: 0;
-  font-size: 30px;
+  font-size: 24px;
+  line-height: 1.2;
   font-weight: 700;
-  color: #20313f;
+  color: #1f2430;
 }
 
-.profile-meta {
+.profile-handle-row {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 16px;
+  color: #6c7484;
+  font-size: 14px;
 }
 
-.meta-pill {
+.profile-handle,
+.profile-location {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
+}
+
+.profile-stats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 22px;
+}
+
+.profile-stat {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 4px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: #eef3f1;
-  color: #55646f;
+  text-align: left;
+}
+
+.profile-stat.is-link {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.profile-stat.is-link:hover {
+  opacity: 0.74;
+}
+
+.profile-stat__value {
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 700;
+  color: #202636;
+}
+
+.profile-stat__label {
   font-size: 13px;
+  color: #7a8293;
+}
+
+.profile-extra {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profile-extra__tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f1f4fb;
+  color: #667085;
+  font-size: 12px;
+}
+
+.profile-bio {
+  max-width: 620px;
+  margin: 0;
+  color: #4b5565;
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.profile-bio.is-empty {
+  color: #98a2b3;
 }
 
 .profile-actions {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  flex-wrap: wrap;
   justify-content: flex-end;
-}
-
-.header-action-btn {
-  border-radius: 999px;
-  min-width: 112px;
-  background: rgba(255, 255, 255, 0.92);
-  border-color: rgba(176, 189, 198, 0.8);
-}
-
-.identity-switch {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  border-radius: 18px;
-  background: #f6f8f7;
-}
-
-.identity-switch__label {
-  font-size: 12px;
-  color: #7b8796;
-}
-
-.profile-bio {
-  margin: 18px 0 0;
-  font-size: 14px;
-  line-height: 1.75;
-  color: #55646f;
-}
-
-.profile-bio.is-empty {
-  color: #97a3ad;
-}
-
-.profile-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 22px;
-}
-
-.stat-card {
-  border: 0;
-  border-radius: 18px;
-  padding: 18px 20px;
-  text-align: left;
-  background: #f7faf9;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.stat-card.is-link {
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(34, 46, 69, 0.08);
-  }
-}
-
-.stat-card__value {
-  font-size: 26px;
-  font-weight: 700;
-  color: #20313f;
-}
-
-.stat-card__label {
-  font-size: 13px;
-  color: #70808c;
-}
-
-.profile-shell {
-  margin-top: 18px;
-  background: #fff;
-  border-radius: 24px;
-  box-shadow: 0 14px 40px rgba(34, 46, 69, 0.08);
-}
-
-.profile-shell__tabs {
-  padding: 24px 28px 0;
-}
-
-.profile-shell__tabs ::v-deep .el-tabs__nav-wrap::after {
-  background: #edf1f0;
-}
-
-.profile-shell__tabs ::v-deep .el-tabs__item {
-  font-size: 16px;
-  font-weight: 600;
-  color: #7b8796;
-}
-
-.profile-shell__tabs ::v-deep .el-tabs__item.is-active {
-  color: #1f5c4f;
-}
-
-.profile-shell__tabs ::v-deep .el-tabs__active-bar {
-  background: #1f5c4f;
-}
-
-.secondary-tabs {
-  display: flex;
-  gap: 10px;
-  margin-top: 4px;
-  margin-bottom: 12px;
   flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 52px;
+  flex-shrink: 0;
 }
 
-.secondary-tab {
+.profile-action-btn {
+  min-width: 110px;
+  height: 36px;
+  border-radius: 999px;
+  border-color: #d5dcea;
+  background: #fff;
+}
+
+.profile-action-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 6px 12px;
+  border: 1px solid #d9e0ee;
+  border-radius: 999px;
+  background: #fff;
+}
+
+.profile-action-switch__label {
+  font-size: 12px;
+  color: #7b8395;
+  white-space: nowrap;
+}
+
+.profile-action-switch ::v-deep .el-radio-group {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.profile-action-switch ::v-deep .el-radio-button__inner {
+  padding: 7px 14px;
   border: 0;
   border-radius: 999px;
-  padding: 8px 16px;
-  background: #eef3f1;
-  color: #70808c;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  background: transparent;
+  color: #687386;
+  box-shadow: none;
 }
 
-.secondary-tab.is-active {
-  background: #1f5c4f;
+.profile-action-switch ::v-deep .el-radio-button:first-child .el-radio-button__inner,
+.profile-action-switch ::v-deep .el-radio-button:last-child .el-radio-button__inner {
+  border-radius: 999px;
+}
+
+.profile-action-switch ::v-deep .el-radio-button__orig-radio:checked + .el-radio-button__inner {
+  background: #0096fa;
   color: #fff;
 }
 
-.profile-shell__content {
-  padding: 0 28px 28px;
+.profile-tabs-wrap {
+  margin-top: 6px;
+  padding: 0 28px;
+}
+
+.profile-tabs {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  border-bottom: 1px solid #e8ebf0;
+  overflow-x: auto;
+}
+
+.profile-tabs__item {
+  border: 0;
+  padding: 0 0 16px;
+  margin-bottom: -1px;
+  background: transparent;
+  color: #6f7787;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.profile-tabs__item:hover {
+  color: #2b3340;
+}
+
+.profile-tabs__item.is-active {
+  color: #0096fa;
+  border-bottom-color: #0096fa;
+}
+
+.profile-subtabs {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 14px 0 0;
+}
+
+.profile-subtabs__item {
+  border: 0;
+  padding: 0 0 10px;
+  background: transparent;
+  color: #7a8293;
+  font-size: 14px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.profile-subtabs__item.is-active {
+  color: #0096fa;
+  border-bottom-color: #0096fa;
+}
+
+.profile-content {
+  padding: 24px 28px 0;
 }
 
 .content-section {
-  padding-top: 8px;
+  padding-top: 0;
 }
 
 .section-heading {
@@ -1623,19 +1712,19 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 22px;
+  margin-bottom: 20px;
 }
 
 .section-heading__title {
   margin: 0;
   font-size: 24px;
   font-weight: 700;
-  color: #20313f;
+  color: #202636;
 }
 
 .section-heading__desc {
   margin: 6px 0 0;
-  color: #7b8796;
+  color: #8b95a7;
   font-size: 14px;
 }
 
@@ -1647,33 +1736,32 @@ export default {
 
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
 }
 
 .content-card {
-  border-radius: 18px;
   overflow: hidden;
+  border-radius: 16px;
   background: #fff;
-  border: 1px solid #edf1f0;
-  box-shadow: 0 8px 24px rgba(34, 46, 69, 0.05);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .content-card.is-clickable {
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 14px 28px rgba(34, 46, 69, 0.12);
-  }
+.content-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
 }
 
 .content-card__cover {
   position: relative;
-  padding-top: 100%;
+  padding-top: 72%;
   overflow: hidden;
-  background: #eef3f1;
+  background: #edf1f7;
 }
 
 .cover-img,
@@ -1693,24 +1781,23 @@ export default {
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(circle at top left, rgba(245, 212, 143, 0.75), transparent 35%),
-    linear-gradient(135deg, #dbe8e2 0%, #eef3f1 100%);
+    radial-gradient(circle at top left, rgba(173, 193, 255, 0.5), transparent 30%),
+    linear-gradient(135deg, #eef2fa 0%, #f7f9fc 100%);
 }
 
 .cover-fallback__label {
   font-size: 12px;
-  letter-spacing: 1px;
-  color: #6f7d88;
+  color: #7b8597;
 }
 
 .cover-price {
   position: absolute;
-  right: 12px;
-  bottom: 12px;
-  padding: 4px 10px;
+  right: 10px;
+  bottom: 10px;
+  padding: 4px 9px;
   border-radius: 999px;
-  background: rgba(19, 28, 35, 0.72);
-  color: #ffd88a;
+  background: rgba(17, 24, 39, 0.72);
+  color: #fff;
   font-size: 12px;
   font-weight: 600;
 }
@@ -1722,7 +1809,7 @@ export default {
 .content-card__title {
   font-size: 15px;
   font-weight: 600;
-  color: #20313f;
+  color: #202636;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1731,9 +1818,9 @@ export default {
 .content-card__meta {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 10px;
   flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .meta-tag {
@@ -1741,14 +1828,14 @@ export default {
   align-items: center;
   padding: 4px 10px;
   border-radius: 999px;
-  background: #eef3f1;
-  color: #1f5c4f;
+  background: #f2f4f8;
+  color: #667085;
   font-size: 12px;
 }
 
 .meta-note {
   font-size: 12px;
-  color: #97a3ad;
+  color: #98a2b3;
 }
 
 .project-list,
@@ -1765,20 +1852,19 @@ export default {
   justify-content: space-between;
   gap: 18px;
   padding: 18px 20px;
-  border-radius: 18px;
-  border: 1px solid #edf1f0;
+  border-radius: 16px;
   background: #fff;
-  box-shadow: 0 8px 24px rgba(34, 46, 69, 0.05);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 .project-card.is-clickable {
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 14px 28px rgba(34, 46, 69, 0.12);
-  }
+.project-card.is-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
 }
 
 .project-card__main,
@@ -1791,12 +1877,12 @@ export default {
 .stack-card__title {
   font-size: 16px;
   font-weight: 600;
-  color: #20313f;
+  color: #202636;
 }
 
 .project-card__desc {
   margin: 8px 0 0;
-  color: #7b8796;
+  color: #6b7280;
   font-size: 14px;
   line-height: 1.7;
 }
@@ -1805,49 +1891,49 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
 .project-status {
+  display: inline-flex;
+  align-items: center;
   padding: 4px 10px;
   border-radius: 999px;
-  background: #ecf7f2;
-  color: #1f8c68;
+  background: #eef6ff;
+  color: #0096fa;
   font-size: 12px;
 }
 
 .project-budget {
+  color: #8b95a7;
   font-size: 13px;
-  color: #7b8796;
 }
 
 .stack-card__thumb {
-  width: 84px;
-  height: 84px;
-  border-radius: 14px;
+  width: 86px;
+  height: 86px;
+  border-radius: 12px;
   object-fit: cover;
-  background: #eef3f1;
   flex-shrink: 0;
+  background: #edf1f7;
 }
 
 .stack-card__thumb--empty {
   display: flex;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(circle at top left, rgba(245, 212, 143, 0.75), transparent 35%),
-    linear-gradient(135deg, #dbe8e2 0%, #eef3f1 100%);
 }
 
 .stack-card__thumb-label {
   font-size: 12px;
-  color: #6f7d88;
+  color: #7b8597;
 }
 
 .stack-card__meta {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
   margin-top: 8px;
 }
@@ -1856,11 +1942,12 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  gap: 6px;
   flex-shrink: 0;
 }
 
 .price-text {
-  color: #d86d3e;
+  color: #d96f32;
   font-weight: 600;
 }
 
@@ -1868,57 +1955,19 @@ export default {
   width: 100%;
 }
 
-.overview-panels {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 28px;
+.orders-table ::v-deep .el-table {
+  border-radius: 16px;
+  overflow: hidden;
 }
 
-.overview-panel {
-  padding: 18px 20px;
-  border-radius: 18px;
-  background: #f7faf9;
+.orders-table ::v-deep .el-table th {
+  background: #f8f9fb;
+  color: #667085;
 }
 
-.overview-panel__label {
-  font-size: 13px;
-  color: #70808c;
-}
-
-.overview-panel__value {
-  margin-top: 6px;
-  font-size: 30px;
-  font-weight: 700;
-  color: #20313f;
-}
-
-.home-sections {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-}
-
-.home-block__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-
-  h3 {
-    margin: 0;
-    font-size: 18px;
-    color: #20313f;
-  }
-}
-
-.link-btn {
-  border: 0;
-  padding: 0;
-  background: transparent;
-  color: #1f5c4f;
-  font-size: 13px;
-  cursor: pointer;
+.orders-table ::v-deep .el-table td,
+.orders-table ::v-deep .el-table th.is-leaf {
+  border-bottom-color: #edf0f5;
 }
 
 .edit-form {
@@ -1929,7 +1978,7 @@ export default {
   margin-bottom: 18px;
   padding: 12px 14px;
   border-radius: 14px;
-  background: #f7faf9;
+  background: #f7f9fc;
   color: #70808c;
   font-size: 13px;
   line-height: 1.6;
@@ -1943,9 +1992,9 @@ export default {
 }
 
 .edit-media-card {
-  border-radius: 20px;
-  border: 1px solid #e7ecea;
-  background: #fbfdfc;
+  border-radius: 18px;
+  border: 1px solid #e7ecf3;
+  background: #fbfcfe;
   padding: 16px;
 }
 
@@ -1973,7 +2022,7 @@ export default {
   margin-bottom: 12px;
   border-radius: 28px;
   overflow: hidden;
-  background: linear-gradient(135deg, #eff3f1 0%, #f7faf8 100%);
+  background: linear-gradient(135deg, #eff3f8 0%, #f7f9fc 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1998,9 +2047,8 @@ export default {
   border-radius: 24px;
   overflow: hidden;
   background:
-    radial-gradient(circle at top left, rgba(255, 203, 119, 0.9), transparent 35%),
-    radial-gradient(circle at top right, rgba(65, 184, 131, 0.22), transparent 28%),
-    linear-gradient(135deg, #1f5c4f 0%, #2e7d69 40%, #f5d48f 100%);
+    radial-gradient(circle at top left, rgba(173, 193, 255, 0.45), transparent 30%),
+    linear-gradient(135deg, #d9dff1 0%, #f2dde1 48%, #d8e4fd 100%);
   background-size: cover;
   background-position: center;
   display: flex;
@@ -2011,45 +2059,58 @@ export default {
 .edit-cover-preview__mask {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(13, 22, 28, 0.08) 0%, rgba(13, 22, 28, 0.26) 100%);
+  background: linear-gradient(180deg, rgba(13, 22, 28, 0.08) 0%, rgba(13, 22, 28, 0.24) 100%);
 }
 
 .edit-cover-preview__placeholder {
   position: relative;
   z-index: 1;
-  color: #f5f7eb;
+  color: #f7f9ff;
 }
 
 .edit-upload ::v-deep .el-upload {
   display: inline-flex;
 }
 
-@media (max-width: 1024px) {
-  .card-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+@media (max-width: 960px) {
+  .profile-container {
+    max-width: none;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .profile-header,
+  .profile-tabs-wrap,
+  .profile-content {
+    padding-left: 20px;
+    padding-right: 20px;
   }
 }
 
 @media (max-width: 768px) {
-  .profile-hero__cover {
+  .profile-banner__surface {
     height: 210px;
   }
 
-  .profile-hero__body {
+  .profile-header {
     flex-direction: column;
-    align-items: stretch;
-    padding: 0;
-    margin-top: -56px;
+    gap: 18px;
   }
 
-  .profile-summary__top,
-  .section-heading {
+  .profile-left {
     flex-direction: column;
-    align-items: flex-start;
+    gap: 16px;
   }
 
-  .profile-summary {
-    padding: 20px 0 4px;
+  .profile-avatar {
+    width: 108px;
+    height: 108px;
+    margin-top: -24px;
+  }
+
+  .profile-meta,
+  .profile-actions {
+    padding-top: 0;
   }
 
   .profile-actions {
@@ -2057,23 +2118,12 @@ export default {
     justify-content: flex-start;
   }
 
-  .profile-stats,
-  .overview-panels {
-    grid-template-columns: 1fr;
+  .profile-stats {
+    gap: 18px;
   }
 
   .edit-media-grid {
     grid-template-columns: 1fr;
-  }
-
-  .card-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .profile-shell__tabs,
-  .profile-shell__content {
-    padding-left: 20px;
-    padding-right: 20px;
   }
 
   .project-card,
@@ -2089,12 +2139,25 @@ export default {
 }
 
 @media (max-width: 520px) {
-  .profile-name {
-    font-size: 24px;
+  .profile-container {
+    padding-left: 12px;
+    padding-right: 12px;
   }
 
-  .card-grid {
-    grid-template-columns: 1fr;
+  .profile-header,
+  .profile-tabs-wrap,
+  .profile-content {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .profile-name {
+    font-size: 22px;
+  }
+
+  .profile-tabs,
+  .profile-subtabs {
+    gap: 18px;
   }
 }
 </style>
