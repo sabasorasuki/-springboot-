@@ -11,7 +11,7 @@
       :image-size="120"
     />
 
-    <div v-else-if="profile" class="profile-container">
+    <div v-else-if="profile" class="profile-layout">
       <section class="profile-banner">
         <div class="profile-banner__surface">
           <img
@@ -27,140 +27,397 @@
         </div>
       </section>
 
-      <section class="profile-header">
-        <div class="profile-left">
-          <div class="profile-avatar">
-            <el-avatar
-              :size="116"
-              :src="profileAvatar"
-              icon="el-icon-user"
-              class="profile-avatar__image"
-            />
-          </div>
-
-          <div class="profile-meta">
-            <h1 class="profile-name">{{ profileDisplayName }}</h1>
-
-            <div class="profile-handle-row">
-              <span v-if="profile.username" class="profile-handle">@{{ profile.username }}</span>
-              <span v-if="locationText" class="profile-location">
-                <i class="el-icon-location-outline" />
-                {{ locationText }}
-              </span>
-            </div>
-
-            <div class="profile-stats">
-              <button type="button" class="profile-stat is-link" @click="goFollows">
-                <span class="profile-stat__value">{{ followStats.following }}</span>
-                <span class="profile-stat__label">{{ isSelf ? '已关注' : '关注' }}</span>
-              </button>
-
-              <button type="button" class="profile-stat is-link" @click="goFollows">
-                <span class="profile-stat__value">{{ followStats.followers }}</span>
-                <span class="profile-stat__label">粉丝</span>
-              </button>
-
-              <div class="profile-stat">
-                <span class="profile-stat__value">{{ portfolioCount }}</span>
-                <span class="profile-stat__label">{{ portfolioLabel }}</span>
-              </div>
-            </div>
-
-            <div v-if="styleTagList.length" class="profile-extra">
-              <span
-                v-for="tag in styleTagList"
-                :key="tag"
-                class="profile-extra__tag"
+      <div class="profile-container">
+        <section class="profile-header">
+          <div class="profile-left">
+            <div class="profile-avatar">
+              <img
+                v-if="profileAvatar"
+                :src="profileAvatar"
+                alt=""
+                class="profile-avatar__image"
               >
-                {{ tag }}
-              </span>
+              <i v-else class="el-icon-user profile-avatar__fallback-icon" />
             </div>
 
-            <p class="profile-bio" :class="{ 'is-empty': !profile.bio }">
-              {{ profile.bio || '这个人还没有留下简介。' }}
-            </p>
-          </div>
-        </div>
+            <div class="profile-meta">
+              <h1 class="profile-name">{{ profileDisplayName }}</h1>
 
-        <div class="profile-actions">
-          <el-button
-            v-if="isSelf"
-            plain
-            size="small"
-            class="profile-action-btn"
-            @click="openEditDialog"
-          >
-            编辑个人信息
-          </el-button>
-
-          <div class="profile-action-switch">
-            <span class="profile-action-switch__label">{{ isSelf ? '身份切换' : '查看身份' }}</span>
-            <el-radio-group v-model="profileViewModeValue" size="small">
-              <el-radio-button label="artist">画师</el-radio-button>
-              <el-radio-button label="client">用户</el-radio-button>
-            </el-radio-group>
-          </div>
-
-          <el-button
-            v-if="!isSelf"
-            size="small"
-            class="profile-action-btn"
-            :type="isFollowingProfile ? '' : 'primary'"
-            :plain="isFollowingProfile"
-            :loading="followLoading"
-            @click="toggleFollowProfile"
-          >
-            {{ isFollowingProfile ? '已关注' : '关注' }}
-          </el-button>
-        </div>
-      </section>
-
-      <section class="profile-tabs-wrap">
-        <nav class="profile-tabs" aria-label="个人中心分类">
-          <button
-            v-for="tab in primaryTabs"
-            :key="tab.key"
-            type="button"
-            class="profile-tabs__item"
-            :class="{ 'is-active': activePrimaryTab === tab.key }"
-            @click="setPrimaryTab(tab.key)"
-          >
-            {{ tab.label }}
-          </button>
-        </nav>
-
-        <div v-if="secondaryTabs.length" class="profile-subtabs">
-          <button
-            v-for="tab in secondaryTabs"
-            :key="tab.key"
-            type="button"
-            class="profile-subtabs__item"
-            :class="{ 'is-active': activeSecondaryTab === tab.key }"
-            @click="setSecondaryTab(tab.key)"
-          >
-            {{ tab.label }}
-          </button>
-        </div>
-      </section>
-
-      <section class="profile-content">
-        <template v-if="isSelf">
-          <section v-if="activePrimaryTab === 'submissions'" class="content-section">
-            <div class="section-heading">
-              <div>
-                <h2 class="section-heading__title">我的投稿</h2>
-                <p class="section-heading__desc">画师身份下管理自己的作品与橱窗。</p>
+              <div class="profile-handle-row">
+                <span v-if="profile.username" class="profile-handle">@{{ profile.username }}</span>
+                <span v-if="locationText" class="profile-location">
+                  <i class="el-icon-location-outline" />
+                  {{ locationText }}
+                </span>
+                <span
+                  v-for="tag in styleTagList"
+                  :key="tag"
+                  class="profile-inline-tag"
+                >
+                  {{ tag }}
+                </span>
               </div>
+
+              <div class="profile-stats">
+                <button type="button" class="profile-stat is-link" @click="goFollows">
+                  <span class="profile-stat__value">{{ followStats.following }}</span>
+                  <span class="profile-stat__label">{{ isSelf ? '已关注' : '关注' }}</span>
+                </button>
+
+                <button type="button" class="profile-stat is-link" @click="goFollows">
+                  <span class="profile-stat__value">{{ followStats.followers }}</span>
+                  <span class="profile-stat__label">粉丝</span>
+                </button>
+
+                <div class="profile-stat">
+                  <span class="profile-stat__value">{{ portfolioCount }}</span>
+                  <span class="profile-stat__label">{{ portfolioLabel }}</span>
+                </div>
+              </div>
+
+              <p class="profile-bio" :class="{ 'is-empty': !profile.bio }">
+                {{ profile.bio || '这个人还没有留下简介。' }}
+              </p>
+            </div>
+          </div>
+
+          <div class="profile-actions">
+            <div class="profile-actions__primary">
               <el-button
+                v-if="isSelf"
+                plain
                 size="small"
-                type="primary"
-                @click="goPublishEntry(activeSecondaryTab)"
+                class="profile-action-btn"
+                @click="openEditDialog"
               >
-                {{ activeSecondaryTab === 'showcase' ? '发布橱窗' : '发布作品' }}
+                编辑个人信息
+              </el-button>
+
+              <el-button
+                v-if="!isSelf"
+                size="small"
+                class="profile-action-btn"
+                :type="isFollowingProfile ? '' : 'primary'"
+                :plain="isFollowingProfile"
+                :loading="followLoading"
+                @click="toggleFollowProfile"
+              >
+                {{ isFollowingProfile ? '已关注' : '关注' }}
               </el-button>
             </div>
 
-            <div v-if="activeSecondaryTab === 'works'">
+            <div class="profile-action-switch">
+              <span class="profile-action-switch__label">{{ isSelf ? '身份切换' : '查看身份' }}</span>
+              <el-radio-group v-model="profileViewModeValue" size="small">
+                <el-radio-button label="artist">画师</el-radio-button>
+                <el-radio-button label="client">用户</el-radio-button>
+              </el-radio-group>
+            </div>
+          </div>
+        </section>
+
+        <section class="profile-tabs-wrap">
+          <nav class="profile-tabs" aria-label="个人中心分类">
+            <button
+              v-for="tab in primaryTabs"
+              :key="tab.key"
+              type="button"
+              class="profile-tabs__item"
+              :class="{ 'is-active': activePrimaryTab === tab.key }"
+              @click="setPrimaryTab(tab.key)"
+            >
+              {{ tab.label }}
+            </button>
+          </nav>
+
+          <div v-if="secondaryTabs.length" class="profile-subtabs">
+            <button
+              v-for="tab in secondaryTabs"
+              :key="tab.key"
+              type="button"
+              class="profile-subtabs__item"
+              :class="{ 'is-active': activeSecondaryTab === tab.key }"
+              @click="setSecondaryTab(tab.key)"
+            >
+              {{ tab.label }}
+            </button>
+          </div>
+        </section>
+
+        <section class="profile-content">
+          <template v-if="isSelf">
+            <section v-if="activePrimaryTab === 'submissions'" class="content-section">
+              <div class="section-heading">
+                <div>
+                  <h2 class="section-heading__title">我的投稿</h2>
+                  <p class="section-heading__desc">画师身份下管理自己的作品与橱窗。</p>
+                </div>
+                <el-button
+                  size="small"
+                  type="primary"
+                  @click="goPublishEntry(activeSecondaryTab)"
+                >
+                  {{ activeSecondaryTab === 'showcase' ? '发布橱窗' : '发布作品' }}
+                </el-button>
+              </div>
+
+              <div v-if="activeSecondaryTab === 'works'">
+                <div v-if="works.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
+                <div v-else-if="works.list.length" class="card-grid">
+                  <article v-for="item in works.list" :key="item.id" class="content-card">
+                    <div class="content-card__cover">
+                      <img
+                        v-if="item.photoUrl && !item.photoBroken"
+                        :src="item.photoUrl"
+                        alt=""
+                        class="cover-img"
+                        @error="handleCardImageError(item)"
+                      >
+                      <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
+                    </div>
+                    <div class="content-card__body">
+                      <div class="content-card__title">{{ item.title || '未命名作品' }}</div>
+                      <div class="content-card__meta">
+                        <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
+                        <span v-if="item.fbdate" class="meta-note">{{ item.fbdate }}</span>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+                <el-empty v-else description="还没有投稿作品" :image-size="110" />
+              </div>
+
+              <div v-else>
+                <div v-if="showcase.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
+                <div v-else-if="showcase.list.length" class="card-grid">
+                  <article
+                    v-for="item in showcase.list"
+                    :key="item.id"
+                    class="content-card is-clickable"
+                    @click="goShowcaseDetail(item.id)"
+                  >
+                    <div class="content-card__cover">
+                      <img
+                        v-if="item.photoUrl && !item.photoBroken"
+                        :src="item.photoUrl"
+                        alt=""
+                        class="cover-img"
+                        @error="handleCardImageError(item)"
+                      >
+                      <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
+                      <span v-if="item.price" class="cover-price">¥{{ item.price }}</span>
+                    </div>
+                    <div class="content-card__body">
+                      <div class="content-card__title">{{ item.name || '未命名橱窗' }}</div>
+                      <div class="content-card__meta">
+                        <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
+                        <span v-if="item.status" class="meta-note">{{ item.status }}</span>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+                <el-empty v-else description="还没有橱窗投稿" :image-size="110" />
+              </div>
+            </section>
+
+            <section v-else-if="activePrimaryTab === 'projects'" class="content-section">
+              <div class="section-heading">
+                <div>
+                  <h2 class="section-heading__title">我的企划</h2>
+                  <p class="section-heading__desc">用户身份下查看和管理自己发布的企划。</p>
+                </div>
+                <el-button size="small" type="primary" @click="goPublishEntry('projects')">发布企划</el-button>
+              </div>
+
+              <div v-if="projects.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
+              <div v-else-if="projects.list.length" class="project-list">
+                <article
+                  v-for="item in projects.list"
+                  :key="item.id"
+                  class="project-card is-clickable"
+                  @click="goProjectDetail(item.id)"
+                >
+                  <div class="project-card__main">
+                    <div class="project-card__title">{{ item.title }}</div>
+                    <p class="project-card__desc">{{ item.description || '暂无企划描述' }}</p>
+                  </div>
+                  <div class="project-card__side">
+                    <span v-if="item.status" class="project-status">{{ item.status }}</span>
+                    <span class="project-budget">{{ formatBudget(item) }}</span>
+                  </div>
+                </article>
+              </div>
+              <el-empty v-else description="还没有发布企划" :image-size="110" />
+            </section>
+
+            <section v-else-if="activePrimaryTab === 'favorites'" class="content-section">
+              <div class="section-heading">
+                <div>
+                  <h2 class="section-heading__title">我的收藏</h2>
+                  <p class="section-heading__desc">
+                    {{ isArtistView ? '画师身份下只展示收藏的企划。' : '用户身份下按作品与橱窗分类查看收藏。' }}
+                  </p>
+                </div>
+              </div>
+
+              <div v-if="favorites.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
+              <template v-else>
+                <div v-if="activeSecondaryTab === 'projects'">
+                  <div v-if="favoriteProjects.length" class="project-list">
+                    <article
+                      v-for="item in favoriteProjects"
+                      :key="item.id"
+                      class="project-card is-clickable"
+                      @click="goProjectDetail(item.wzids)"
+                    >
+                      <div class="project-card__main">
+                        <div class="project-card__title">{{ item.title || '未命名企划' }}</div>
+                        <p class="project-card__desc">收藏的企划条目</p>
+                      </div>
+                    </article>
+                  </div>
+                  <el-empty v-else description="还没有收藏企划" :image-size="110" />
+                </div>
+
+                <div v-else-if="activeSecondaryTab === 'works'">
+                  <div v-if="favoriteWorks.length" class="card-grid">
+                    <article v-for="item in favoriteWorks" :key="item.id" class="content-card">
+                      <div class="content-card__cover">
+                        <img
+                          v-if="item.photoUrl && !item.photoBroken"
+                          :src="item.photoUrl"
+                          alt=""
+                          class="cover-img"
+                          @error="handleCardImageError(item)"
+                        >
+                        <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
+                      </div>
+                      <div class="content-card__body">
+                        <div class="content-card__title">{{ item.title || '未命名作品' }}</div>
+                        <div class="content-card__meta">
+                          <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
+                        </div>
+                      </div>
+                    </article>
+                  </div>
+                  <el-empty v-else description="还没有收藏作品" :image-size="110" />
+                </div>
+
+                <div v-else>
+                  <div v-if="favoriteShowcase.length" class="card-grid">
+                    <article
+                      v-for="item in favoriteShowcase"
+                      :key="item.id"
+                      class="content-card is-clickable"
+                      @click="goShowcaseDetail(item.wzids)"
+                    >
+                      <div class="content-card__cover">
+                        <img
+                          v-if="item.photoUrl && !item.photoBroken"
+                          :src="item.photoUrl"
+                          alt=""
+                          class="cover-img"
+                          @error="handleCardImageError(item)"
+                        >
+                        <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
+                        <span v-if="item.price" class="cover-price">¥{{ item.price }}</span>
+                      </div>
+                      <div class="content-card__body">
+                        <div class="content-card__title">{{ item.title || '未命名橱窗' }}</div>
+                        <div class="content-card__meta">
+                          <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
+                        </div>
+                      </div>
+                    </article>
+                  </div>
+                  <el-empty v-else description="还没有收藏橱窗" :image-size="110" />
+                </div>
+              </template>
+            </section>
+
+            <section v-else-if="activePrimaryTab === 'cart'" class="content-section">
+              <div class="section-heading">
+                <div>
+                  <h2 class="section-heading__title">购物车</h2>
+                  <p class="section-heading__desc">这里只展示加入购物车的橱窗商品。</p>
+                </div>
+                <el-button size="small" plain @click="$router.push('/showcase')">去逛橱窗</el-button>
+              </div>
+
+              <div v-if="cart.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
+              <div v-else-if="cart.list.length" class="stack-list">
+                <article v-for="item in cart.list" :key="item.id" class="stack-card">
+                  <img
+                    v-if="item.photoUrl && !item.photoBroken"
+                    :src="item.photoUrl"
+                    class="stack-card__thumb"
+                    alt=""
+                    @error="handleCardImageError(item)"
+                  >
+                  <div v-else class="stack-card__thumb stack-card__thumb--empty">
+                    <span class="stack-card__thumb-label">暂无封面</span>
+                  </div>
+                  <div class="stack-card__main">
+                    <div class="stack-card__title">{{ item.name || '未命名商品' }}</div>
+                    <div class="stack-card__meta">
+                      <span class="price-text">¥{{ item.price || 0 }}</span>
+                      <span v-if="item.xddate" class="meta-note">{{ item.xddate }}</span>
+                    </div>
+                  </div>
+                  <div class="stack-card__actions">
+                    <el-button size="mini" type="primary" @click="openOrdersTab">去支付</el-button>
+                    <el-button size="mini" type="text" @click="removeCartItem(item)">移除</el-button>
+                  </div>
+                </article>
+              </div>
+              <el-empty v-else description="购物车还是空的" :image-size="110" />
+            </section>
+
+            <section v-else class="content-section">
+              <div class="section-heading">
+                <div>
+                  <h2 class="section-heading__title">订单</h2>
+                  <p class="section-heading__desc">统一查看买家或画师视角下的订单记录。</p>
+                </div>
+
+                <el-radio-group
+                  v-if="hasArtistRole"
+                  v-model="orderViewRole"
+                  size="small"
+                >
+                  <el-radio-button label="用户角色">买家</el-radio-button>
+                  <el-radio-button label="画师角色">画师</el-radio-button>
+                </el-radio-group>
+              </div>
+
+              <div v-if="orders.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
+              <el-table v-else-if="orders.list.length" :data="orders.list" class="orders-table">
+                <el-table-column prop="name" label="订单内容" min-width="160" show-overflow-tooltip />
+                <el-table-column label="价格" width="110">
+                  <template slot-scope="{ row }">
+                    <span class="price-text">¥{{ row.price || 0 }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="status" label="状态" width="120">
+                  <template slot-scope="{ row }">
+                    <el-tag size="small" :type="statusTagType(row.status)">{{ row.status }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="xddate" label="时间" min-width="160" />
+              </el-table>
+              <el-empty v-else description="还没有订单记录" :image-size="110" />
+            </section>
+          </template>
+
+          <template v-else>
+            <section v-if="activePrimaryTab === 'featuredWorks'" class="content-section">
+              <div class="section-heading">
+                <div>
+                  <h2 class="section-heading__title">精选作品</h2>
+                  <p class="section-heading__desc">以画师身份查看该用户公开展示的作品。</p>
+                </div>
+              </div>
+
               <div v-if="works.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
               <div v-else-if="works.list.length" class="card-grid">
                 <article v-for="item in works.list" :key="item.id" class="content-card">
@@ -178,15 +435,21 @@
                     <div class="content-card__title">{{ item.title || '未命名作品' }}</div>
                     <div class="content-card__meta">
                       <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
-                      <span v-if="item.fbdate" class="meta-note">{{ item.fbdate }}</span>
                     </div>
                   </div>
                 </article>
               </div>
-              <el-empty v-else description="还没有投稿作品" :image-size="110" />
-            </div>
+              <el-empty v-else description="暂无公开作品" :image-size="110" />
+            </section>
 
-            <div v-else>
+            <section v-else-if="activePrimaryTab === 'showcase'" class="content-section">
+              <div class="section-heading">
+                <div>
+                  <h2 class="section-heading__title">橱窗</h2>
+                  <p class="section-heading__desc">以画师身份查看该用户公开上架的橱窗内容。</p>
+                </div>
+              </div>
+
               <div v-if="showcase.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
               <div v-else-if="showcase.list.length" class="card-grid">
                 <article
@@ -210,401 +473,173 @@
                     <div class="content-card__title">{{ item.name || '未命名橱窗' }}</div>
                     <div class="content-card__meta">
                       <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
-                      <span v-if="item.status" class="meta-note">{{ item.status }}</span>
                     </div>
                   </div>
                 </article>
               </div>
-              <el-empty v-else description="还没有橱窗投稿" :image-size="110" />
-            </div>
-          </section>
+              <el-empty v-else description="暂无公开橱窗" :image-size="110" />
+            </section>
 
-          <section v-else-if="activePrimaryTab === 'projects'" class="content-section">
-            <div class="section-heading">
-              <div>
-                <h2 class="section-heading__title">我的企划</h2>
-                <p class="section-heading__desc">用户身份下查看和管理自己发布的企划。</p>
-              </div>
-              <el-button size="small" type="primary" @click="goPublishEntry('projects')">发布企划</el-button>
-            </div>
-
-            <div v-if="projects.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
-            <div v-else-if="projects.list.length" class="project-list">
-              <article
-                v-for="item in projects.list"
-                :key="item.id"
-                class="project-card is-clickable"
-                @click="goProjectDetail(item.id)"
-              >
-                <div class="project-card__main">
-                  <div class="project-card__title">{{ item.title }}</div>
-                  <p class="project-card__desc">{{ item.description || '暂无企划描述' }}</p>
+            <section v-else class="content-section">
+              <div class="section-heading">
+                <div>
+                  <h2 class="section-heading__title">企划</h2>
+                  <p class="section-heading__desc">以用户身份查看该用户公开发布的企划。</p>
                 </div>
-                <div class="project-card__side">
-                  <span v-if="item.status" class="project-status">{{ item.status }}</span>
-                  <span class="project-budget">{{ formatBudget(item) }}</span>
-                </div>
-              </article>
-            </div>
-            <el-empty v-else description="还没有发布企划" :image-size="110" />
-          </section>
-
-          <section v-else-if="activePrimaryTab === 'favorites'" class="content-section">
-            <div class="section-heading">
-              <div>
-                <h2 class="section-heading__title">我的收藏</h2>
-                <p class="section-heading__desc">
-                  {{ isArtistView ? '画师身份下只展示收藏的企划。' : '用户身份下按作品与橱窗分类查看收藏。' }}
-                </p>
-              </div>
-            </div>
-
-            <div v-if="favorites.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
-            <template v-else>
-              <div v-if="activeSecondaryTab === 'projects'">
-                <div v-if="favoriteProjects.length" class="project-list">
-                  <article
-                    v-for="item in favoriteProjects"
-                    :key="item.id"
-                    class="project-card is-clickable"
-                    @click="goProjectDetail(item.wzids)"
-                  >
-                    <div class="project-card__main">
-                      <div class="project-card__title">{{ item.title || '未命名企划' }}</div>
-                      <p class="project-card__desc">收藏的企划条目</p>
-                    </div>
-                  </article>
-                </div>
-                <el-empty v-else description="还没有收藏企划" :image-size="110" />
               </div>
 
-              <div v-else-if="activeSecondaryTab === 'works'">
-                <div v-if="favoriteWorks.length" class="card-grid">
-                  <article v-for="item in favoriteWorks" :key="item.id" class="content-card">
-                    <div class="content-card__cover">
-                      <img
-                        v-if="item.photoUrl && !item.photoBroken"
-                        :src="item.photoUrl"
-                        alt=""
-                        class="cover-img"
-                        @error="handleCardImageError(item)"
-                      >
-                      <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
-                    </div>
-                    <div class="content-card__body">
-                      <div class="content-card__title">{{ item.title || '未命名作品' }}</div>
-                      <div class="content-card__meta">
-                        <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
-                      </div>
-                    </div>
-                  </article>
-                </div>
-                <el-empty v-else description="还没有收藏作品" :image-size="110" />
-              </div>
-
-              <div v-else>
-                <div v-if="favoriteShowcase.length" class="card-grid">
-                  <article
-                    v-for="item in favoriteShowcase"
-                    :key="item.id"
-                    class="content-card is-clickable"
-                    @click="goShowcaseDetail(item.wzids)"
-                  >
-                    <div class="content-card__cover">
-                      <img
-                        v-if="item.photoUrl && !item.photoBroken"
-                        :src="item.photoUrl"
-                        alt=""
-                        class="cover-img"
-                        @error="handleCardImageError(item)"
-                      >
-                      <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
-                      <span v-if="item.price" class="cover-price">¥{{ item.price }}</span>
-                    </div>
-                    <div class="content-card__body">
-                      <div class="content-card__title">{{ item.title || '未命名橱窗' }}</div>
-                      <div class="content-card__meta">
-                        <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
-                      </div>
-                    </div>
-                  </article>
-                </div>
-                <el-empty v-else description="还没有收藏橱窗" :image-size="110" />
-              </div>
-            </template>
-          </section>
-
-          <section v-else-if="activePrimaryTab === 'cart'" class="content-section">
-            <div class="section-heading">
-              <div>
-                <h2 class="section-heading__title">购物车</h2>
-                <p class="section-heading__desc">这里只展示加入购物车的橱窗商品。</p>
-              </div>
-              <el-button size="small" plain @click="$router.push('/showcase')">去逛橱窗</el-button>
-            </div>
-
-            <div v-if="cart.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
-            <div v-else-if="cart.list.length" class="stack-list">
-              <article v-for="item in cart.list" :key="item.id" class="stack-card">
-                <img
-                  v-if="item.photoUrl && !item.photoBroken"
-                  :src="item.photoUrl"
-                  class="stack-card__thumb"
-                  alt=""
-                  @error="handleCardImageError(item)"
+              <div v-if="projects.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
+              <div v-else-if="projects.list.length" class="project-list">
+                <article
+                  v-for="item in projects.list"
+                  :key="item.id"
+                  class="project-card is-clickable"
+                  @click="goProjectDetail(item.id)"
                 >
-                <div v-else class="stack-card__thumb stack-card__thumb--empty">
-                  <span class="stack-card__thumb-label">暂无封面</span>
-                </div>
-                <div class="stack-card__main">
-                  <div class="stack-card__title">{{ item.name || '未命名商品' }}</div>
-                  <div class="stack-card__meta">
-                    <span class="price-text">¥{{ item.price || 0 }}</span>
-                    <span v-if="item.xddate" class="meta-note">{{ item.xddate }}</span>
+                  <div class="project-card__main">
+                    <div class="project-card__title">{{ item.title }}</div>
+                    <p class="project-card__desc">{{ item.description || '暂无企划描述' }}</p>
                   </div>
-                </div>
-                <div class="stack-card__actions">
-                  <el-button size="mini" type="primary" @click="openOrdersTab">去支付</el-button>
-                  <el-button size="mini" type="text" @click="removeCartItem(item)">移除</el-button>
-                </div>
-              </article>
-            </div>
-            <el-empty v-else description="购物车还是空的" :image-size="110" />
-          </section>
-
-          <section v-else class="content-section">
-            <div class="section-heading">
-              <div>
-                <h2 class="section-heading__title">订单</h2>
-                <p class="section-heading__desc">统一查看买家或画师视角下的订单记录。</p>
-              </div>
-
-              <el-radio-group
-                v-if="hasArtistRole"
-                v-model="orderViewRole"
-                size="small"
-              >
-                <el-radio-button label="用户角色">买家</el-radio-button>
-                <el-radio-button label="画师角色">画师</el-radio-button>
-              </el-radio-group>
-            </div>
-
-            <div v-if="orders.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
-            <el-table v-else-if="orders.list.length" :data="orders.list" class="orders-table">
-              <el-table-column prop="name" label="订单内容" min-width="160" show-overflow-tooltip />
-              <el-table-column label="价格" width="110">
-                <template slot-scope="{ row }">
-                  <span class="price-text">¥{{ row.price || 0 }}</span>
-                </template>
-              </el-table-column>
-              <el-table-column prop="status" label="状态" width="120">
-                <template slot-scope="{ row }">
-                  <el-tag size="small" :type="statusTagType(row.status)">{{ row.status }}</el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column prop="xddate" label="时间" min-width="160" />
-            </el-table>
-            <el-empty v-else description="还没有订单记录" :image-size="110" />
-          </section>
-        </template>
-
-        <template v-else>
-          <section v-if="activePrimaryTab === 'featuredWorks'" class="content-section">
-            <div class="section-heading">
-              <div>
-                <h2 class="section-heading__title">精选作品</h2>
-                <p class="section-heading__desc">以画师身份查看该用户公开展示的作品。</p>
-              </div>
-            </div>
-
-            <div v-if="works.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
-            <div v-else-if="works.list.length" class="card-grid">
-              <article v-for="item in works.list" :key="item.id" class="content-card">
-                <div class="content-card__cover">
-                  <img
-                    v-if="item.photoUrl && !item.photoBroken"
-                    :src="item.photoUrl"
-                    alt=""
-                    class="cover-img"
-                    @error="handleCardImageError(item)"
-                  >
-                  <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
-                </div>
-                <div class="content-card__body">
-                  <div class="content-card__title">{{ item.title || '未命名作品' }}</div>
-                  <div class="content-card__meta">
-                    <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
+                  <div class="project-card__side">
+                    <span v-if="item.status" class="project-status">{{ item.status }}</span>
+                    <span class="project-budget">{{ formatBudget(item) }}</span>
                   </div>
-                </div>
-              </article>
-            </div>
-            <el-empty v-else description="暂无公开作品" :image-size="110" />
-          </section>
-
-          <section v-else-if="activePrimaryTab === 'showcase'" class="content-section">
-            <div class="section-heading">
-              <div>
-                <h2 class="section-heading__title">橱窗</h2>
-                <p class="section-heading__desc">以画师身份查看该用户公开上架的橱窗内容。</p>
+                </article>
               </div>
-            </div>
-
-            <div v-if="showcase.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
-            <div v-else-if="showcase.list.length" class="card-grid">
-              <article
-                v-for="item in showcase.list"
-                :key="item.id"
-                class="content-card is-clickable"
-                @click="goShowcaseDetail(item.id)"
-              >
-                <div class="content-card__cover">
-                  <img
-                    v-if="item.photoUrl && !item.photoBroken"
-                    :src="item.photoUrl"
-                    alt=""
-                    class="cover-img"
-                    @error="handleCardImageError(item)"
-                  >
-                  <div v-else class="cover-fallback"><span class="cover-fallback__label">暂无封面</span></div>
-                  <span v-if="item.price" class="cover-price">¥{{ item.price }}</span>
-                </div>
-                <div class="content-card__body">
-                  <div class="content-card__title">{{ item.name || '未命名橱窗' }}</div>
-                  <div class="content-card__meta">
-                    <span v-if="item.fenlei" class="meta-tag">{{ item.fenlei }}</span>
-                  </div>
-                </div>
-              </article>
-            </div>
-            <el-empty v-else description="暂无公开橱窗" :image-size="110" />
-          </section>
-
-          <section v-else class="content-section">
-            <div class="section-heading">
-              <div>
-                <h2 class="section-heading__title">企划</h2>
-                <p class="section-heading__desc">以用户身份查看该用户公开发布的企划。</p>
-              </div>
-            </div>
-
-            <div v-if="projects.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
-            <div v-else-if="projects.list.length" class="project-list">
-              <article
-                v-for="item in projects.list"
-                :key="item.id"
-                class="project-card is-clickable"
-                @click="goProjectDetail(item.id)"
-              >
-                <div class="project-card__main">
-                  <div class="project-card__title">{{ item.title }}</div>
-                  <p class="project-card__desc">{{ item.description || '暂无企划描述' }}</p>
-                </div>
-                <div class="project-card__side">
-                  <span v-if="item.status" class="project-status">{{ item.status }}</span>
-                  <span class="project-budget">{{ formatBudget(item) }}</span>
-                </div>
-              </article>
-            </div>
-            <el-empty v-else description="暂无公开企划" :image-size="110" />
-          </section>
-        </template>
-      </section>
-
-      <el-dialog
-        :visible.sync="editDialogVisible"
-        title="编辑个人信息"
-        width="720px"
-        destroy-on-close
-      >
-        <el-form ref="editForm" :model="editForm" label-width="84px" class="edit-form">
-          <div class="edit-form__hint">在同一个面板里完成基础资料、头像和头图调整。上传完成后点击保存，即会同步刷新个人中心和顶栏头像。</div>
-          <div class="edit-media-grid">
-            <section class="edit-media-card edit-media-card--avatar">
-              <div class="edit-media-card__header">
-                <span class="edit-media-card__title">头像</span>
-                <span class="edit-media-card__desc">上传后点击保存生效</span>
-              </div>
-              <div class="edit-avatar-preview">
-                <img v-if="editAvatarPreview" :src="editAvatarPreview" alt="" class="edit-avatar-preview__img">
-                <div v-else class="edit-avatar-preview__placeholder">暂无头像</div>
-              </div>
-              <el-upload
-                class="edit-upload"
-                :action="ossUploadAction('photo')"
-                :before-upload="beforeAvatarUpload"
-                :show-file-list="false"
-                :on-success="handleAvatarUploadSuccess"
-                :on-error="handleAvatarUploadError"
-              >
-                <el-button size="small" plain :loading="avatarUploading">上传新头像</el-button>
-              </el-upload>
+              <el-empty v-else description="暂无公开企划" :image-size="110" />
             </section>
+          </template>
+        </section>
 
-            <section class="edit-media-card edit-media-card--cover">
-              <div class="edit-media-card__header">
-                <span class="edit-media-card__title">背景图</span>
-                <span class="edit-media-card__desc">建议横向图片，个人主页头图会在保存后更新</span>
-              </div>
-              <div class="edit-cover-preview" :style="editCoverPreviewStyle">
-                <div class="edit-cover-preview__mask" />
-                <span v-if="!editCoverPreview" class="edit-cover-preview__placeholder">暂无背景图</span>
-              </div>
-              <el-upload
-                class="edit-upload"
-                :action="ossUploadAction('photo')"
-                :before-upload="beforeCoverUpload"
-                :show-file-list="false"
-                :on-success="handleCoverUploadSuccess"
-                :on-error="handleCoverUploadError"
-              >
-                <el-button size="small" plain :loading="coverUploading">上传新背景图</el-button>
-              </el-upload>
-            </section>
+        <el-dialog
+          :visible.sync="editDialogVisible"
+          title="编辑个人信息"
+          width="720px"
+          destroy-on-close
+        >
+          <el-form ref="editForm" :model="editForm" label-width="84px" class="edit-form">
+            <div class="edit-form__hint">在同一个面板里完成基础资料、头像和头图调整。上传完成后点击保存，即会同步刷新个人中心和顶栏头像。</div>
+            <div class="edit-media-grid">
+              <section class="edit-media-card edit-media-card--avatar">
+                <div class="edit-media-card__header">
+                  <span class="edit-media-card__title">头像</span>
+                  <span class="edit-media-card__desc">上传后可裁剪调整，保存后生效</span>
+                </div>
+                <div class="edit-avatar-preview">
+                  <img v-if="editAvatarPreview" :src="editAvatarPreview" alt="" class="edit-avatar-preview__img">
+                  <div v-else class="edit-avatar-preview__placeholder">暂无头像</div>
+                </div>
+                <el-upload
+                  class="edit-upload"
+                  action="#"
+                  :auto-upload="false"
+                  :show-file-list="false"
+                  :on-change="onAvatarFileChange"
+                  accept="image/*"
+                >
+                  <el-button size="small" plain>选择头像</el-button>
+                </el-upload>
+              </section>
+
+              <section class="edit-media-card edit-media-card--cover">
+                <div class="edit-media-card__header">
+                  <span class="edit-media-card__title">背景图</span>
+                  <span class="edit-media-card__desc">建议横向图片，上传后可裁剪调整</span>
+                </div>
+                <div class="edit-cover-preview" :style="editCoverPreviewStyle">
+                  <div class="edit-cover-preview__mask" />
+                  <span v-if="!editCoverPreview" class="edit-cover-preview__placeholder">暂无背景图</span>
+                </div>
+                <el-upload
+                  class="edit-upload"
+                  action="#"
+                  :auto-upload="false"
+                  :show-file-list="false"
+                  :on-change="onCoverFileChange"
+                  accept="image/*"
+                >
+                  <el-button size="small" plain>选择背景图</el-button>
+                </el-upload>
+              </section>
+            </div>
+            <el-form-item label="用户名">
+              <el-input v-model="editForm.username" disabled />
+            </el-form-item>
+            <el-form-item label="昵称">
+              <el-input v-model="editForm.name" placeholder="请输入昵称" />
+            </el-form-item>
+            <el-form-item v-if="locationText" label="地区">
+              <el-input :value="locationText" disabled />
+            </el-form-item>
+            <el-form-item label="邮箱">
+              <el-input v-model="editForm.email" placeholder="请输入邮箱" />
+            </el-form-item>
+            <el-form-item label="电话">
+              <el-input v-model="editForm.phone" placeholder="请输入电话" />
+            </el-form-item>
+            <el-form-item label="简介">
+              <el-input
+                v-model="editForm.bio"
+                type="textarea"
+                :rows="4"
+                maxlength="500"
+                show-word-limit
+                placeholder="介绍一下自己"
+              />
+            </el-form-item>
+            <el-form-item label="风格标签">
+              <el-input
+                v-model="editForm.styleTags"
+                placeholder="多个标签用逗号分隔，例如：国风,厚涂,Q版"
+              />
+            </el-form-item>
+          </el-form>
+
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="editDialogVisible = false">取消</el-button>
+            <el-button type="primary" :loading="saving" @click="handleSaveProfile">保存</el-button>
           </div>
-          <el-form-item label="用户名">
-            <el-input v-model="editForm.username" disabled />
-          </el-form-item>
-          <el-form-item label="昵称">
-            <el-input v-model="editForm.name" placeholder="请输入昵称" />
-          </el-form-item>
-          <el-form-item v-if="locationText" label="地区">
-            <el-input :value="locationText" disabled />
-          </el-form-item>
-          <el-form-item label="邮箱">
-            <el-input v-model="editForm.email" placeholder="请输入邮箱" />
-          </el-form-item>
-          <el-form-item label="电话">
-            <el-input v-model="editForm.phone" placeholder="请输入电话" />
-          </el-form-item>
-          <el-form-item label="简介">
-            <el-input
-              v-model="editForm.bio"
-              type="textarea"
-              :rows="4"
-              maxlength="500"
-              show-word-limit
-              placeholder="介绍一下自己"
-            />
-          </el-form-item>
-          <el-form-item label="风格标签">
-            <el-input
-              v-model="editForm.styleTags"
-              placeholder="多个标签用逗号分隔，例如：国风,厚涂,Q版"
-            />
-          </el-form-item>
-        </el-form>
+        </el-dialog>
 
-        <div slot="footer" class="dialog-footer">
-          <el-button @click="editDialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="saving" @click="handleSaveProfile">保存</el-button>
-        </div>
-      </el-dialog>
+        <el-dialog
+          :visible.sync="cropperVisible"
+          :title="cropperMode === 'avatar' ? '裁剪头像' : '裁剪背景图'"
+          :width="cropperMode === 'avatar' ? '480px' : '720px'"
+          append-to-body
+          destroy-on-close
+          @closed="onCropperClosed"
+        >
+          <div class="cropper-container">
+            <vue-cropper
+              ref="cropper"
+              :img="cropperImageUrl"
+              :output-size="0.9"
+              output-type="png"
+              :auto-crop="true"
+              :auto-crop-width="cropperMode === 'avatar' ? 300 : 600"
+              :auto-crop-height="cropperMode === 'avatar' ? 300 : 200"
+              :fixed="true"
+              :fixed-number="cropperMode === 'avatar' ? [1, 1] : [3, 1]"
+              :center-box="true"
+              :can-move-box="true"
+              :can-scale="true"
+              :full="false"
+            />
+          </div>
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="cropperVisible = false">取消</el-button>
+            <el-button type="primary" :loading="cropperUploading" @click="handleCropConfirm">确认并上传</el-button>
+          </div>
+        </el-dialog>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
+import axios from 'axios'
+import { VueCropper } from 'vue-cropper'
 import userApi from '@/api/userManage'
 import followApi from '@/api/follow'
 import fenxiangApi from '@/api/fenxiang'
@@ -649,6 +684,7 @@ function isSameProfileLocation(route, target) {
 
 export default {
   name: 'CenterProfile',
+  components: { VueCropper },
   data() {
     return {
       defaultAvatar,
@@ -665,6 +701,10 @@ export default {
       coverUploading: false,
       followLoading: false,
       isFollowingProfile: false,
+      cropperVisible: false,
+      cropperMode: 'avatar',
+      cropperImageUrl: '',
+      cropperUploading: false,
       editForm: {
         id: null,
         username: '',
@@ -796,8 +836,26 @@ export default {
       }
     }
   },
+  activated() {
+    this.applyPageChrome()
+  },
+  deactivated() {
+    this.clearPageChrome()
+  },
+  mounted() {
+    this.applyPageChrome()
+  },
+  beforeDestroy() {
+    this.clearPageChrome()
+  },
   methods: {
     ossUploadAction,
+    applyPageChrome() {
+      document.body.classList.add('profile-page-view')
+    },
+    clearPageChrome() {
+      document.body.classList.remove('profile-page-view')
+    },
     async handleRouteChange() {
       const previousProfileUserId = this.profileUserId
       const previousIsSelf = this.isSelf
@@ -1149,6 +1207,50 @@ export default {
       this.coverUploading = false
       this.editDialogVisible = true
     },
+    onAvatarFileChange(file) {
+      if (!file || !file.raw) return
+      this.cropperMode = 'avatar'
+      this.cropperImageUrl = URL.createObjectURL(file.raw)
+      this.cropperVisible = true
+    },
+    onCoverFileChange(file) {
+      if (!file || !file.raw) return
+      this.cropperMode = 'cover'
+      this.cropperImageUrl = URL.createObjectURL(file.raw)
+      this.cropperVisible = true
+    },
+    onCropperClosed() {
+      if (this.cropperImageUrl) {
+        URL.revokeObjectURL(this.cropperImageUrl)
+        this.cropperImageUrl = ''
+      }
+    },
+    handleCropConfirm() {
+      this.$refs.cropper.getCropBlob(blob => {
+        if (!blob) {
+          this.$message.error('裁剪失败')
+          return
+        }
+        this.cropperUploading = true
+        const formData = new FormData()
+        formData.append('file', blob, `cropped_${Date.now()}.png`)
+        const uploadUrl = ossUploadAction('photo')
+        axios.post(uploadUrl, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        }).then(res => {
+          const response = res.data
+          const field = this.cropperMode === 'avatar' ? 'avatar' : 'coverImage'
+          const loadingKey = this.cropperMode === 'avatar' ? 'avatarUploading' : 'coverUploading'
+          const successMsg = this.cropperMode === 'avatar' ? '头像裁剪上传成功，保存后生效' : '背景图裁剪上传成功，保存后生效'
+          this.applyUploadedImage(field, response, loadingKey, successMsg)
+          this.cropperVisible = false
+        }).catch(() => {
+          this.$message.error('上传失败')
+        }).finally(() => {
+          this.cropperUploading = false
+        })
+      })
+    },
     beforeAvatarUpload() {
       this.avatarUploading = true
       return true
@@ -1374,8 +1476,9 @@ export default {
 
 <style lang="scss" scoped>
 .profile-page {
-  padding: 0 0 56px;
-  background: #f7f8fb;
+  margin: 0;
+  padding: 0 0 52px;
+  background: #f5f5f5;
 }
 
 .page-loading {
@@ -1388,22 +1491,28 @@ export default {
   font-size: 15px;
 }
 
+.profile-layout {
+  width: 100%;
+  background: #f5f5f5;
+}
+
 .profile-container {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 24px 0 0;
+  width: 100%;
+  max-width: none;
+  background: #f5f5f5;
 }
 
 .profile-banner {
-  width: 100%;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
 }
 
 .profile-banner__surface {
   position: relative;
   width: 100%;
-  height: 228px;
+  height: 232px;
   overflow: hidden;
-  border-radius: 24px;
+  border-radius: 0;
   background: linear-gradient(135deg, #d6def5 0%, #f2d4dc 50%, #d8e3fb 100%);
 }
 
@@ -1423,8 +1532,8 @@ export default {
 .profile-banner__fallback {
   display: flex;
   align-items: flex-end;
-  justify-content: flex-end;
-  padding: 20px 24px;
+  justify-content: flex-start;
+  padding: 18px 28px;
   background:
     radial-gradient(circle at top left, rgba(255, 255, 255, 0.32), transparent 28%),
     radial-gradient(circle at right center, rgba(120, 155, 255, 0.18), transparent 30%),
@@ -1434,14 +1543,14 @@ export default {
 }
 
 .profile-banner__fallback span {
-  padding: 8px 14px;
+  padding: 7px 12px;
   border-radius: 999px;
-  background: rgba(54, 66, 98, 0.2);
+  background: rgba(54, 66, 98, 0.16);
   backdrop-filter: blur(12px);
 }
 
 .profile-banner__overlay {
-  background: linear-gradient(180deg, rgba(17, 24, 39, 0.04) 0%, rgba(17, 24, 39, 0.22) 100%);
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.05) 0%, rgba(17, 24, 39, 0.18) 100%);
   pointer-events: none;
 }
 
@@ -1450,8 +1559,11 @@ export default {
   justify-content: space-between;
   align-items: flex-start;
   gap: 32px;
-  padding: 0 28px 24px;
-  margin-top: -42px;
+  max-width: 1024px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 24px 28px;
+  margin-top: -36px;
   position: relative;
   z-index: 2;
 }
@@ -1459,20 +1571,20 @@ export default {
 .profile-left {
   display: flex;
   align-items: flex-start;
-  gap: 24px;
+  gap: 28px;
   min-width: 0;
   flex: 1;
 }
 
 .profile-avatar {
-  width: 124px;
-  height: 124px;
+  width: 108px;
+  height: 108px;
   flex-shrink: 0;
-  margin-top: -10px;
+  margin-top: 0;
   border-radius: 50%;
-  border: 4px solid #fff;
+  border: 3px solid #fff;
   background: #fff;
-  box-shadow: 0 12px 28px rgba(28, 39, 67, 0.14);
+  box-shadow: 0 10px 24px rgba(28, 39, 67, 0.1);
   overflow: hidden;
 }
 
@@ -1480,6 +1592,20 @@ export default {
   display: block;
   width: 100%;
   height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.profile-avatar__fallback-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 42px;
+  color: #c0c4cc;
+  background: #f5f7fa;
+  border-radius: 50%;
 }
 
 .profile-meta {
@@ -1492,18 +1618,19 @@ export default {
 
 .profile-name {
   margin: 0;
-  font-size: 24px;
-  line-height: 1.2;
+  font-size: 32px;
+  line-height: 1.08;
   font-weight: 700;
-  color: #1f2430;
+  letter-spacing: -0.02em;
+  color: #131722;
 }
 
 .profile-handle-row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 16px;
-  color: #6c7484;
+  gap: 12px 16px;
+  color: #778091;
   font-size: 14px;
 }
 
@@ -1511,14 +1638,25 @@ export default {
 .profile-location {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+}
+
+.profile-inline-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f3f5f8;
+  color: #6b7383;
+  font-size: 12px;
 }
 
 .profile-stats {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 22px;
+  gap: 28px;
+  margin-top: 6px;
 }
 
 .profile-stat {
@@ -1529,6 +1667,7 @@ export default {
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
+  min-width: 54px;
   text-align: left;
 }
 
@@ -1545,37 +1684,20 @@ export default {
   font-size: 20px;
   line-height: 1;
   font-weight: 700;
-  color: #202636;
+  color: #171c27;
 }
 
 .profile-stat__label {
   font-size: 13px;
-  color: #7a8293;
-}
-
-.profile-extra {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.profile-extra__tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: #f1f4fb;
-  color: #667085;
-  font-size: 12px;
+  color: #8791a3;
 }
 
 .profile-bio {
   max-width: 620px;
-  margin: 0;
-  color: #4b5565;
-  font-size: 14px;
-  line-height: 1.85;
+  margin: 4px 0 0;
+  color: #4f5968;
+  font-size: 15px;
+  line-height: 1.9;
 }
 
 .profile-bio.is-empty {
@@ -1584,49 +1706,64 @@ export default {
 
 .profile-actions {
   display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-end;
   gap: 12px;
-  padding-top: 52px;
+  padding-top: 50px;
   flex-shrink: 0;
+  min-width: 190px;
+}
+
+.profile-actions__primary {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
 }
 
 .profile-action-btn {
-  min-width: 110px;
-  height: 36px;
+  min-width: 104px;
+  height: 35px;
+  padding: 0 17px;
   border-radius: 999px;
-  border-color: #d5dcea;
+  border-color: #d9e0ea;
   background: #fff;
+  color: #2f3947;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .profile-action-switch {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 8px 6px 12px;
-  border: 1px solid #d9e0ee;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0;
+  border: 0;
   border-radius: 999px;
-  background: #fff;
+  background: transparent;
 }
 
 .profile-action-switch__label {
-  font-size: 12px;
-  color: #7b8395;
+  font-size: 11px;
+  color: #96a1b1;
   white-space: nowrap;
 }
 
 .profile-action-switch ::v-deep .el-radio-group {
   display: inline-flex;
-  gap: 4px;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+  background: #f3f6fa;
 }
 
 .profile-action-switch ::v-deep .el-radio-button__inner {
-  padding: 7px 14px;
+  padding: 6px 12px;
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: #687386;
+  color: #738095;
+  font-size: 12px;
   box-shadow: none;
 }
 
@@ -1641,27 +1778,37 @@ export default {
 }
 
 .profile-tabs-wrap {
-  margin-top: 6px;
-  padding: 0 28px;
+  margin-top: 18px;
+  max-width: 1024px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 24px;
 }
 
 .profile-tabs {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 32px;
   border-bottom: 1px solid #e8ebf0;
   overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.profile-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .profile-tabs__item {
   border: 0;
-  padding: 0 0 16px;
+  padding: 0 0 14px;
   margin-bottom: -1px;
   background: transparent;
-  color: #6f7787;
+  color: #6b7280;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
+  outline: none;
   border-bottom: 3px solid transparent;
   transition: color 0.2s ease, border-color 0.2s ease;
   white-space: nowrap;
@@ -1685,11 +1832,12 @@ export default {
 
 .profile-subtabs__item {
   border: 0;
-  padding: 0 0 10px;
+  padding: 0 0 8px;
   background: transparent;
-  color: #7a8293;
+  color: #848d9d;
   font-size: 14px;
   cursor: pointer;
+  outline: none;
   border-bottom: 2px solid transparent;
   transition: color 0.2s ease, border-color 0.2s ease;
 }
@@ -1700,7 +1848,9 @@ export default {
 }
 
 .profile-content {
-  padding: 24px 28px 0;
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 24px 24px 0;
 }
 
 .content-section {
@@ -1712,18 +1862,18 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
 .section-heading__title {
   margin: 0;
-  font-size: 24px;
+  font-size: 23px;
   font-weight: 700;
   color: #202636;
 }
 
 .section-heading__desc {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   color: #8b95a7;
   font-size: 14px;
 }
@@ -1736,16 +1886,17 @@ export default {
 
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(212px, 1fr));
+  gap: 14px;
 }
 
 .content-card {
   overflow: hidden;
-  border-radius: 16px;
+  border: 1px solid #eef1f5;
+  border-radius: 12px;
   background: #fff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .content-card.is-clickable {
@@ -1754,7 +1905,8 @@ export default {
 
 .content-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
+  border-color: #dde4ee;
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
 }
 
 .content-card__cover {
@@ -1803,11 +1955,11 @@ export default {
 }
 
 .content-card__body {
-  padding: 14px;
+  padding: 12px 12px 13px;
 }
 
 .content-card__title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #202636;
   overflow: hidden;
@@ -1819,8 +1971,8 @@ export default {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 6px;
+  margin-top: 7px;
 }
 
 .meta-tag {
@@ -1851,10 +2003,11 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  padding: 18px 20px;
-  border-radius: 16px;
+  padding: 16px 18px;
+  border: 1px solid #eef1f5;
+  border-radius: 14px;
   background: #fff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
 }
 
 .project-card.is-clickable {
@@ -1864,7 +2017,8 @@ export default {
 
 .project-card.is-clickable:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
+  border-color: #dde4ee;
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
 }
 
 .project-card__main,
@@ -1875,16 +2029,16 @@ export default {
 
 .project-card__title,
 .stack-card__title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: #202636;
 }
 
 .project-card__desc {
-  margin: 8px 0 0;
+  margin: 7px 0 0;
   color: #6b7280;
-  font-size: 14px;
-  line-height: 1.7;
+  font-size: 13px;
+  line-height: 1.65;
 }
 
 .project-card__side {
@@ -1911,9 +2065,9 @@ export default {
 }
 
 .stack-card__thumb {
-  width: 86px;
-  height: 86px;
-  border-radius: 12px;
+  width: 82px;
+  height: 82px;
+  border-radius: 10px;
   object-fit: cover;
   flex-shrink: 0;
   background: #edf1f7;
@@ -1934,8 +2088,8 @@ export default {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 8px;
+  gap: 10px;
+  margin-top: 7px;
 }
 
 .stack-card__actions {
@@ -2072,40 +2226,36 @@ export default {
   display: inline-flex;
 }
 
+.cropper-container {
+  width: 100%;
+  height: 380px;
+}
+
 @media (max-width: 960px) {
   .profile-container {
-    max-width: none;
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-
-  .profile-header,
-  .profile-tabs-wrap,
-  .profile-content {
-    padding-left: 20px;
-    padding-right: 20px;
+    padding: 0 28px;
   }
 }
 
 @media (max-width: 768px) {
   .profile-banner__surface {
-    height: 210px;
+    height: 208px;
   }
 
   .profile-header {
     flex-direction: column;
-    gap: 18px;
+    gap: 14px;
+    margin-top: -32px;
   }
 
   .profile-left {
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
   }
 
   .profile-avatar {
-    width: 108px;
-    height: 108px;
-    margin-top: -24px;
+    width: 100px;
+    height: 100px;
   }
 
   .profile-meta,
@@ -2113,13 +2263,22 @@ export default {
     padding-top: 0;
   }
 
+  .profile-meta {
+    gap: 14px;
+  }
+
   .profile-actions {
     width: 100%;
+    align-items: flex-start;
+    min-width: 0;
+  }
+
+  .profile-actions__primary {
     justify-content: flex-start;
   }
 
   .profile-stats {
-    gap: 18px;
+    gap: 16px;
   }
 
   .edit-media-grid {
@@ -2140,24 +2299,49 @@ export default {
 
 @media (max-width: 520px) {
   .profile-container {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-
-  .profile-header,
-  .profile-tabs-wrap,
-  .profile-content {
-    padding-left: 12px;
-    padding-right: 12px;
+    padding: 0 16px;
   }
 
   .profile-name {
-    font-size: 22px;
+    font-size: 26px;
   }
 
   .profile-tabs,
   .profile-subtabs {
-    gap: 18px;
+    gap: 16px;
   }
+
+  .profile-banner__surface {
+    height: 196px;
+  }
+
+  .profile-avatar {
+    width: 92px;
+    height: 92px;
+  }
+
+  .profile-stats {
+    gap: 14px;
+  }
+}
+</style>
+
+<style lang="scss">
+body.profile-page-view #app .main-container,
+body.profile-page-view #app .app-main {
+  background: #f5f5f5 !important;
+}
+
+body.profile-page-view #app .app-main {
+  padding: 0 !important;
+}
+
+body.profile-page-view .main-layout {
+  background: #f5f5f5 !important;
+}
+
+body.profile-page-view .main-layout__content {
+  max-width: none !important;
+  padding: 0 !important;
 }
 </style>
