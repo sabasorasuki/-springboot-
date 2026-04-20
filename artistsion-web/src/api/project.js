@@ -26,5 +26,11 @@ export default {
       method: 'post',
       data
     })
+  },
+  deleteById(id) {
+    return request({
+      url: `/sysProject/deleteById/${id}`,
+      method: 'delete'
+    })
   }
 }

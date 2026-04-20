@@ -164,7 +164,12 @@
               <div v-if="activeSecondaryTab === 'works'">
                 <div v-if="works.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
                 <div v-else-if="works.list.length" class="card-grid">
-                  <article v-for="item in works.list" :key="item.id" class="content-card">
+                  <article
+                    v-for="item in works.list"
+                    :key="item.id"
+                    class="content-card is-clickable"
+                    @click="openWorkPreview(item)"
+                  >
                     <div class="content-card__cover">
                       <img
                         v-if="item.photoUrl && !item.photoBroken"
@@ -420,7 +425,12 @@
 
               <div v-if="works.loading" class="content-loading"><i class="el-icon-loading" /> 加载中…</div>
               <div v-else-if="works.list.length" class="card-grid">
-                <article v-for="item in works.list" :key="item.id" class="content-card">
+                <article
+                  v-for="item in works.list"
+                  :key="item.id"
+                  class="content-card is-clickable"
+                  @click="openWorkPreview(item)"
+                >
                   <div class="content-card__cover">
                     <img
                       v-if="item.photoUrl && !item.photoBroken"
@@ -510,6 +520,58 @@
             </section>
           </template>
         </section>
+
+        <el-dialog
+          :visible.sync="workPreviewVisible"
+          :title="null"
+          width="680px"
+          custom-class="profile-work-preview-dialog"
+          :show-close="true"
+          append-to-body
+        >
+          <div v-if="previewWorkItem" class="profile-preview-content">
+            <div class="profile-preview-image">
+              <img
+                v-if="previewWorkItem.photoUrl && !previewWorkItem.photoBroken"
+                :src="previewWorkItem.photoUrl"
+                alt=""
+                class="profile-preview-img"
+                @error="handlePreviewImageError"
+              >
+              <div v-else class="profile-preview-image__placeholder">
+                <span>暂无可预览图片</span>
+              </div>
+
+              <div v-if="previewCanDelete" class="profile-preview-image__actions">
+                <el-button
+                  size="mini"
+                  class="profile-preview-delete-btn"
+                  :loading="previewDeleteLoading"
+                  @click.stop="handleDeletePreviewWork"
+                >
+                  删除作品
+                </el-button>
+              </div>
+            </div>
+
+            <div class="profile-preview-info">
+              <div class="profile-preview-author" @click="goPreviewAuthor">
+                <img
+                  :src="profileAvatar || defaultAvatar"
+                  class="profile-preview-author__avatar"
+                  alt=""
+                >
+                <span class="profile-preview-author__name">{{ profileDisplayName }}</span>
+              </div>
+              <h2 v-if="previewWorkItem.title" class="profile-preview-title">{{ previewWorkItem.title }}</h2>
+              <div v-if="previewWorkItem.fenlei || previewWorkItem.fbdate" class="profile-preview-tags">
+                <span v-if="previewWorkItem.fenlei" class="meta-tag">{{ previewWorkItem.fenlei }}</span>
+                <span v-if="previewWorkItem.fbdate" class="meta-note">{{ previewWorkItem.fbdate }}</span>
+              </div>
+              <p v-if="previewWorkItem.content" class="profile-preview-desc">{{ previewWorkItem.content }}</p>
+            </div>
+          </div>
+        </el-dialog>
 
         <el-dialog
           :visible.sync="editDialogVisible"
@@ -613,17 +675,19 @@
             <vue-cropper
               ref="cropper"
               :img="cropperImageUrl"
-              :output-size="0.9"
+              :output-size="1"
               output-type="png"
               :auto-crop="true"
-              :auto-crop-width="cropperMode === 'avatar' ? 300 : 600"
-              :auto-crop-height="cropperMode === 'avatar' ? 300 : 200"
+              :auto-crop-width="cropperMode === 'avatar' ? 400 : 1200"
+              :auto-crop-height="cropperMode === 'avatar' ? 400 : 400"
               :fixed="true"
               :fixed-number="cropperMode === 'avatar' ? [1, 1] : [3, 1]"
               :center-box="true"
               :can-move-box="true"
               :can-scale="true"
-              :full="false"
+              :full="true"
+              :high="true"
+              :enlarge="2"
             />
           </div>
           <div slot="footer" class="dialog-footer">
@@ -650,6 +714,7 @@ import orderApi from '@/api/order'
 import { extractUploadFileName, normalizeImageUrl, ossUploadAction } from '@/utils/oss'
 import {
   buildCenterProfileRoute,
+  buildOtherArtistProfileRoute,
   getCenterProfileConfig,
   normalizeProfileViewMode,
   resolveCenterProfileState
@@ -705,6 +770,9 @@ export default {
       cropperMode: 'avatar',
       cropperImageUrl: '',
       cropperUploading: false,
+      workPreviewVisible: false,
+      previewWorkItem: null,
+      previewDeleteLoading: false,
       editForm: {
         id: null,
         username: '',
@@ -753,6 +821,9 @@ export default {
     },
     isArtistView() {
       return this.currentViewMode === 'artist'
+    },
+    previewCanDelete() {
+      return this.isSelf && !!(this.previewWorkItem && this.previewWorkItem.id)
     },
     profileSchema() {
       return getCenterProfileConfig(this.isSelf, this.currentViewMode)
@@ -1002,6 +1073,7 @@ export default {
       this.favorites = createListState(99)
       this.cart = createListState(6)
       this.orders = createListState(6)
+      this.closeWorkPreview()
     },
     normalizeUserId(value) {
       const numeric = Number(value)
@@ -1056,6 +1128,20 @@ export default {
     },
     normalizeMediaList(list) {
       return Array.isArray(list) ? list.map(item => this.normalizeMediaItem(item)) : []
+    },
+    openWorkPreview(item) {
+      if (!item) return
+      this.previewWorkItem = {
+        ...item,
+        photoUrl: normalizeImageUrl(item.photo) || item.photoUrl,
+        photoBroken: !!item.photoBroken
+      }
+      this.workPreviewVisible = true
+    },
+    closeWorkPreview() {
+      this.workPreviewVisible = false
+      this.previewWorkItem = null
+      this.previewDeleteLoading = false
     },
     async fetchWorks() {
       this.works.loading = true
@@ -1200,6 +1286,16 @@ export default {
     },
     handleCardImageError(item) {
       this.$set(item, 'photoBroken', true)
+    },
+    handlePreviewImageError() {
+      if (this.previewWorkItem) {
+        this.$set(this.previewWorkItem, 'photoBroken', true)
+      }
+    },
+    goPreviewAuthor() {
+      if (!this.profileUserId || this.isSelf) return
+      this.workPreviewVisible = false
+      this.$router.push(buildOtherArtistProfileRoute(this.profileUserId, 'featuredWorks'))
     },
     openEditDialog() {
       this.applyProfileToForm(this.profile)
@@ -1435,6 +1531,24 @@ export default {
     goProjectDetail(id) {
       if (!id) return
       this.$router.push('/project/' + id)
+    },
+    async handleDeletePreviewWork() {
+      if (!this.previewCanDelete || !this.previewWorkItem || !this.previewWorkItem.id) return
+      this.$confirm(`确认删除作品《${this.previewWorkItem.title || '未命名作品'}》吗？删除后无法恢复。`, '删除确认', {
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        this.previewDeleteLoading = true
+        try {
+          const response = await fenxiangApi.deleteById(this.previewWorkItem.id)
+          this.$message.success(response.message || '作品已删除')
+          await this.fetchWorks()
+          this.closeWorkPreview()
+        } finally {
+          this.previewDeleteLoading = false
+        }
+      }).catch(() => {})
     },
     openOrdersTab() {
       const wasOrdersTab = this.activePrimaryTab === 'orders'
@@ -1975,6 +2089,89 @@ export default {
   margin-top: 7px;
 }
 
+.profile-preview-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profile-preview-image {
+  position: relative;
+  width: 100%;
+  max-height: 420px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #f5f5f5;
+}
+
+.profile-preview-img {
+  width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+}
+
+.profile-preview-image__placeholder {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7b8796;
+  background: linear-gradient(135deg, #eef2fa 0%, #f7f9fc 100%);
+}
+
+.profile-preview-image__actions {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+}
+
+.profile-preview-info {
+  padding: 0 4px;
+}
+
+.profile-preview-author {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.profile-preview-author__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-preview-author__name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #202636;
+}
+
+.profile-preview-title {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #202636;
+}
+
+.profile-preview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.profile-preview-desc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.75;
+  color: #667085;
+  white-space: pre-line;
+}
+
 .meta-tag {
   display: inline-flex;
   align-items: center;
@@ -2343,5 +2540,32 @@ body.profile-page-view .main-layout {
 body.profile-page-view .main-layout__content {
   max-width: none !important;
   padding: 0 !important;
+}
+
+.profile-work-preview-dialog {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.profile-work-preview-dialog .el-dialog__header {
+  padding: 12px 16px 0;
+}
+
+.profile-work-preview-dialog .el-dialog__body {
+  padding: 0 24px 24px;
+}
+
+.profile-preview-delete-btn {
+  border-color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.92);
+  color: #202636;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+}
+
+.profile-preview-delete-btn:hover,
+.profile-preview-delete-btn:focus {
+  border-color: #fff;
+  background: #fff;
+  color: #d14343;
 }
 </style>

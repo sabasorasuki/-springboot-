@@ -45,7 +45,7 @@
             >{{ project.status }}</span>
           </div>
           <div class="project-card__footer">
-            <div class="publisher">
+            <div class="publisher publisher--clickable" @click.stop="goPublisher(project.userId)">
               <img :src="project.userAvatar" class="publisher-avatar" alt="">
               <span class="publisher-name">{{ project.username }}</span>
             </div>
@@ -76,6 +76,7 @@
 
 <script>
 import projectApi from '@/api/project'
+import { buildOtherClientProfileRoute } from '@/utils/centerProfile'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
@@ -137,6 +138,10 @@ export default {
     },
     goDetail(id) {
       this.$router.push('/project/' + id)
+    },
+    goPublisher(userId) {
+      if (!userId) return
+      this.$router.push(buildOtherClientProfileRoute(userId, 'projects'))
     },
     onApply(id) {
       this.$message.info('应征功能即将上线')
@@ -310,6 +315,14 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.publisher--clickable {
+  cursor: pointer;
+}
+
+.publisher--clickable:hover .publisher-name {
+  color: #6c5ce7;
 }
 
 .publisher-avatar {

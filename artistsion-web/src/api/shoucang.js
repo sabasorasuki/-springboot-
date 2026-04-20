@@ -9,7 +9,8 @@ export default {
         pageNo: searchModel.pageNo,
         pageSize: searchModel.pageSize,
         title: searchModel.title,
-        userids: searchModel.userids
+        userids: searchModel.userids,
+        wzids: searchModel.wzids
       }
     })
   },

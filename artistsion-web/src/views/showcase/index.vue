@@ -67,6 +67,7 @@
 import huagaoApi from '@/api/huagao'
 import fenleiApi from '@/api/fenlei'
 import { normalizeImageUrl } from '@/utils/oss'
+import { buildOtherArtistProfileRoute } from '@/utils/centerProfile'
 
 export default {
   name: 'ShowcasePage',
@@ -137,7 +138,7 @@ export default {
     goAuthor(item) {
       const authorId = item.shangjiaids
       if (authorId) {
-        this.$router.push('/center/profile/' + authorId)
+        this.$router.push(buildOtherArtistProfileRoute(authorId, 'showcase'))
       }
     }
   }

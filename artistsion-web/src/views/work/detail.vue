@@ -38,6 +38,16 @@
           <div class="detail-actions">
             <el-button type="primary" icon="el-icon-shopping-cart-2" round :loading="cartLoading" @click="addToCart">加入购物车</el-button>
             <el-button :icon="isFav ? 'el-icon-star-on' : 'el-icon-star-off'" :type="isFav ? 'warning' : 'default'" round :loading="favLoading" @click="toggleFav">{{ isFav ? '已收藏' : '收藏' }}</el-button>
+            <el-button
+              v-if="isOwner"
+              type="danger"
+              plain
+              round
+              :loading="deleteLoading"
+              @click="handleDelete"
+            >
+              删除投稿
+            </el-button>
             <el-button type="danger" plain round @click="openReportDialog">举报作品</el-button>
           </div>
         </div>
@@ -75,6 +85,7 @@ import shoucangApi from '@/api/shoucang'
 import orderApi from '@/api/order'
 import ReportDialog from '@/components/ReportDialog'
 import { normalizeImageUrl } from '@/utils/oss'
+import { buildCenterProfileRoute, buildOtherArtistProfileRoute } from '@/utils/centerProfile'
 
 export default {
   name: 'WorkDetail',
@@ -90,13 +101,18 @@ export default {
       favId: null,
       favLoading: false,
       cartLoading: false,
-      reportVisible: false
+      reportVisible: false,
+      deleteLoading: false
     }
   },
   computed: {
     ...mapGetters(['userId']),
     workPhotoUrl() {
       return normalizeImageUrl(this.work && this.work.photo)
+    },
+    isOwner() {
+      if (!this.work || !this.userId) return false
+      return String(this.work.shangjiaids) === String(this.userId)
     }
   },
   created() {
@@ -120,6 +136,8 @@ export default {
       }
     },
     async checkFav() {
+      this.isFav = false
+      this.favId = null
       if (!this.userId || !this.work) return
       try {
         const res = await shoucangApi.getList1({ wzids: String(this.work.id), userids: String(this.userId) })
@@ -149,7 +167,7 @@ export default {
             userids: String(this.userId)
           })
           this.$message.success('收藏成功')
-          this.checkFav()
+          await this.checkFav()
         }
       } catch (e) {
         this.$message.error('操作失败')
@@ -161,7 +179,7 @@ export default {
       if (!this.userId) { this.$message.warning('请先登录'); return }
       this.cartLoading = true
       try {
-        await orderApi.add({
+        const res = await orderApi.add({
           name: this.work.name,
           photo: this.workPhotoUrl || this.work.photo || '',
           price: this.work.price,
@@ -170,18 +188,40 @@ export default {
           userids: String(this.userId),
           status: '购物车'
         })
-        this.$message.success('已加入购物车')
+        this.$message.success((res && res.message) || '已加入购物车')
       } catch (e) {
-        this.$message.error('加入购物车失败')
+        this.$message.error(e.message || '加入购物车失败')
       } finally {
         this.cartLoading = false
       }
     },
     goArtist(artistId) {
-      this.$router.push('/center/profile/' + artistId)
+      this.$router.push(buildOtherArtistProfileRoute(artistId, 'showcase'))
     },
     handlePhotoError() {
       this.photoBroken = true
+    },
+    handleDelete() {
+      if (!this.work || !this.work.id) return
+      this.$confirm(`确认删除投稿《${this.work.name || '未命名投稿'}》吗？删除后无法恢复。`, '删除确认', {
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        this.deleteLoading = true
+        try {
+          const res = await huagaoApi.deleteById(this.work.id)
+          this.$message.success(res.message || '投稿已删除')
+          this.$router.replace(buildCenterProfileRoute({
+            isSelf: true,
+            viewMode: 'artist',
+            tab: 'submissions',
+            sub: 'showcase'
+          }))
+        } finally {
+          this.deleteLoading = false
+        }
+      }).catch(() => {})
     },
     openReportDialog() {
       this.reportVisible = true

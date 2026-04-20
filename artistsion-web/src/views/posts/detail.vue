@@ -15,6 +15,16 @@
           </div>
         </div>
         <div class="hero-actions">
+          <el-button
+            v-if="isOwner"
+            type="danger"
+            plain
+            round
+            :loading="deleteLoading"
+            @click="handleDelete"
+          >
+            删除投稿
+          </el-button>
           <el-button type="danger" plain round @click="openReportDialog">举报内容</el-button>
         </div>
       </section>
@@ -43,8 +53,10 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import fenxiangApi from '@/api/fenxiang'
 import ReportDialog from '@/components/ReportDialog'
+import { buildCenterProfileRoute } from '@/utils/centerProfile'
 
 export default {
   name: 'PostDetail',
@@ -55,7 +67,15 @@ export default {
     return {
       loading: true,
       post: null,
-      reportVisible: false
+      reportVisible: false,
+      deleteLoading: false
+    }
+  },
+  computed: {
+    ...mapGetters(['userId']),
+    isOwner() {
+      if (!this.post || !this.userId) return false
+      return String(this.post.userids) === String(this.userId)
     }
   },
   created() {
@@ -78,6 +98,28 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+    handleDelete() {
+      if (!this.post || !this.post.id) return
+      this.$confirm(`确认删除投稿《${this.post.title || '未命名投稿'}》吗？删除后无法恢复。`, '删除确认', {
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        this.deleteLoading = true
+        try {
+          const response = await fenxiangApi.deleteById(this.post.id)
+          this.$message.success(response.message || '投稿已删除')
+          this.$router.replace(buildCenterProfileRoute({
+            isSelf: true,
+            viewMode: 'artist',
+            tab: 'submissions',
+            sub: 'works'
+          }))
+        } finally {
+          this.deleteLoading = false
+        }
+      }).catch(() => {})
     },
     openReportDialog() {
       this.reportVisible = true

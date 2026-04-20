@@ -123,6 +123,17 @@ public class SysOrderController {
 
     @PostMapping("/add")
     public Result<?> add(@RequestBody SysOrder shetuan){
+        if ("购物车".equals(shetuan.getStatus())
+                && StringUtils.hasLength(shetuan.getUserids())
+                && StringUtils.hasLength(shetuan.getSpids())) {
+            LambdaQueryWrapper<SysOrder> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(SysOrder::getUserids, shetuan.getUserids());
+            wrapper.eq(SysOrder::getSpids, shetuan.getSpids());
+            wrapper.eq(SysOrder::getStatus, "购物车");
+            if (service.count(wrapper) > 0) {
+                return Result.success("该橱窗已在购物车中");
+            }
+        }
         Date now = new Date();
         shetuan.setXddate(now);
         service.save(shetuan);

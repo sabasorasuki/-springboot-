@@ -4,12 +4,15 @@ package com.lf.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lf.common.Result;
+import com.lf.common.utils.JwtUtil;
 import com.lf.entity.SysZuopin;
+import com.lf.entity.User;
 import com.lf.service.SysZuopinService;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +33,9 @@ public class SysZuopinController {
 
     @Resource
     private SysZuopinService service;
+
+    @Resource
+    private JwtUtil jwtUtil;
 
 
     @GetMapping("/list")
@@ -89,7 +95,26 @@ public class SysZuopinController {
     }
 
     @DeleteMapping("/deleteById/{id}")
-    public Result<SysZuopin> deleteById(@PathVariable("id") Integer id){
+    public Result<SysZuopin> deleteById(HttpServletRequest request, @PathVariable("id") Integer id){
+        SysZuopin zuopin = service.getById(id);
+        if (zuopin == null) {
+            return Result.fail(20001, "投稿不存在");
+        }
+
+        User loginUser;
+        try {
+            loginUser = jwtUtil.parseToken(request.getHeader("X-Token"), User.class);
+        } catch (Exception e) {
+            return Result.fail(20003, "令牌无效");
+        }
+
+        if (loginUser == null || loginUser.getId() == null) {
+            return Result.fail(20003, "未登录");
+        }
+        if (!String.valueOf(loginUser.getId()).equals(zuopin.getUserids())) {
+            return Result.fail(20001, "只能删除自己的投稿");
+        }
+
         service.removeById(id);
         return Result.success("删除成功");
     }

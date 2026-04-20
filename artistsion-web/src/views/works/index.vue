@@ -107,6 +107,7 @@
 import fenxiangApi from '@/api/fenxiang'
 import fenleiApi from '@/api/fenlei'
 import { normalizeImageUrl } from '@/utils/oss'
+import { buildOtherArtistProfileRoute } from '@/utils/centerProfile'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
@@ -194,7 +195,7 @@ export default {
       const authorId = item.userids || item.userId
       if (authorId) {
         this.previewVisible = false
-        this.$router.push('/center/profile/' + authorId)
+        this.$router.push(buildOtherArtistProfileRoute(authorId, 'featuredWorks'))
       }
     }
   }

@@ -135,6 +135,24 @@ export function buildCenterProfileRoute({ isSelf = true, userId = null, viewMode
   }
 }
 
+export function buildOtherArtistProfileRoute(userId, tab = 'featuredWorks') {
+  return buildCenterProfileRoute({
+    isSelf: false,
+    userId,
+    viewMode: PROFILE_MODE_ARTIST,
+    tab
+  })
+}
+
+export function buildOtherClientProfileRoute(userId, tab = 'projects') {
+  return buildCenterProfileRoute({
+    isSelf: false,
+    userId,
+    viewMode: PROFILE_MODE_CLIENT,
+    tab
+  })
+}
+
 export function getCenterDropdownItems(displayMode) {
   const mode = normalizeProfileViewMode(displayMode)
   return dropdownItemsByMode[mode].map(item => ({ ...item }))

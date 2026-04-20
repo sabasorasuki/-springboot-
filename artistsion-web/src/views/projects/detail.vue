@@ -31,7 +31,7 @@
         </div>
 
         <!-- 发布者 -->
-        <div class="publisher-row">
+        <div class="publisher-row publisher-row--clickable" @click="goPublisherProfile">
           <el-avatar :size="36" :src="project.userAvatar" icon="el-icon-user" />
           <span class="publisher-name">{{ project.username }}</span>
         </div>
@@ -40,6 +40,16 @@
         <div class="action-row">
           <el-button type="primary" round icon="el-icon-edit">我要应征</el-button>
           <el-button round icon="el-icon-star-off">收藏企划</el-button>
+          <el-button
+            v-if="isOwner"
+            type="danger"
+            plain
+            round
+            :loading="deleteLoading"
+            @click="handleDelete"
+          >
+            删除企划
+          </el-button>
         </div>
       </div>
     </template>
@@ -48,7 +58,9 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import projectApi from '@/api/project'
+import { buildCenterProfileRoute, buildOtherClientProfileRoute } from '@/utils/centerProfile'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
@@ -57,14 +69,20 @@ export default {
   data() {
     return {
       loading: true,
-      project: null
+      project: null,
+      deleteLoading: false
     }
   },
   computed: {
+    ...mapGetters(['userId']),
     statusClass() {
       if (!this.project) return ''
       const map = { '招募中': 'recruiting', '进行中': 'ongoing', '已完成': 'done', '已关闭': 'closed' }
       return map[this.project.status] || ''
+    },
+    isOwner() {
+      if (!this.project || !this.userId) return false
+      return Number(this.project.userId) === Number(this.userId)
     }
   },
   created() {
@@ -88,6 +106,31 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+    handleDelete() {
+      if (!this.project || !this.project.id) return
+      this.$confirm(`确认删除企划《${this.project.title || '未命名企划'}》吗？删除后无法恢复。`, '删除确认', {
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        this.deleteLoading = true
+        try {
+          const res = await projectApi.deleteById(this.project.id)
+          this.$message.success(res.message || '企划已删除')
+          this.$router.replace(buildCenterProfileRoute({
+            isSelf: true,
+            viewMode: 'client',
+            tab: 'projects'
+          }))
+        } finally {
+          this.deleteLoading = false
+        }
+      }).catch(() => {})
+    },
+    goPublisherProfile() {
+      if (!this.project || !this.project.userId) return
+      this.$router.push(buildOtherClientProfileRoute(this.project.userId, 'projects'))
     }
   }
 }
@@ -219,6 +262,14 @@ export default {
   margin-bottom: 24px;
   padding-top: 16px;
   border-top: 1px solid #f0f0f0;
+}
+
+.publisher-row--clickable {
+  cursor: pointer;
+}
+
+.publisher-row--clickable:hover .publisher-name {
+  color: #6c5ce7;
 }
 
 .publisher-name {

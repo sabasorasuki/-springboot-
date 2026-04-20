@@ -86,6 +86,7 @@
 <script>
 import artistApi from '@/api/artist'
 import fenleiApi from '@/api/fenlei'
+import { buildOtherArtistProfileRoute } from '@/utils/centerProfile'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
@@ -143,7 +144,7 @@ export default {
     },
 
     goArtistDetail(id) {
-      this.$router.push('/center/profile/' + id)
+      this.$router.push(buildOtherArtistProfileRoute(id, 'featuredWorks'))
     }
   }
 }

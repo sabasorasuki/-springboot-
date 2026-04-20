@@ -13,9 +13,8 @@ function buildSelfCenterRedirect(tab, sub, mode = getPersistedDisplayMode()) {
   })
 }
 
-/* Layout */
-import Layout from '@/layout'
 import MainLayout from '@/layout/MainLayout'
+import AdminLayout from '@/layout/AdminLayout'
 
 /**
  * Note: sub-menu only appear when route children.length >= 1
@@ -54,7 +53,7 @@ export const constantRoutes = [
   },
   {
     path: '/admin/*',
-    component: Layout,
+    component: AdminLayout,
     hidden: true
   },
   {
@@ -219,19 +218,17 @@ export const constantRoutes = [
       }
     ]
   },
-  // ── 旧后台管理路由（保留原 Layout） ──
+  // ── 管理后台路由（使用 AdminLayout） ──
   {
     path: '/',
-    component: Layout,
+    component: AdminLayout,
     redirect: '/home',
     children: [{
-      // admin 过渡版首页：当前已改造成管理看板，继续作为 /admin 的默认落点。
       path: 'dashboard',
       name: 'Dashboard',
       component: () => import('@/views/dashboard/index'),
-      meta: { title: '控制台', icon: 'dashboard', affix: true, noCache: false }
+      meta: { title: '控制台' }
     },
-    // 兼容保留：以下隐藏路由本质上是旧用户自助页，后续会迁出 admin 侧信息架构。
     {
       path: '/userinfo',
       name: 'AdminProfile',

@@ -4,6 +4,7 @@ package com.lf.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lf.common.Result;
+import com.lf.common.utils.JwtUtil;
 import com.lf.entity.SysHuagao;
 import com.lf.entity.User;
 import com.lf.dao.UserMapper;
@@ -12,6 +13,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,9 @@ public class SysHuagaoController {
 
     @Resource
     private UserMapper userMapper;
+
+    @Resource
+    private JwtUtil jwtUtil;
 
 
     @GetMapping("/tuijianlist")
@@ -152,7 +157,26 @@ public class SysHuagaoController {
     }
 
     @DeleteMapping("/deleteById/{id}")
-    public Result<SysHuagao> deleteById(@PathVariable("id") Integer id){
+    public Result<SysHuagao> deleteById(HttpServletRequest request, @PathVariable("id") Integer id){
+        SysHuagao huagao = service.getById(id);
+        if (huagao == null) {
+            return Result.fail(20001, "投稿不存在");
+        }
+
+        User loginUser;
+        try {
+            loginUser = jwtUtil.parseToken(request.getHeader("X-Token"), User.class);
+        } catch (Exception e) {
+            return Result.fail(20003, "令牌无效");
+        }
+
+        if (loginUser == null || loginUser.getId() == null) {
+            return Result.fail(20003, "未登录");
+        }
+        if (!String.valueOf(loginUser.getId()).equals(huagao.getShangjiaids())) {
+            return Result.fail(20001, "只能删除自己的投稿");
+        }
+
         service.removeById(id);
         return Result.success("删除成功");
     }

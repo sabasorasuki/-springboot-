@@ -36,11 +36,13 @@ public class SysShoucangController {
     public Result<Map<String,Object>> getList(
             @RequestParam(value = "title",required = false) String title,
             @RequestParam(value = "userids",required = false) String userids,
+            @RequestParam(value = "wzids",required = false) String wzids,
             @RequestParam(value = "pageNo") Long pageNo,
             @RequestParam(value = "pageSize") Long pageSize){
         LambdaQueryWrapper<SysShoucang> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StringUtils.hasLength(title),SysShoucang::getTitle,title);
         wrapper.eq(StringUtils.hasLength(userids),SysShoucang::getUserids,userids);
+        wrapper.eq(StringUtils.hasLength(wzids),SysShoucang::getWzids,wzids);
         wrapper.orderByDesc(SysShoucang::getId);
 
         Page<SysShoucang> page = new Page<>(pageNo,pageSize);
@@ -72,6 +74,12 @@ public class SysShoucangController {
 
     @PostMapping("/add")
     public Result<?> add(@RequestBody SysShoucang shetuan){
+        LambdaQueryWrapper<SysShoucang> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(StringUtils.hasLength(shetuan.getUserids()), SysShoucang::getUserids, shetuan.getUserids());
+        wrapper.eq(StringUtils.hasLength(shetuan.getWzids()), SysShoucang::getWzids, shetuan.getWzids());
+        if (StringUtils.hasLength(shetuan.getUserids()) && StringUtils.hasLength(shetuan.getWzids()) && service.count(wrapper) > 0) {
+            return Result.success("已收藏");
+        }
         service.save(shetuan);
         return Result.success("添加成功");
     }

@@ -90,6 +90,7 @@
 import { mapGetters } from 'vuex'
 import followApi from '@/api/follow'
 import userApi from '@/api/userManage'
+import { buildOtherClientProfileRoute } from '@/utils/centerProfile'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
@@ -158,7 +159,7 @@ export default {
       return this.followingIds.has(id)
     },
     goArtist(id) {
-      this.$router.push('/center/profile/' + id)
+      this.$router.push(buildOtherClientProfileRoute(id, 'projects'))
     },
     async handleUnfollow(user) {
       try {
