@@ -4,67 +4,159 @@
       <i class="el-icon-loading" /> 加载中…
     </div>
     <template v-else-if="work">
-      <!-- 主体区域 -->
-      <div class="detail-main">
-        <!-- 左：大图 -->
-        <div class="detail-cover">
-          <img
-            v-if="workPhotoUrl && !photoBroken"
-            :src="workPhotoUrl"
-            alt=""
-            class="cover-img"
-            @error="handlePhotoError"
-          >
-          <div v-else class="cover-placeholder">
-            <span class="cover-placeholder__label">暂无封面</span>
-          </div>
-        </div>
-        <!-- 右：信息 -->
-        <div class="detail-info">
-          <h1 class="detail-title">{{ work.name }}</h1>
-          <div class="detail-meta">
-            <span v-if="work.fenlei" class="meta-tag">{{ work.fenlei }}</span>
-            <span v-if="work.type" class="meta-status">{{ work.type }}</span>
-          </div>
-          <div class="detail-price-row">
-            <span class="price">¥{{ work.price }}</span>
-            <span v-if="work.zhekou && work.zhekou < 10" class="discount">{{ work.zhekou }}折</span>
-          </div>
-          <div v-if="work.shangjiaids" class="detail-artist">
-            <span class="label">画师：</span>
-            <span v-if="work.artistName" class="artist-name-text">{{ work.artistName }}</span>
-            <el-button type="text" @click="goArtist(work.shangjiaids)">查看画师主页</el-button>
-          </div>
-          <div class="detail-actions">
-            <el-button type="primary" icon="el-icon-shopping-cart-2" round :loading="cartLoading" @click="addToCart">加入购物车</el-button>
-            <el-button :icon="isFav ? 'el-icon-star-on' : 'el-icon-star-off'" :type="isFav ? 'warning' : 'default'" round :loading="favLoading" @click="toggleFav">{{ isFav ? '已收藏' : '收藏' }}</el-button>
-            <el-button
-              v-if="isOwner"
-              type="danger"
-              plain
-              round
-              :loading="deleteLoading"
-              @click="handleDelete"
+      <div class="detail-layout">
+        <!-- ========== 左栏：图片 + 标签行 + 标签页 ========== -->
+        <div class="detail-left">
+          <!-- 大图 -->
+          <div class="detail-cover">
+            <img
+              v-if="workPhotoUrl && !photoBroken"
+              :src="workPhotoUrl"
+              alt=""
+              class="cover-img"
+              @error="handlePhotoError"
             >
-              删除投稿
-            </el-button>
-            <el-button type="danger" plain round @click="openReportDialog">举报作品</el-button>
+            <div v-else class="cover-placeholder">
+              <span class="cover-placeholder__label">暂无封面</span>
+            </div>
+          </div>
+          <!-- 图片下方：分类 + 举报图标 -->
+          <div class="cover-bar">
+            <div class="cover-bar__left">
+              <span v-if="work.fenlei" class="bar-tag">{{ work.fenlei }}</span>
+              <span v-if="work.type" class="bar-status">{{ work.type }}</span>
+            </div>
+            <el-tooltip content="举报" placement="top">
+              <i class="el-icon-warning-outline bar-report-icon" @click="openReportDialog" />
+            </el-tooltip>
+          </div>
+          <!-- 标签页 -->
+          <div class="detail-tabs">
+            <div class="tabs-nav">
+              <span
+                class="tab-item"
+                :class="{ 'is-active': activeTab === 'info' }"
+                @click="activeTab = 'info'"
+              >橱窗详情</span>
+              <span
+                class="tab-item"
+                :class="{ 'is-active': activeTab === 'comments' }"
+                @click="activeTab = 'comments'"
+              >评价<template v-if="commentTotal">（{{ commentTotal }}）</template></span>
+            </div>
+            <!-- 橱窗详情 -->
+            <div v-show="activeTab === 'info'" class="tab-panel">
+              <div v-if="work.content" class="rich-content" v-html="work.content" />
+              <el-empty v-else description="暂无详情" :image-size="80" />
+              <div v-if="work.fujin" class="attachment-section">
+                <a :href="work.fujin" target="_blank" class="attachment-link">
+                  <i class="el-icon-paperclip" /> 下载附件
+                </a>
+              </div>
+            </div>
+            <!-- 评价 -->
+            <div v-show="activeTab === 'comments'" class="tab-panel">
+              <div v-if="comments.length" class="comment-list">
+                <div v-for="c in comments" :key="c.id" class="comment-item">
+                  <img
+                    v-if="c.avatar"
+                    :src="normalizeImageUrl(c.avatar)"
+                    class="comment-avatar"
+                    @error="e => e.target.style.display='none'"
+                  >
+                  <div v-else class="comment-avatar comment-avatar--placeholder">
+                    <i class="el-icon-user" />
+                  </div>
+                  <div class="comment-body">
+                    <div class="comment-header">
+                      <span class="comment-name">{{ c.plname || '匿名用户' }}</span>
+                      <span class="comment-date">{{ c.pldate }}</span>
+                    </div>
+                    <div class="comment-text">{{ c.content }}</div>
+                  </div>
+                </div>
+              </div>
+              <el-empty v-else description="暂无评价" :image-size="80" />
+              <!-- 发表评价 -->
+              <div v-if="userId" class="comment-form">
+                <el-input
+                  v-model="newComment"
+                  type="textarea"
+                  :rows="3"
+                  placeholder="写下你的评价…"
+                  maxlength="500"
+                  show-word-limit
+                />
+                <el-button
+                  type="primary"
+                  size="small"
+                  :loading="commentSubmitting"
+                  :disabled="!newComment.trim()"
+                  style="margin-top:8px"
+                  @click="submitComment"
+                >发表评价</el-button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- 详细介绍 -->
-      <div v-if="work.content" class="detail-content-section">
-        <h2 class="section-title">作品介绍</h2>
-        <div class="rich-content" v-html="work.content" />
-      </div>
-
-      <!-- 附件 -->
-      <div v-if="work.fujin" class="detail-content-section">
-        <h2 class="section-title">附件</h2>
-        <a :href="work.fujin" target="_blank" class="attachment-link">
-          <i class="el-icon-paperclip" /> 下载附件
-        </a>
+        <!-- ========== 右栏：作者卡片 + 价格 + 操作 ========== -->
+        <div class="detail-right">
+          <!-- 作者信息卡 -->
+          <div class="artist-card" @click="goArtist(work.shangjiaids)">
+            <img
+              v-if="artistInfo && artistInfo.avatar"
+              :src="normalizeImageUrl(artistInfo.avatar)"
+              class="artist-avatar"
+              @error="e => e.target.style.display='none'"
+            >
+            <div v-else class="artist-avatar artist-avatar--placeholder">
+              <i class="el-icon-user" />
+            </div>
+            <div class="artist-meta">
+              <span class="artist-name">{{ artistDisplayName }}</span>
+              <span v-if="artistInfo && artistInfo.bio" class="artist-bio">{{ artistInfo.bio }}</span>
+              <span v-if="artistInfo && artistInfo.workCount != null" class="artist-stat">
+                {{ artistInfo.workCount }} 件作品在售
+              </span>
+            </div>
+          </div>
+          <!-- 价格 -->
+          <div class="price-block">
+            <span class="price-label">橱窗价格</span>
+            <div class="price-row">
+              <span class="price-value">¥{{ work.price }}</span>
+              <span v-if="work.zhekou && work.zhekou > 0" class="price-discount">优惠 ¥{{ work.zhekou }}</span>
+            </div>
+          </div>
+          <!-- 操作按钮列 -->
+          <div class="action-stack">
+            <el-button type="primary" class="action-btn" :loading="buyLoading" @click="buyNow">
+              <i class="el-icon-shopping-bag-1" /> 立即购买
+            </el-button>
+            <el-button class="action-btn action-btn--cart" :loading="cartLoading" @click="addToCart">
+              <i class="el-icon-shopping-cart-2" /> 加入购物车
+            </el-button>
+            <el-button
+              class="action-btn action-btn--fav"
+              :class="{ 'is-faved': isFav }"
+              :loading="favLoading"
+              @click="toggleFav"
+            >
+              <i :class="isFav ? 'el-icon-star-on' : 'el-icon-star-off'" /> {{ isFav ? '已收藏' : '收藏橱窗' }}
+            </el-button>
+          </div>
+          <!-- 删除（仅自己） -->
+          <el-button
+            v-if="isOwner"
+            type="text"
+            class="delete-link"
+            :loading="deleteLoading"
+            @click="handleDelete"
+          >
+            <i class="el-icon-delete" /> 删除投稿
+          </el-button>
+        </div>
       </div>
     </template>
     <el-empty v-else description="作品不存在或已下架" />
@@ -83,42 +175,59 @@ import { mapGetters } from 'vuex'
 import huagaoApi from '@/api/huagao'
 import shoucangApi from '@/api/shoucang'
 import orderApi from '@/api/order'
+import pinglunApi from '@/api/pinglun'
+import userApi from '@/api/userManage'
 import ReportDialog from '@/components/ReportDialog'
 import { normalizeImageUrl } from '@/utils/oss'
 import { buildCenterProfileRoute, buildOtherArtistProfileRoute } from '@/utils/centerProfile'
 
 export default {
   name: 'WorkDetail',
-  components: {
-    ReportDialog
-  },
+  components: { ReportDialog },
   data() {
     return {
       loading: true,
       work: null,
       photoBroken: false,
+      activeTab: 'info',
+      // artist
+      artistInfo: null,
+      // fav
       isFav: false,
       favId: null,
       favLoading: false,
+      // cart / buy
       cartLoading: false,
+      buyLoading: false,
+      // comments
+      comments: [],
+      commentTotal: 0,
+      newComment: '',
+      commentSubmitting: false,
+      // misc
       reportVisible: false,
       deleteLoading: false
     }
   },
   computed: {
-    ...mapGetters(['userId']),
+    ...mapGetters(['userId', 'name', 'avatar']),
     workPhotoUrl() {
       return normalizeImageUrl(this.work && this.work.photo)
     },
     isOwner() {
       if (!this.work || !this.userId) return false
       return String(this.work.shangjiaids) === String(this.userId)
+    },
+    artistDisplayName() {
+      if (this.artistInfo) return this.artistInfo.name || this.artistInfo.username || '画师'
+      return this.work && this.work.artistName ? this.work.artistName : '画师'
     }
   },
   created() {
     this.fetchWork()
   },
   methods: {
+    normalizeImageUrl,
     async fetchWork() {
       const id = this.$route.params.id
       if (!id) { this.loading = false; return }
@@ -128,11 +237,51 @@ export default {
           this.work = res.data
           this.photoBroken = false
           this.checkFav()
+          this.fetchArtist()
+          this.fetchComments()
         }
       } catch (e) {
         console.error('获取作品详情失败', e)
       } finally {
         this.loading = false
+      }
+    },
+    async fetchArtist() {
+      if (!this.work || !this.work.shangjiaids) return
+      try {
+        const res = await userApi.getUserById(this.work.shangjiaids)
+        if (res.code === 20000 && res.data) {
+          this.artistInfo = res.data
+        }
+      } catch (_) { /* ignore */ }
+    },
+    async fetchComments() {
+      if (!this.work) return
+      try {
+        const res = await pinglunApi.getList1({ wzids: String(this.work.id) })
+        const rows = res.data && res.data.rows ? res.data.rows : []
+        this.comments = rows
+        this.commentTotal = rows.length
+      } catch (_) { /* ignore */ }
+    },
+    async submitComment() {
+      if (!this.userId) { this.$message.warning('请先登录'); return }
+      if (!this.newComment.trim()) return
+      this.commentSubmitting = true
+      try {
+        await pinglunApi.add({
+          wzids: String(this.work.id),
+          plname: this.name || '用户',
+          content: this.newComment.trim(),
+          avatar: this.avatar || ''
+        })
+        this.$message.success('评价成功')
+        this.newComment = ''
+        this.fetchComments()
+      } catch (e) {
+        this.$message.error('评价失败')
+      } finally {
+        this.commentSubmitting = false
       }
     },
     async checkFav() {
@@ -195,6 +344,28 @@ export default {
         this.cartLoading = false
       }
     },
+    async buyNow() {
+      if (!this.userId) { this.$message.warning('请先登录'); return }
+      this.buyLoading = true
+      try {
+        await orderApi.add({
+          name: this.work.name,
+          photo: this.workPhotoUrl || this.work.photo || '',
+          price: this.work.price,
+          spids: String(this.work.id),
+          shangjiaids: this.work.shangjiaids,
+          userids: String(this.userId),
+          status: '待付款'
+        })
+        this.$message.success('订单已创建')
+        // 跳转到订单页
+        this.$router.push('/center/profile?tab=orders')
+      } catch (e) {
+        this.$message.error(e.message || '购买失败')
+      } finally {
+        this.buyLoading = false
+      }
+    },
     goArtist(artistId) {
       this.$router.push(buildOtherArtistProfileRoute(artistId, 'showcase'))
     },
@@ -231,32 +402,53 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+$brand: #6c5ce7;
+$brand-light: rgba(108, 92, 231, 0.08);
+$text-primary: #1f2937;
+$text-secondary: #6b7280;
+$text-muted: #9ca3af;
+$border: #e5e7eb;
+$bg-page: #f7f8fa;
+$radius-lg: 16px;
+$radius-md: 12px;
+
 .work-detail-page {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 20px;
+  padding: 32px 20px 60px;
 }
 
 .loading-box {
   text-align: center;
   padding: 80px 0;
-  color: #999;
+  color: $text-muted;
   font-size: 16px;
 }
 
-/* 主体：左图右信息 */
-.detail-main {
+/* ========== 两栏布局 ========== */
+.detail-layout {
   display: flex;
   gap: 32px;
-  margin-bottom: 40px;
+  align-items: flex-start;
 }
 
+.detail-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.detail-right {
+  flex: 0 0 320px;
+  position: sticky;
+  top: 80px;
+}
+
+/* ========== 封面图 ========== */
 .detail-cover {
-  flex: 0 0 480px;
-  border-radius: 14px;
+  border-radius: $radius-lg;
   overflow: hidden;
-  background: #f5f5f5;
-  aspect-ratio: 1;
+  background: #f0f0f0;
+  aspect-ratio: 4 / 3;
 }
 
 .cover-img {
@@ -279,116 +471,350 @@ export default {
   color: #7b8796;
 }
 
-.detail-info {
-  flex: 1;
+/* ========== 图片下方工具条 ========== */
+.cover-bar {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
 }
 
-.detail-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #333;
-  margin: 0;
-}
-
-.detail-meta {
+.cover-bar__left {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
 }
 
-.meta-tag {
+.bar-tag {
   font-size: 13px;
-  color: #6c5ce7;
-  background: rgba(108, 92, 231, 0.08);
-  padding: 3px 10px;
-  border-radius: 4px;
+  color: $brand;
+  background: $brand-light;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 500;
 }
 
-.meta-status {
+.bar-status {
   font-size: 13px;
   color: #00b894;
   background: rgba(0, 184, 148, 0.08);
-  padding: 3px 10px;
-  border-radius: 4px;
+  padding: 4px 12px;
+  border-radius: 20px;
 }
 
-.detail-price-row {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
+.bar-report-icon {
+  font-size: 18px;
+  color: $text-muted;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s;
 
-.price {
-  font-size: 28px;
-  font-weight: 700;
-  color: #e17055;
-}
-
-.discount {
-  font-size: 14px;
-  color: #fff;
-  background: #e17055;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
-.detail-artist {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #666;
-  font-size: 14px;
-
-  .label {
-    color: #999;
+  &:hover {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.08);
   }
 }
 
-.detail-actions {
-  margin-top: auto;
+/* ========== 标签页 ========== */
+.detail-tabs {
+  margin-top: 4px;
+}
+
+.tabs-nav {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  gap: 0;
+  border-bottom: 2px solid $border;
 }
 
-/* 内容区 */
-.detail-content-section {
-  margin-bottom: 32px;
+.tab-item {
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 500;
+  color: $text-secondary;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+
+  &:hover {
+    color: $brand;
+  }
+
+  &.is-active {
+    color: $brand;
+    border-bottom-color: $brand;
+  }
 }
 
-.section-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 16px 0;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
+.tab-panel {
+  padding: 20px 0;
 }
 
+/* ========== 详情内容 ========== */
 .rich-content {
   line-height: 1.8;
-  color: #555;
+  color: $text-primary;
   font-size: 14px;
 
-  img {
+  ::v-deep img {
     max-width: 100%;
     border-radius: 8px;
+    margin: 8px 0;
   }
+}
+
+.attachment-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid $border;
 }
 
 .attachment-link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #6c5ce7;
+  color: $brand;
   text-decoration: none;
   font-size: 14px;
 
   &:hover {
     text-decoration: underline;
+  }
+}
+
+/* ========== 评价列表 ========== */
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.comment-item {
+  display: flex;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid $border;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.comment-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+
+  &--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $brand-light;
+    color: $brand;
+    font-size: 18px;
+  }
+}
+
+.comment-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.comment-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+.comment-date {
+  font-size: 12px;
+  color: $text-muted;
+}
+
+.comment-text {
+  font-size: 14px;
+  color: $text-secondary;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.comment-form {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid $border;
+}
+
+/* ========== 右栏：作者卡片 ========== */
+.artist-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+  background: #fff;
+  border-radius: $radius-md;
+  border: 1px solid $border;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  }
+}
+
+.artist-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+
+  &--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $brand-light;
+    color: $brand;
+    font-size: 22px;
+  }
+}
+
+.artist-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.artist-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: $text-primary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.artist-bio {
+  font-size: 13px;
+  color: $text-secondary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.artist-stat {
+  font-size: 12px;
+  color: $text-muted;
+}
+
+/* ========== 价格块 ========== */
+.price-block {
+  margin-top: 16px;
+  padding: 16px;
+  background: #fff;
+  border-radius: $radius-md;
+  border: 1px solid $border;
+}
+
+.price-label {
+  font-size: 13px;
+  color: $text-muted;
+}
+
+.price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.price-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #e17055;
+}
+
+.price-discount {
+  font-size: 13px;
+  color: #fff;
+  background: #e17055;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* ========== 操作按钮列 ========== */
+.action-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.action-btn {
+  width: 100%;
+  height: 42px;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+
+  &--cart {
+    color: $brand;
+    border-color: $brand;
+    background: #fff;
+
+    &:hover {
+      background: $brand-light;
+    }
+  }
+
+  &--fav {
+    color: $text-secondary;
+    border-color: $border;
+    background: #fff;
+
+    &:hover {
+      color: $brand;
+      border-color: $brand;
+    }
+
+    &.is-faved {
+      color: #f59e0b;
+      border-color: #f59e0b;
+    }
+  }
+}
+
+.delete-link {
+  margin-top: 12px;
+  color: $text-muted;
+  font-size: 13px;
+
+  &:hover {
+    color: #e74c3c;
+  }
+}
+
+/* ========== 响应式 ========== */
+@media (max-width: 900px) {
+  .detail-layout {
+    flex-direction: column;
+  }
+
+  .detail-right {
+    flex: none;
+    width: 100%;
+    position: static;
   }
 }
 </style>
