@@ -145,46 +145,5 @@ export default {
 </script>
 
 <style scoped>
-.admin-page {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.page-hero {
-  border: none;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #13293d 0%, #1f4565 60%, #295e85 100%);
-  color: #fff;
-}
-
-.page-kicker {
-  margin: 0 0 8px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.72);
-}
-
-.page-hero h1 {
-  margin: 0;
-  font-size: 28px;
-}
-
-.page-hero p {
-  margin: 12px 0 0;
-  line-height: 1.7;
-  color: rgba(255, 255, 255, 0.82);
-}
-
-#search .el-input {
-  width: 260px;
-  margin-right: 10px;
-}
-
-.table-muted {
-  color: #909399;
-  font-size: 13px;
-}
+/* page styles inherited from admin-page.scss */
 </style>

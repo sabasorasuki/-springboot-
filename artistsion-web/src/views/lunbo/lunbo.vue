@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div class="admin-page">
     <!-- 搜索栏 -->
-    <el-card id="search">
+    <el-card id="search" class="page-search">
       <el-row>
         <el-col :span="20">
           <el-input v-model="searchModel.name" placeholder="轮播图姓名" clearable />
@@ -77,15 +77,60 @@
             :action="ossUploadAction('lunbo')"
             :show-file-list="false"
             :on-success="handleAvatarSuccess"
+            :on-change="onBannerFileChange"
+            :auto-upload="true"
           >
             <img v-if="Form.lunbo" :src="Form.lunbo" class="avatar">
             <i v-else class="el-icon-plus avatar-uploader-icon" />
           </el-upload>
+          <el-button
+            v-if="Form.lunbo"
+            type="text"
+            icon="el-icon-crop"
+            style="margin-top: 6px;"
+            @click="openCropperForExisting"
+          >
+            调整图片位置
+          </el-button>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取 消</el-button>
         <el-button type="primary" @click="saveOrUpdate">确 定</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 裁剪对话框 -->
+    <el-dialog
+      :visible.sync="cropperVisible"
+      title="调整轮播图位置"
+      width="720px"
+      append-to-body
+      destroy-on-close
+      @closed="onCropperClosed"
+    >
+      <div class="cropper-container">
+        <vue-cropper
+          ref="cropper"
+          :img="cropperImageUrl"
+          :output-size="1"
+          output-type="png"
+          :auto-crop="true"
+          :auto-crop-width="1200"
+          :auto-crop-height="400"
+          :fixed="true"
+          :fixed-number="[3, 1]"
+          :center-box="true"
+          :can-move-box="true"
+          :can-scale="true"
+          :full="true"
+          :high="true"
+          :enlarge="2"
+        />
+      </div>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cropperVisible = false">取消</el-button>
+        <el-button type="primary" :loading="cropperUploading" @click="handleCropConfirm">确认裁剪</el-button>
       </div>
     </el-dialog>
   </div>
@@ -95,13 +140,19 @@ import api from '@/api/lunbo.js'
 import { ossDownloadUrl, ossUploadAction } from '@/utils/oss'
 import { mapGetters } from 'vuex'
 import userApi from '@/api/userManage'
+import { VueCropper } from 'vue-cropper'
+import axios from 'axios'
 
 export default {
+  components: { VueCropper },
   data() {
     return {
       title: '',
       total: 0,
       dialogFormVisible: false,
+      cropperVisible: false,
+      cropperImageUrl: '',
+      cropperUploading: false,
       searchModel: {
         pageNo: 1,
         pageSize: 5
@@ -132,12 +183,50 @@ export default {
     ossUploadAction,
 
     handleAvatarSuccess(res, file) {
-      console.log(res, 'oss1')
       this.Form.lunbo = ossDownloadUrl(res.data)
-      console.log(this.Form.lunbo, 'oss12312')
-
-      // 强制重新渲染
       this.$forceUpdate()
+    },
+    onBannerFileChange(file) {
+      if (!file || !file.raw) return
+      this.cropperImageUrl = URL.createObjectURL(file.raw)
+      this.cropperVisible = true
+    },
+    openCropperForExisting() {
+      if (this.Form.lunbo) {
+        this.cropperImageUrl = this.Form.lunbo
+        this.cropperVisible = true
+      }
+    },
+    onCropperClosed() {
+      if (this.cropperImageUrl && this.cropperImageUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(this.cropperImageUrl)
+      }
+      this.cropperImageUrl = ''
+    },
+    handleCropConfirm() {
+      this.$refs.cropper.getCropBlob(blob => {
+        if (!blob) {
+          this.$message.error('裁剪失败')
+          return
+        }
+        this.cropperUploading = true
+        const formData = new FormData()
+        formData.append('file', blob, `lunbo_${Date.now()}.png`)
+        const uploadUrl = ossUploadAction('lunbo')
+        axios.post(uploadUrl, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        }).then(res => {
+          const response = res.data
+          this.Form.lunbo = ossDownloadUrl(response.data)
+          this.$forceUpdate()
+          this.cropperVisible = false
+          this.$message.success('裁剪上传成功')
+        }).catch(() => {
+          this.$message.error('上传失败')
+        }).finally(() => {
+          this.cropperUploading = false
+        })
+      })
     },
     deleteUser(content) {
       this.$confirm(`您确认删除名字 ${content.name} ?`, '提示', {
@@ -266,6 +355,12 @@ text-align: center;
 width: 178px;
 height: 178px;
 display: block;
+}
+
+/* ── Cropper dialog ── */
+.cropper-container {
+  width: 100%;
+  height: 400px;
 }
 
 </style>

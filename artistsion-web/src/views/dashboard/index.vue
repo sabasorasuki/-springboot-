@@ -5,9 +5,8 @@
         <p class="hero-kicker">Admin Console</p>
         <h1>管理控制台</h1>
         <p class="hero-description">
-          当前首页通过最小聚合接口返回管理员概览数据，减少前端多次估算和多请求拼装，先把 admin 的真实看板能力补稳。
+          平台运营数据一览，快速进入各管理模块。
         </p>
-        <p class="hero-note">管理员账号设置已迁移到右上角头像菜单，dashboard 不再承担个人资料页职责。</p>
       </div>
       <div class="hero-actions">
         <el-button type="primary" @click="go('/shangp/shangpsh')">作品审核</el-button>
@@ -18,14 +17,6 @@
         <el-button @click="go('/sys/user')">用户管理</el-button>
       </div>
     </section>
-
-    <el-alert
-      :closable="false"
-      class="dashboard-alert"
-      show-icon
-      title="当前看板已切到单一后台汇总接口：待处理反馈、待审核作品、最近订单、最近日志均由后端统一返回。"
-      type="info"
-    />
 
     <el-alert
       v-if="loadWarnings.length"
@@ -220,10 +211,8 @@ export default {
   justify-content: space-between;
   gap: 24px;
   padding: 28px 32px;
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at top right, rgba(255, 219, 143, 0.35), transparent 36%),
-    linear-gradient(135deg, #102542 0%, #1d436d 42%, #2f5a86 100%);
+  border-radius: 20px;
+  background: linear-gradient(135deg, #6c5ce7 0%, #a78bfa 55%, #c4b5fd 100%);
   color: #fff;
 }
 
@@ -282,7 +271,7 @@ export default {
 
 .metric-card {
   border: none;
-  border-radius: 20px;
+  border-radius: 16px;
 }
 
 .metric-card ::v-deep .el-card__body {
@@ -290,7 +279,7 @@ export default {
 }
 
 .metric-card--ink {
-  background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+  background: linear-gradient(135deg, #334155 0%, #64748b 100%);
   color: #fff;
 }
 
@@ -300,17 +289,17 @@ export default {
 }
 
 .metric-card--amber {
-  background: linear-gradient(135deg, #92400e 0%, #f59e0b 100%);
+  background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);
   color: #fff;
 }
 
 .metric-card--red {
-  background: linear-gradient(135deg, #9f1239 0%, #ef4444 100%);
+  background: linear-gradient(135deg, #e11d48 0%, #fb7185 100%);
   color: #fff;
 }
 
 .metric-card--violet {
-  background: linear-gradient(135deg, #5b21b6 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #6c5ce7 0%, #a78bfa 100%);
   color: #fff;
 }
 
@@ -345,7 +334,7 @@ export default {
 }
 
 .panel-card {
-  border-radius: 20px;
+  border-radius: 16px;
 }
 
 .panel-header {

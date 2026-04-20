@@ -1,0 +1,164 @@
+/* ── Shared admin page styles ──
+   Imported by AdminLayout to provide consistent styles for all admin pages.
+   These styles override Element UI defaults for the admin context.  */
+
+/* ── Page layout ── */
+.admin-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Hero banner ── */
+.page-hero {
+  border: none !important;
+  border-radius: 20px !important;
+  background: linear-gradient(135deg, #6c5ce7 0%, #a78bfa 55%, #c4b5fd 100%) !important;
+  color: #fff;
+}
+
+.page-hero .el-card__body {
+  padding: 24px 28px;
+}
+
+.page-hero__content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.page-kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.page-hero h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.page-hero p {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* ── Search / filter bar ── */
+.page-search,
+.page-filters {
+  border: none !important;
+  border-radius: 16px !important;
+}
+
+.page-search .el-card__body,
+.page-filters .el-card__body {
+  padding: 16px 20px;
+}
+
+.page-search .el-input {
+  width: 260px;
+  margin-right: 10px;
+}
+
+.page-search .el-input .el-input__inner {
+  border-radius: 8px;
+}
+
+.page-search .el-button {
+  border-radius: 8px;
+}
+
+/* ── Table card ── */
+.page-table {
+  border: none !important;
+  border-radius: 16px !important;
+}
+
+.page-table .el-card__body {
+  padding: 16px 20px;
+}
+
+/* ── Alert ── */
+.page-alert {
+  border-radius: 10px;
+}
+
+/* ── Table muted text ── */
+.table-muted {
+  color: #909399;
+  font-size: 13px;
+}
+
+/* ── Element UI overrides for admin pages ── */
+
+/* Card defaults */
+.admin-layout__content .el-card {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Table styling */
+.admin-layout__content .el-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.admin-layout__content .el-table th {
+  background: #fafafa;
+  color: #606266;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.admin-layout__content .el-table td,
+.admin-layout__content .el-table th.is-leaf {
+  border-bottom-color: #f0f0f0;
+}
+
+.admin-layout__content .el-table--striped .el-table__body tr.el-table__row--striped td {
+  background: #fafbfc;
+}
+
+/* Tag styles */
+.admin-layout__content .el-tag {
+  border-radius: 6px;
+}
+
+/* Button roundness */
+.admin-layout__content .el-button--primary {
+  border-radius: 8px;
+}
+
+.admin-layout__content .el-button--default {
+  border-radius: 8px;
+}
+
+/* Dialog roundness */
+.admin-layout__content .el-dialog {
+  border-radius: 20px;
+}
+
+/* Pagination */
+.admin-layout__content .el-pagination {
+  margin-top: 16px;
+  text-align: right;
+}
+
+/* ── Legacy admin pages (el-card #search pattern) ── */
+.admin-layout__content > div > .el-card {
+  border: none;
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+
+.admin-layout__content > div > .el-card + .el-card {
+  margin-bottom: 0;
+}

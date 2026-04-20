@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div class="admin-page">
     <!-- 搜索栏 -->
-    <el-card id="search">
+    <el-card id="search" class="page-search">
       <el-row>
         <el-col :span="20">
           <el-input v-model="searchModel.rizhi" placeholder="日志内容" clearable />

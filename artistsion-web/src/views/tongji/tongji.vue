@@ -1,5 +1,5 @@
 <template>
-  <div class="tongji-container">
+  <div class="admin-page tongji-container">
     <el-row :gutter="20">
       <!-- 每日订单金额统计 - 折线图 -->
       <el-col :span="12">

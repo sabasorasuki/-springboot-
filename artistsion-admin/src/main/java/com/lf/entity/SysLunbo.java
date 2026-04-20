@@ -39,5 +39,9 @@ public class SysLunbo implements Serializable {
      */
     private String name;
 
+    /**
+     * 图片位置 (CSS object-position, 默认 center)
+     */
+    private String imgPosition;
 
 }

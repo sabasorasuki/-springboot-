@@ -7,11 +7,12 @@
         <id column="id" property="id" />
         <result column="lunbo" property="lunbo" />
         <result column="name" property="name" />
+        <result column="img_position" property="imgPosition" />
     </resultMap>
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, lunbo, name
+        id, lunbo, name, img_position
     </sql>
 
 </mapper>

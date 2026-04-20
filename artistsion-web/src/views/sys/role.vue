@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div class="admin-page">
     <!-- 搜索栏 -->
-    <el-card id="search">
+    <el-card id="search" class="page-search">
       <el-row>
         <el-col :span="18">
           <el-input v-model="searchModel.roleName" placeholder="角色名" clearable />

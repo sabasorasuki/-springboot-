@@ -1,5 +1,5 @@
 <template>
-  <div class="report-center-page">
+  <div class="admin-page report-center-page">
     <el-card class="page-hero" shadow="never">
       <div class="hero-copy">
         <p class="page-kicker">Admin Moderation</p>
@@ -370,10 +370,8 @@ export default {
 
 .page-hero {
   border: none;
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at top right, rgba(255, 209, 143, 0.28), transparent 34%),
-    linear-gradient(135deg, #102542 0%, #1d436d 42%, #2f5a86 100%);
+  border-radius: 20px;
+  background: linear-gradient(135deg, #6c5ce7 0%, #a78bfa 55%, #c4b5fd 100%);
   color: #fff;
 }
 
@@ -411,7 +409,7 @@ export default {
 .page-filters,
 .page-table,
 .summary-card {
-  border-radius: 20px;
+  border-radius: 16px;
 }
 
 .filters-grid {
@@ -440,11 +438,11 @@ export default {
   margin-top: 10px;
   font-size: 28px;
   font-weight: 700;
-  color: #102542;
+  color: #1f2937;
 }
 
 .target-summary__title {
-  color: #102542;
+  color: #1f2937;
   font-weight: 600;
   line-height: 1.5;
   word-break: break-word;
@@ -463,7 +461,7 @@ export default {
 .detail-header h2 {
   margin: 0;
   font-size: 26px;
-  color: #102542;
+  color: #1f2937;
 }
 
 .detail-header p:last-child {
@@ -481,7 +479,7 @@ export default {
 
 .detail-item {
   padding: 16px;
-  border-radius: 18px;
+  border-radius: 16px;
   background: #f7f9fc;
   border: 1px solid #e7edf6;
 }
@@ -500,7 +498,7 @@ export default {
 .detail-item strong,
 .detail-item p {
   margin: 0;
-  color: #102542;
+  color: #1f2937;
   line-height: 1.7;
   word-break: break-word;
 }
