@@ -277,7 +277,6 @@ export default {
     },
     async handleStatusChange(row) {
       const nextStatus = row.status
-      const previousStatus = nextStatus === 1 ? 0 : 1
       try {
         await tagApi.update({
           id: row.id,
@@ -285,7 +284,8 @@ export default {
         })
         this.$message.success('标签状态已更新')
       } catch (error) {
-        row.status = previousStatus
+        this.$message.error((error && error.message) || '标签状态更新失败')
+        this.getList()
       }
     },
     openAliasDialog(row) {

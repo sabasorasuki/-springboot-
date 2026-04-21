@@ -129,13 +129,13 @@ export default {
         const metrics = payload.metrics || {}
 
         this.metrics = [
-          this.createMetric('users', '用户总数', metrics.userTotal, '来自后台管理员汇总接口', 'ink'),
-          this.createMetric('works', '作品总数', metrics.workTotal, '来自后台管理员汇总接口', 'cyan'),
-          this.createMetric('orders', '订单总数', metrics.orderTotal, '已排除购物车记录', 'amber'),
-          this.createMetric('pendingWorks', '待审核作品', metrics.pendingWorkTotal, '由后端直接统计未审核作品', 'red'),
-          this.createMetric('pendingFeedback', '待处理反馈', metrics.pendingFeedbackTotal, '由后端直接统计未回复工单', 'violet'),
-          this.createMetric('categories', '分类总数', metrics.categoryTotal, '来自后台管理员汇总接口', 'green'),
-          this.createMetric('banners', '轮播总数', metrics.bannerTotal, '来自后台管理员汇总接口', 'blue')
+          this.createMetric('users', '用户总数', metrics.userTotal, '来自后台管理员汇总接口', 'slate'),
+          this.createMetric('works', '作品总数', metrics.workTotal, '来自后台管理员汇总接口', 'teal'),
+          this.createMetric('orders', '订单总数', metrics.orderTotal, '已排除购物车记录', 'ocean'),
+          this.createMetric('pendingWorks', '待审核作品', metrics.pendingWorkTotal, '由后端直接统计未审核作品', 'indigo'),
+          this.createMetric('pendingFeedback', '待处理反馈', metrics.pendingFeedbackTotal, '由后端直接统计未回复工单', 'ice'),
+          this.createMetric('categories', '分类总数', metrics.categoryTotal, '来自后台管理员汇总接口', 'steel'),
+          this.createMetric('banners', '轮播总数', metrics.bannerTotal, '来自后台管理员汇总接口', 'azure')
         ]
 
         this.pendingWorks = Array.isArray(payload.pendingWorks) ? payload.pendingWorks : []
@@ -144,13 +144,13 @@ export default {
       } catch (error) {
         this.loadWarnings = ['首页汇总接口']
         this.metrics = [
-          this.createMetric('users', '用户总数', '--', '汇总接口加载失败', 'ink'),
-          this.createMetric('works', '作品总数', '--', '汇总接口加载失败', 'cyan'),
-          this.createMetric('orders', '订单总数', '--', '汇总接口加载失败', 'amber'),
-          this.createMetric('pendingWorks', '待审核作品', '--', '汇总接口加载失败', 'red'),
-          this.createMetric('pendingFeedback', '待处理反馈', '--', '汇总接口加载失败', 'violet'),
-          this.createMetric('categories', '分类总数', '--', '汇总接口加载失败', 'green'),
-          this.createMetric('banners', '轮播总数', '--', '汇总接口加载失败', 'blue')
+          this.createMetric('users', '用户总数', '--', '汇总接口加载失败', 'slate'),
+          this.createMetric('works', '作品总数', '--', '汇总接口加载失败', 'teal'),
+          this.createMetric('orders', '订单总数', '--', '汇总接口加载失败', 'ocean'),
+          this.createMetric('pendingWorks', '待审核作品', '--', '汇总接口加载失败', 'indigo'),
+          this.createMetric('pendingFeedback', '待处理反馈', '--', '汇总接口加载失败', 'ice'),
+          this.createMetric('categories', '分类总数', '--', '汇总接口加载失败', 'steel'),
+          this.createMetric('banners', '轮播总数', '--', '汇总接口加载失败', 'azure')
         ]
         this.pendingWorks = []
         this.recentOrders = []
@@ -269,6 +269,15 @@ export default {
   margin-top: 0;
 }
 
+.panel-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.panel-grid > .el-col {
+  display: flex;
+}
+
 .metric-card {
   border: none;
   border-radius: 16px;
@@ -278,38 +287,38 @@ export default {
   padding: 20px 22px;
 }
 
-.metric-card--ink {
+.metric-card--slate {
   background: linear-gradient(135deg, #334155 0%, #64748b 100%);
   color: #fff;
 }
 
-.metric-card--cyan {
-  background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+.metric-card--teal {
+  background: linear-gradient(135deg, #115e59 0%, #0f766e 100%);
   color: #fff;
 }
 
-.metric-card--amber {
-  background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);
+.metric-card--ocean {
+  background: linear-gradient(135deg, #0f3d5e 0%, #2563eb 100%);
   color: #fff;
 }
 
-.metric-card--red {
-  background: linear-gradient(135deg, #e11d48 0%, #fb7185 100%);
+.metric-card--indigo {
+  background: linear-gradient(135deg, #312e81 0%, #6366f1 100%);
   color: #fff;
 }
 
-.metric-card--violet {
-  background: linear-gradient(135deg, #6c5ce7 0%, #a78bfa 100%);
+.metric-card--ice {
+  background: linear-gradient(135deg, #155e75 0%, #06b6d4 100%);
   color: #fff;
 }
 
-.metric-card--green {
-  background: linear-gradient(135deg, #166534 0%, #22c55e 100%);
+.metric-card--steel {
+  background: linear-gradient(135deg, #1e3a5f 0%, #3b82f6 100%);
   color: #fff;
 }
 
-.metric-card--blue {
-  background: linear-gradient(135deg, #1d4ed8 0%, #60a5fa 100%);
+.metric-card--azure {
+  background: linear-gradient(135deg, #1d4ed8 0%, #38bdf8 100%);
   color: #fff;
 }
 
@@ -334,7 +343,20 @@ export default {
 }
 
 .panel-card {
+  width: 100%;
+  height: 100%;
   border-radius: 16px;
+}
+
+.panel-card ::v-deep .el-card__header {
+  padding-bottom: 14px;
+}
+
+.panel-card ::v-deep .el-card__body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-top: 0;
 }
 
 .panel-header {
@@ -342,6 +364,7 @@ export default {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  min-height: 82px;
 }
 
 .panel-header h3 {
@@ -356,6 +379,14 @@ export default {
   color: #6b7280;
 }
 
+.panel-card ::v-deep .el-table {
+  flex: 1;
+}
+
+.panel-card ::v-deep .el-table__body-wrapper {
+  min-height: 252px;
+}
+
 @media (max-width: 991px) {
   .dashboard-hero {
     flex-direction: column;
@@ -365,6 +396,18 @@ export default {
   .hero-actions {
     justify-content: flex-start;
     min-width: 0;
+  }
+
+  .panel-grid {
+    display: block;
+  }
+
+  .panel-grid > .el-col {
+    display: block;
+  }
+
+  .panel-header {
+    min-height: 0;
   }
 }
 </style>

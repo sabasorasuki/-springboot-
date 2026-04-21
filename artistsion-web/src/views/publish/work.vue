@@ -164,7 +164,7 @@ import tagApi from '@/api/tag'
 import userApi from '@/api/userManage'
 
 const TAG_GROUP_ORDER = ['风格', '人物', '构图', '情绪', '发型发色', '服装', '场景', '配色', '用途', '生产属性']
-const INVISIBLE_SPACE_RE = /[\u200B\u200C\u200D\u2060\uFEFF\u00A0\u3000\r\n\t]/g
+const INVISIBLE_SPACE_RE = /\u200B|\u200C|\u200D|\u2060|\uFEFF|\u00A0|\u3000|\r|\n|\t/g
 
 export default {
   name: 'PublishWork',
