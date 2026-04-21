@@ -100,7 +100,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        api.saveOrUpdate({ id: row.id, status: status }).then(response => {
+        api.adminPatch({ id: row.id, status: status }).then(response => {
           this.$message({
             message: response.message || `${actionLabel}成功`,
             type: 'success'

@@ -102,6 +102,37 @@
 
         <!-- ========== 右栏：作者卡片 + 价格 + 操作 ========== -->
         <div class="detail-right">
+          <div class="work-heading">
+            <h1 class="work-heading__title">{{ work.name || '未命名橱窗' }}</h1>
+          </div>
+          <div v-if="work.fenlei || systemTagList.length || freeTagList.length" class="work-taxonomy">
+            <div v-if="work.fenlei" class="taxonomy-row">
+              <span class="taxonomy-label">分类</span>
+              <div class="taxonomy-values">
+                <span class="taxonomy-chip taxonomy-chip--category">{{ work.fenlei }}</span>
+              </div>
+            </div>
+            <div v-if="systemTagList.length" class="taxonomy-row">
+              <span class="taxonomy-label">系统标签</span>
+              <div class="taxonomy-values">
+                <span
+                  v-for="tag in systemTagList"
+                  :key="tag.id"
+                  class="taxonomy-chip"
+                >{{ tag.name }}</span>
+              </div>
+            </div>
+            <div v-if="freeTagList.length" class="taxonomy-row">
+              <span class="taxonomy-label">自由标签</span>
+              <div class="taxonomy-values">
+                <span
+                  v-for="tag in freeTagList"
+                  :key="tag"
+                  class="taxonomy-chip taxonomy-chip--free"
+                >{{ tag }}</span>
+              </div>
+            </div>
+          </div>
           <!-- 作者信息卡 -->
           <div class="artist-card" @click="goArtist(work.shangjiaids)">
             <img
@@ -217,6 +248,14 @@ export default {
     isOwner() {
       if (!this.work || !this.userId) return false
       return String(this.work.shangjiaids) === String(this.userId)
+    },
+    systemTagList() {
+      if (!this.work || !Array.isArray(this.work.systemTags)) return []
+      return this.work.systemTags.filter(tag => tag && tag.id)
+    },
+    freeTagList() {
+      if (!this.work || !Array.isArray(this.work.freeTagNames)) return []
+      return this.work.freeTagNames.filter(Boolean)
     },
     artistDisplayName() {
       if (this.artistInfo) return this.artistInfo.name || this.artistInfo.username || '画师'
@@ -451,6 +490,19 @@ $radius-md: 12px;
   flex: 0 0 320px;
   position: sticky;
   top: 80px;
+}
+
+.work-heading {
+  padding: 0 2px 14px;
+}
+
+.work-heading__title {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.25;
+  font-weight: 700;
+  color: $text-primary;
+  word-break: break-word;
 }
 
 /* ========== 封面图 ========== */
@@ -727,6 +779,57 @@ $radius-md: 12px;
   color: $text-muted;
 }
 
+.work-taxonomy {
+  margin-top: 16px;
+  padding: 16px;
+  background: #fff;
+  border-radius: $radius-md;
+  border: 1px solid $border;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.taxonomy-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.taxonomy-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-secondary;
+}
+
+.taxonomy-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.taxonomy-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: $brand-light;
+  color: $brand;
+  font-size: 13px;
+  line-height: 1.2;
+
+  &--category {
+    background: rgba(225, 112, 85, 0.12);
+    color: #d35400;
+  }
+
+  &--free {
+    background: rgba(123, 135, 150, 0.12);
+    color: $text-secondary;
+  }
+}
+
 /* ========== 价格块 ========== */
 .price-block {
   margin-top: 16px;
@@ -770,9 +873,17 @@ $radius-md: 12px;
   margin-top: 16px;
 }
 
+.action-stack .action-btn + .action-btn {
+  margin-left: 0;
+}
+
 .action-btn {
   width: 100%;
   height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   font-size: 15px;
   font-weight: 500;
   border-radius: 8px;

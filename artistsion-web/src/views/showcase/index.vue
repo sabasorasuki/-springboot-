@@ -7,14 +7,54 @@
 
     <!-- 筛选区 -->
     <section class="section filter-section">
-      <div class="filter-bar">
-        <span
-          v-for="tag in filterTags"
-          :key="tag"
-          class="filter-tag"
-          :class="{ 'is-active': activeFilter === tag }"
-          @click="onFilterChange(tag)"
-        >{{ tag }}</span>
+      <div class="filter-panel">
+        <div class="search-row">
+          <el-input
+            v-model.trim="keyword"
+            clearable
+            placeholder="搜索标题、角色名、自由标签或标签别名"
+            @clear="onSearch"
+            @keyup.enter.native="onSearch"
+          >
+            <el-button slot="append" icon="el-icon-search" @click="onSearch">搜索</el-button>
+          </el-input>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">分类</span>
+          <div class="filter-bar">
+            <span
+              v-for="tag in filterTags"
+              :key="tag"
+              class="filter-tag"
+              :class="{ 'is-active': activeFilter === tag }"
+              @click="onFilterChange(tag)"
+            >{{ tag }}</span>
+          </div>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">系统标签</span>
+          <el-select
+            v-model="activeTagId"
+            class="tag-select"
+            clearable
+            filterable
+            placeholder="全部标签"
+            @change="onTagChange"
+          >
+            <el-option-group
+              v-for="group in groupedSystemTags"
+              :key="group.group"
+              :label="group.group"
+            >
+              <el-option
+                v-for="item in group.items"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+              />
+            </el-option-group>
+          </el-select>
+        </div>
       </div>
     </section>
 
@@ -67,6 +107,7 @@
 import { mapGetters } from 'vuex'
 import huagaoApi from '@/api/huagao'
 import fenleiApi from '@/api/fenlei'
+import tagApi from '@/api/tag'
 import { normalizeImageUrl } from '@/utils/oss'
 import { buildCenterProfileRoute, buildOtherArtistProfileRoute } from '@/utils/centerProfile'
 
@@ -78,15 +119,35 @@ export default {
       total: 0,
       pageNo: 1,
       loading: false,
+      keyword: '',
+      activeTagId: null,
       filterTags: ['全部'],
-      activeFilter: '全部'
+      activeFilter: '全部',
+      systemTagOptions: []
     }
   },
   computed: {
-    ...mapGetters(['userId'])
+    ...mapGetters(['userId']),
+    groupedSystemTags() {
+      const groups = []
+      const groupMap = {}
+      this.systemTagOptions.forEach(item => {
+        const groupName = item.tagGroup || '未分组'
+        if (!groupMap[groupName]) {
+          groupMap[groupName] = {
+            group: groupName,
+            items: []
+          }
+          groups.push(groupMap[groupName])
+        }
+        groupMap[groupName].items.push(item)
+      })
+      return groups
+    }
   },
   created() {
     this.fetchCategories()
+    this.fetchSystemTags()
     this.fetchItems()
   },
   methods: {
@@ -99,12 +160,16 @@ export default {
     },
     fetchCategories() {
       fenleiApi.getList1().then(res => {
-        const cats = (res.data.rows || []).map(c => c.fenlei)
+        const cats = [...new Set((res.data.rows || []).map(c => c.fenlei).filter(Boolean))]
         this.filterTags = ['全部', ...cats]
       }).catch(() => {})
     },
-    fetchItems() {
-      this.loading = true
+    fetchSystemTags() {
+      tagApi.getSystemOptions().then(res => {
+        this.systemTagOptions = res.data || []
+      }).catch(() => {})
+    },
+    buildListParams() {
       const params = {
         pageNo: this.pageNo,
         pageSize: 16,
@@ -114,6 +179,17 @@ export default {
       if (this.activeFilter !== '全部') {
         params.fenlei = this.activeFilter
       }
+      if (this.activeTagId) {
+        params.tagId = this.activeTagId
+      }
+      if (this.keyword) {
+        params.keyword = this.keyword
+      }
+      return params
+    },
+    fetchItems() {
+      this.loading = true
+      const params = this.buildListParams()
       huagaoApi.getList(params).then(res => {
         const rows = res.data.rows || []
         const normalizedRows = rows.map(this.normalizeItem)
@@ -123,11 +199,20 @@ export default {
         this.loading = false
       })
     },
-    onFilterChange(tag) {
-      this.activeFilter = tag
+    resetAndFetch() {
       this.pageNo = 1
       this.items = []
       this.fetchItems()
+    },
+    onSearch() {
+      this.resetAndFetch()
+    },
+    onFilterChange(tag) {
+      this.activeFilter = tag
+      this.resetAndFetch()
+    },
+    onTagChange() {
+      this.resetAndFetch()
     },
     loadMore() {
       this.pageNo++
@@ -190,10 +275,37 @@ export default {
   margin-top: 16px;
 }
 
+.filter-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.search-row {
+  max-width: 560px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.filter-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+}
+
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.tag-select {
+  width: 100%;
+  max-width: 340px;
 }
 
 .filter-tag {
@@ -330,5 +442,22 @@ export default {
   text-align: center;
   padding: 40px 0;
   color: #999;
+}
+
+@media (max-width: 768px) {
+  .search-row,
+  .tag-select {
+    max-width: none;
+  }
+
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

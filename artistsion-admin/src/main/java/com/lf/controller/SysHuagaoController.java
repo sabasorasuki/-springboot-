@@ -4,6 +4,7 @@ package com.lf.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lf.common.Result;
+import com.lf.common.request.SysHuagaoAdminPatchRequest;
 import com.lf.common.utils.JwtUtil;
 import com.lf.common.request.SysHuagaoPublishRequest;
 import com.lf.entity.SysHuagao;
@@ -104,6 +105,8 @@ public class SysHuagaoController {
     @GetMapping("/list")
     public Result<Map<String,Object>> getList(
             @RequestParam(value = "name",required = false) String name,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "tagId", required = false) Long tagId,
             @RequestParam(value = "id",required = false) String id,
             @RequestParam(value = "type",required = false) String type,
             @RequestParam(value = "fenlei",required = false) String fenlei,
@@ -111,17 +114,7 @@ public class SysHuagaoController {
             @RequestParam(value = "status",required = false) String status,
             @RequestParam(value = "pageNo") Long pageNo,
             @RequestParam(value = "pageSize") Long pageSize){
-        LambdaQueryWrapper<SysHuagao> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(StringUtils.hasLength(name), SysHuagao::getName,name);
-        wrapper.eq(StringUtils.hasLength(id), SysHuagao::getId,id);
-        wrapper.eq(StringUtils.hasLength(shangjiaids), SysHuagao::getShangjiaids,shangjiaids);
-        wrapper.eq(StringUtils.hasLength(status), SysHuagao::getStatus,status);
-        wrapper.like(StringUtils.hasLength(type), SysHuagao::getType,type);
-        wrapper.like(StringUtils.hasLength(fenlei), SysHuagao::getFenlei,fenlei);
-        wrapper.orderByDesc(SysHuagao::getId);
-
-        Page<SysHuagao> page = new Page<>(pageNo,pageSize);
-        service.page(page, wrapper);
+        Page<SysHuagao> page = service.getFrontPage(name, keyword, tagId, id, type, fenlei, shangjiaids, status, pageNo, pageSize);
         populateArtistNames(page.getRecords());
 
         Map<String,Object> data = new HashMap<>();
@@ -135,14 +128,18 @@ public class SysHuagaoController {
 
     @PostMapping("/add")
     public Result<?> add(@RequestBody SysHuagao shetuan){
-        service.save(shetuan);
-        return Result.success("添加成功");
+        return Result.fail(20001, "该接口已废弃，请使用 /sysHuagao/publish 保存橱窗");
     }
 
 
     @PutMapping("/update")
     public Result<?> update(@RequestBody SysHuagao shetuan){
-        service.updateById(shetuan);
+        return Result.fail(20001, "通用更新接口已收口，请使用 /sysHuagao/publish 或 /sysHuagao/adminPatch");
+    }
+
+    @PutMapping("/adminPatch")
+    public Result<?> adminPatch(@RequestBody SysHuagaoAdminPatchRequest request) {
+        service.patchHuagaoAdminFields(request);
         return Result.success("修改成功");
     }
 

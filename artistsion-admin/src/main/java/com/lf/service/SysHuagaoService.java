@@ -1,5 +1,7 @@
 package com.lf.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.lf.common.request.SysHuagaoAdminPatchRequest;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lf.common.request.SysHuagaoPublishRequest;
 import com.lf.entity.SysHuagao;
@@ -17,5 +19,18 @@ public interface SysHuagaoService extends IService<SysHuagao> {
 
     SysHuagao getDetailById(Long id);
 
+    Page<SysHuagao> getFrontPage(String name,
+                                 String keyword,
+                                 Long tagId,
+                                 String id,
+                                 String type,
+                                 String fenlei,
+                                 String shangjiaids,
+                                 String status,
+                                 Long pageNo,
+                                 Long pageSize);
+
     SysHuagao savePublishedHuagao(SysHuagaoPublishRequest request, User loginUser);
+
+    SysHuagao patchHuagaoAdminFields(SysHuagaoAdminPatchRequest request);
 }

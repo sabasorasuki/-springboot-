@@ -22,4 +22,74 @@
         id, name, photo, price, fenlei, content, type, shangjiaids, status, zhekou, fujin
     </sql>
 
+    <select id="selectFrontPage" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM sys_huagao h
+        <where>
+            <if test="name != null and name != ''">
+                AND h.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="id != null and id != ''">
+                AND h.id = #{id}
+            </if>
+            <if test="shangjiaids != null and shangjiaids != ''">
+                AND h.shangjiaids = #{shangjiaids}
+            </if>
+            <if test="status != null and status != ''">
+                AND h.status = #{status}
+            </if>
+            <if test="type != null and type != ''">
+                AND h.type LIKE CONCAT('%', #{type}, '%')
+            </if>
+            <if test="fenlei != null and fenlei != '' and fenlei != '全部'">
+                AND h.fenlei = #{fenlei}
+            </if>
+            <if test="tagId != null">
+                AND EXISTS (
+                    SELECT 1
+                    FROM sys_huagao_tag ht
+                    INNER JOIN sys_tag st ON st.id = ht.tag_id
+                    WHERE ht.huagao_id = h.id
+                      AND ht.tag_id = #{tagId}
+                      AND st.deleted = 0
+                      AND st.tag_type = 'system'
+                )
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    h.name LIKE CONCAT('%', #{keyword}, '%')
+                    OR EXISTS (
+                        SELECT 1
+                        FROM sys_huagao_tag ht
+                        INNER JOIN sys_tag st ON st.id = ht.tag_id
+                        WHERE ht.huagao_id = h.id
+                          AND st.deleted = 0
+                          AND (
+                              st.name LIKE CONCAT('%', #{keyword}, '%')
+                              <if test="normalizedKeyword != null and normalizedKeyword != ''">
+                                  OR st.normalized_name LIKE CONCAT('%', #{normalizedKeyword}, '%')
+                              </if>
+                          )
+                    )
+                    OR EXISTS (
+                        SELECT 1
+                        FROM sys_huagao_tag ht
+                        INNER JOIN sys_tag_alias sta ON sta.tag_id = ht.tag_id
+                        INNER JOIN sys_tag st ON st.id = sta.tag_id
+                        WHERE ht.huagao_id = h.id
+                          AND st.deleted = 0
+                          AND (
+                              sta.alias_name LIKE CONCAT('%', #{keyword}, '%')
+                              <if test="normalizedKeyword != null and normalizedKeyword != ''">
+                                  OR sta.normalized_name LIKE CONCAT('%', #{normalizedKeyword}, '%')
+                              </if>
+                          )
+                    )
+                )
+            </if>
+        </where>
+        ORDER BY h.id DESC
+    </select>
+
 </mapper>

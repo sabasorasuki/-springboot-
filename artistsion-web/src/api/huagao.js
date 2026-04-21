@@ -10,6 +10,8 @@ export default {
         pageSize: searchModel.pageSize,
         shangjiaids: searchModel.shangjiaids,
         title: searchModel.title,
+        keyword: searchModel.keyword,
+        tagId: searchModel.tagId,
         type: searchModel.type,
         status: searchModel.status,
         name: searchModel.name,
@@ -69,32 +71,18 @@ export default {
     })
   },
 
-  add(content) {
-    return request({
-      url: '/sysHuagao/add',
-      method: 'post',
-      data: content
-    })
-  },
-  update(content) {
-    return request({
-      url: '/sysHuagao/update',
-      method: 'put',
-      data: content
-    })
-  },
-
-  saveOrUpdate(content) {
-    if (content.id === null || content.id === undefined) {
-      return this.add(content)
-    }
-    return this.update(content)
-  },
-
   publish(content) {
     return request({
       url: '/sysHuagao/publish',
       method: 'post',
+      data: content
+    })
+  },
+
+  adminPatch(content) {
+    return request({
+      url: '/sysHuagao/adminPatch',
+      method: 'put',
       data: content
     })
   },

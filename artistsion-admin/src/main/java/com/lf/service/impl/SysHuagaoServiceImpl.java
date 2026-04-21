@@ -1,10 +1,12 @@
 package com.lf.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lf.common.constants.TagConstants;
 import com.lf.common.constants.TagSourceConstants;
 import com.lf.common.exception.BusinessException;
+import com.lf.common.request.SysHuagaoAdminPatchRequest;
 import com.lf.common.request.SysHuagaoPublishRequest;
 import com.lf.common.utils.TagNormalizationUtil;
 import com.lf.common.utils.TagSensitiveWordUtil;
@@ -66,6 +68,40 @@ public class SysHuagaoServiceImpl extends ServiceImpl<SysHuagaoMapper, SysHuagao
     }
 
     @Override
+    public Page<SysHuagao> getFrontPage(String name,
+                                        String keyword,
+                                        Long tagId,
+                                        String id,
+                                        String type,
+                                        String fenlei,
+                                        String shangjiaids,
+                                        String status,
+                                        Long pageNo,
+                                        Long pageSize) {
+        Page<SysHuagao> page = new Page<>(pageNo, pageSize);
+        String sanitizedKeyword = sanitizeKeyword(keyword);
+        String normalizedKeyword = StringUtils.hasText(sanitizedKeyword)
+                ? TagNormalizationUtil.normalize(sanitizedKeyword)
+                : null;
+        Long sanitizedTagId = tagId != null && tagId > 0 ? tagId : null;
+        String fenleiFilter = normalizeFenleiFilter(fenlei);
+        List<SysHuagao> records = baseMapper.selectFrontPage(
+                page,
+                name,
+                sanitizedKeyword,
+                normalizedKeyword,
+                id,
+                type,
+                fenleiFilter,
+                shangjiaids,
+                status,
+                sanitizedTagId
+        );
+        page.setRecords(records);
+        return page;
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public SysHuagao savePublishedHuagao(SysHuagaoPublishRequest request, User loginUser) {
         if (loginUser == null || loginUser.getId() == null) {
@@ -113,6 +149,30 @@ public class SysHuagaoServiceImpl extends ServiceImpl<SysHuagaoMapper, SysHuagao
         return target;
     }
 
+    @Override
+    public SysHuagao patchHuagaoAdminFields(SysHuagaoAdminPatchRequest request) {
+        if (request == null || request.getId() == null) {
+            throw new BusinessException(20001, "画稿ID不能为空");
+        }
+        if (!StringUtils.hasText(request.getStatus()) && !StringUtils.hasText(request.getType())) {
+            throw new BusinessException(20001, "至少需要提供一个可更新字段");
+        }
+
+        SysHuagao current = getById(request.getId());
+        if (current == null) {
+            throw new BusinessException(20001, "画稿不存在");
+        }
+
+        if (StringUtils.hasText(request.getStatus())) {
+            current.setStatus(request.getStatus().trim());
+        }
+        if (StringUtils.hasText(request.getType())) {
+            current.setType(request.getType().trim());
+        }
+        updateById(current);
+        return current;
+    }
+
     private void validateHuagaoRequest(SysHuagaoPublishRequest request) {
         if (!StringUtils.hasText(request.getName())) {
             throw new BusinessException(20001, "画稿名称不能为空");
@@ -137,6 +197,22 @@ public class SysHuagaoServiceImpl extends ServiceImpl<SysHuagaoMapper, SysHuagao
             throw new BusinessException(20001, "折扣不能小于0");
         }
         request.setZhekou(zhekou);
+    }
+
+    private String sanitizeKeyword(String keyword) {
+        String sanitizedKeyword = TagNormalizationUtil.sanitizeDisplayName(keyword);
+        return StringUtils.hasText(sanitizedKeyword) ? sanitizedKeyword : null;
+    }
+
+    private String normalizeFenleiFilter(String fenlei) {
+        if (!StringUtils.hasText(fenlei)) {
+            return null;
+        }
+        String normalizedFenlei = fenlei.trim();
+        if (!StringUtils.hasText(normalizedFenlei) || "全部".equals(normalizedFenlei)) {
+            return null;
+        }
+        return normalizedFenlei;
     }
 
     private void validateCategory(String fenlei) {

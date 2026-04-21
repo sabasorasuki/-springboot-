@@ -135,34 +135,6 @@ export default {
         })
       })
     },
-    saveOrUpdate() {
-      // 触发表单验证
-      this.$refs.FormRef.validate((valid) => {
-        if (valid) {
-          // 再提交请求给后台
-          api.saveOrUpdate(this.Form).then(response => {
-            // 成功提示
-            this.$message({
-              message: response.message,
-              type: 'success'
-            })
-            // 关闭对话框
-            this.dialogFormVisible = false
-            // 刷新表格
-            this.getList()
-          })
-        } else {
-          console.log('error submit!!')
-          return false
-        }
-      })
-    },
-    clearForm() {
-      this.Form = {
-
-      }
-      this.$refs.FormRef.clearValidate()
-    },
     openEditUI(id) {
       if (id == null) {
         this.title = '新增用户'
