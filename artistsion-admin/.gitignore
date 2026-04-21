@@ -34,3 +34,6 @@ build/
 
 # Local runtime secrets
 src/main/resources/application-local.properties
+
+# Runtime uploads
+uploads/
