@@ -11,70 +11,30 @@ import lombok.EqualsAndHashCode;
 import java.io.Serializable;
 import java.util.Date;
 
-/**
- * <p>
- *
- * </p>
- *
- * @author
- * @since 2024-02-16
- */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("sys_fenlei")
-public class SysFenlei implements Serializable {
+@TableName("sys_tag_alias")
+public class SysTagAlias implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /**
-     * id
-     */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    /**
-     * 分类
-     */
-    private String fenlei;
+    @TableField("tag_id")
+    private Long tagId;
 
-    /**
-     * 分类编码
-     */
-    private String code;
+    @TableField("alias_name")
+    private String aliasName;
 
-    /**
-     * 排序
-     */
-    private Integer sort;
+    @TableField("normalized_name")
+    private String normalizedName;
 
-    /**
-     * 状态：1启用 0禁用
-     */
-    private Integer status;
-
-    /**
-     * 是否固定分类：1是 0否
-     */
-    @TableField("is_fixed")
-    private Integer isFixed;
-
-    /**
-     * 创建时间
-     */
     @TableField("created_at")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date createdAt;
 
-    /**
-     * 更新时间
-     */
     @TableField("updated_at")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date updatedAt;
-
-    /**
-     * 逻辑删除：0否 1是
-     */
-    private Integer deleted;
-
 }

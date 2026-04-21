@@ -129,6 +129,7 @@ const NAV_GROUPS = [
     matchPaths: ['/fenlei', '/lunbo'],
     children: [
       { path: '/fenlei/fenlei', label: '分类管理' },
+      { path: '/fenlei/tag', label: '标签管理' },
       { path: '/lunbo/lunbo', label: '轮播管理' }
     ]
   },

@@ -1,7 +1,9 @@
 package com.lf.service;
 
-import com.lf.entity.SysFenlei;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.lf.common.request.SysFenleiUpdateRequest;
+import com.lf.entity.SysFenlei;
 
 /**
  * <p>
@@ -13,4 +15,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface SysFenleiService extends IService<SysFenlei> {
 
+    Page<SysFenlei> getPage(String fenlei, Integer status, Long pageNo, Long pageSize);
+
+    SysFenlei getActiveById(Long id);
+
+    void updateCategory(SysFenleiUpdateRequest request);
 }

@@ -230,6 +230,13 @@ export const constantRoutes = [
       meta: { title: '控制台' }
     },
     {
+      path: '/fenlei/tag',
+      name: 'AdminTagManage',
+      component: () => import('@/views/fenlei/tag'),
+      meta: { title: '标签管理', requiresAdmin: true },
+      hidden: true
+    },
+    {
       path: '/userinfo',
       name: 'AdminProfile',
       component: () => import('@/views/userinfo/index'),

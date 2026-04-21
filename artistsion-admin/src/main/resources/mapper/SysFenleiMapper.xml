@@ -6,11 +6,18 @@
     <resultMap id="BaseResultMap" type="com.lf.entity.SysFenlei">
         <id column="id" property="id" />
         <result column="fenlei" property="fenlei" />
+        <result column="code" property="code" />
+        <result column="sort" property="sort" />
+        <result column="status" property="status" />
+        <result column="is_fixed" property="isFixed" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="deleted" property="deleted" />
     </resultMap>
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, fenlei
+        id, fenlei, code, sort, status, is_fixed, created_at, updated_at, deleted
     </sql>
 
 </mapper>

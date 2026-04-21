@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lf.dao.SysTagMapper">
+
+    <resultMap id="BaseResultMap" type="com.lf.entity.SysTag">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="normalized_name" property="normalizedName" />
+        <result column="tag_type" property="tagType" />
+        <result column="tag_group" property="tagGroup" />
+        <result column="status" property="status" />
+        <result column="use_count" property="useCount" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="deleted" property="deleted" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, name, normalized_name, tag_type, tag_group, status, use_count, created_at, updated_at, deleted
+    </sql>
+
+</mapper>

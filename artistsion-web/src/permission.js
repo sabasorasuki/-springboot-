@@ -181,8 +181,18 @@ function normalizeAdminConsoleMenus(menuList) {
   }, [])
 }
 
+function routeRequiresAdmin(to) {
+  return to.matched.some(route => route.meta && route.meta.requiresAdmin)
+}
+
 function handleAdminAccess(to, next) {
   const canAccess = canAccessAdminConsole(store.getters.roles, store.getters.activeRole)
+  if (routeRequiresAdmin(to) && !canAccess) {
+    Message.warning('当前身份不可访问管理员页面')
+    next({ path: '/home', replace: true })
+    NProgress.done()
+    return true
+  }
   if (isAdminEntryPath(to.path)) {
     if (!canAccess) {
       Message.warning('当前身份不可进入管理员控制台')

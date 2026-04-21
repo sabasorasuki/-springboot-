@@ -24,6 +24,7 @@ export const ADMIN_MENU_COMPONENT_ALLOWLIST = new Set([
   'liuyan/liuyan',
   'report/index',
   'fenlei/fenlei',
+  'fenlei/tag',
   'tongji/tongji',
   'rizhi/rizhi',
   'lunbo/lunbo'
@@ -46,6 +47,7 @@ export const ADMIN_MENU_OVERRIDES = {
   'report/index': { title: '举报与审核中心' },
   '/fenlei': { title: '分类与配置', redirect: '/fenlei/fenlei' },
   'fenlei/fenlei': { title: '分类管理' },
+  'fenlei/tag': { title: '标签管理' },
   '/tongji': { title: '统计与审计', redirect: '/tongji/tongji' },
   'tongji/tongji': { title: '交易统计' },
   '/rizhi': { title: '日志与审计', redirect: '/rizhi/rizhi' },

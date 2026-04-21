@@ -1,16 +1,15 @@
 import request from '@/utils/request'
 
 export default {
-  getList(searchModel) {
+  getAdminList(searchModel) {
     return request({
       url: '/sysFenlei/list',
       method: 'get',
       params: {
         pageNo: searchModel.pageNo,
         pageSize: searchModel.pageSize,
-        title: searchModel.title,
         fenlei: searchModel.fenlei,
-        id: searchModel.id
+        status: searchModel.status
       }
     })
   },
@@ -21,31 +20,18 @@ export default {
       method: 'get',
       params: {
         pageNo: 1,
-        pageSize: 99
+        pageSize: 99,
+        status: 1
       }
     })
   },
 
-  add(content) {
-    return request({
-      url: '/sysFenlei/add',
-      method: 'post',
-      data: content
-    })
-  },
   update(content) {
     return request({
       url: '/sysFenlei/update',
       method: 'put',
       data: content
     })
-  },
-
-  saveOrUpdate(content) {
-    if (content.id === null || content.id === undefined) {
-      return this.add(content)
-    }
-    return this.update(content)
   },
 
   getById(id) {
@@ -59,13 +45,6 @@ export default {
     return request({
       url: `/sysHuodong/getByhuodongId/${id}`,
       method: 'get'
-    })
-  },
-
-  deleteById(id) {
-    return request({
-      url: `/sysFenlei/deleteById/${id}`,
-      method: 'delete'
     })
   }
 
