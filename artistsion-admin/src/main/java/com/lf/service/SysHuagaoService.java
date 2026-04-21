@@ -1,7 +1,9 @@
 package com.lf.service;
 
-import com.lf.entity.SysHuagao;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.lf.common.request.SysHuagaoPublishRequest;
+import com.lf.entity.SysHuagao;
+import com.lf.entity.User;
 
 /**
  * <p>
@@ -13,4 +15,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface SysHuagaoService extends IService<SysHuagao> {
 
+    SysHuagao getDetailById(Long id);
+
+    SysHuagao savePublishedHuagao(SysHuagaoPublishRequest request, User loginUser);
 }

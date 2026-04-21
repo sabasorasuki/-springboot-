@@ -38,9 +38,10 @@ public class SysFenleiController {
     public Result<Map<String,Object>> getList(
             @RequestParam(value = "fenlei",required = false) String fenlei,
             @RequestParam(value = "status", required = false) Integer status,
+            @RequestParam(value = "isFixed", required = false) Integer isFixed,
             @RequestParam(value = "pageNo", defaultValue = "1") Long pageNo,
             @RequestParam(value = "pageSize", defaultValue = "10") Long pageSize){
-        Page<SysFenlei> page = service.getPage(fenlei, status, pageNo, pageSize);
+        Page<SysFenlei> page = service.getPage(fenlei, status, isFixed, pageNo, pageSize);
 
         Map<String,Object> data = new HashMap<>();
         data.put("total",page.getTotal());

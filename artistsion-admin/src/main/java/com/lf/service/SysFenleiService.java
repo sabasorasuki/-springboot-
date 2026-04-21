@@ -15,7 +15,7 @@ import com.lf.entity.SysFenlei;
  */
 public interface SysFenleiService extends IService<SysFenlei> {
 
-    Page<SysFenlei> getPage(String fenlei, Integer status, Long pageNo, Long pageSize);
+    Page<SysFenlei> getPage(String fenlei, Integer status, Integer isFixed, Long pageNo, Long pageSize);
 
     SysFenlei getActiveById(Long id);
 

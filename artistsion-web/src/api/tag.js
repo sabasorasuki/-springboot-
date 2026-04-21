@@ -23,6 +23,13 @@ export default {
     })
   },
 
+  getSystemOptions() {
+    return request({
+      url: '/sysTag/systemOptions',
+      method: 'get'
+    })
+  },
+
   add(content) {
     return request({
       url: '/sysTag/add',

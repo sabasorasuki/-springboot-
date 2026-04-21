@@ -26,6 +26,19 @@ export default {
     })
   },
 
+  getFixedList() {
+    return request({
+      url: '/sysFenlei/list',
+      method: 'get',
+      params: {
+        pageNo: 1,
+        pageSize: 20,
+        status: 1,
+        isFixed: 1
+      }
+    })
+  },
+
   update(content) {
     return request({
       url: '/sysFenlei/update',

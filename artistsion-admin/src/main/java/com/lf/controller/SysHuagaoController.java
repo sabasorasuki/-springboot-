@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lf.common.Result;
 import com.lf.common.utils.JwtUtil;
+import com.lf.common.request.SysHuagaoPublishRequest;
 import com.lf.entity.SysHuagao;
 import com.lf.entity.User;
 import com.lf.dao.UserMapper;
@@ -148,10 +149,22 @@ public class SysHuagaoController {
 
 
     @GetMapping("/getById/{id}")
-    public Result<SysHuagao> getById(@PathVariable("id") Integer id){
-        SysHuagao shetuan = service.getById(id);
+    public Result<SysHuagao> getById(@PathVariable("id") Long id){
+        SysHuagao shetuan = service.getDetailById(id);
         populateArtistName(shetuan);
         return Result.success(shetuan);
+    }
+
+    @PostMapping("/publish")
+    public Result<?> publish(HttpServletRequest request, @RequestBody SysHuagaoPublishRequest publishRequest) {
+        User loginUser;
+        try {
+            loginUser = jwtUtil.parseToken(request.getHeader("X-Token"), User.class);
+        } catch (Exception e) {
+            return Result.fail(20003, "令牌无效");
+        }
+        service.savePublishedHuagao(publishRequest, loginUser);
+        return Result.success("保存成功");
     }
 
     @DeleteMapping("/deleteById/{id}")

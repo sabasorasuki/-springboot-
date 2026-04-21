@@ -95,7 +95,7 @@ export default {
   },
   methods: {
     goto() {
-      this.$router.push({ name: 'fabusp' })
+      this.$router.push({ path: '/publish/work', query: { type: 'huagao' }})
     },
     handleAvatarSuccess(res, file) {
       console.log(res, 'oss1')

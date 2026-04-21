@@ -91,6 +91,14 @@ export default {
     return this.update(content)
   },
 
+  publish(content) {
+    return request({
+      url: '/sysHuagao/publish',
+      method: 'post',
+      data: content
+    })
+  },
+
   getById(id) {
     return request({
       url: `/sysHuagao/getById/${id}`,

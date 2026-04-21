@@ -6,11 +6,15 @@ import com.lf.common.request.SysTagCreateRequest;
 import com.lf.common.request.SysTagUpdateRequest;
 import com.lf.entity.SysTag;
 
+import java.util.List;
+
 public interface SysTagService extends IService<SysTag> {
 
     Page<SysTag> getPage(String name, String tagType, String tagGroup, Integer status, Long pageNo, Long pageSize);
 
     SysTag getActiveById(Long id);
+
+    List<SysTag> listEnabledSystemTags();
 
     SysTag createSystemTag(SysTagCreateRequest request);
 

@@ -23,11 +23,12 @@ import org.springframework.util.StringUtils;
 public class SysFenleiServiceImpl extends ServiceImpl<SysFenleiMapper, SysFenlei> implements SysFenleiService {
 
     @Override
-    public Page<SysFenlei> getPage(String fenlei, Integer status, Long pageNo, Long pageSize) {
+    public Page<SysFenlei> getPage(String fenlei, Integer status, Integer isFixed, Long pageNo, Long pageSize) {
         LambdaQueryWrapper<SysFenlei> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SysFenlei::getDeleted, 0);
         wrapper.like(StringUtils.hasText(fenlei), SysFenlei::getFenlei, fenlei);
         wrapper.eq(status != null, SysFenlei::getStatus, status);
+        wrapper.eq(isFixed != null, SysFenlei::getIsFixed, isFixed);
         wrapper.orderByAsc(SysFenlei::getSort)
                 .orderByAsc(SysFenlei::getId);
 

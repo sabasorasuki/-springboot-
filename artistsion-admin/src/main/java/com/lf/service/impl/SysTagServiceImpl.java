@@ -16,6 +16,7 @@ import com.lf.service.SysTagService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
+import java.util.List;
 
 @Service
 public class SysTagServiceImpl extends ServiceImpl<SysTagMapper, SysTag> implements SysTagService {
@@ -52,6 +53,16 @@ public class SysTagServiceImpl extends ServiceImpl<SysTagMapper, SysTag> impleme
             throw new BusinessException(20001, "标签不存在");
         }
         return tag;
+    }
+
+    @Override
+    public List<SysTag> listEnabledSystemTags() {
+        LambdaQueryWrapper<SysTag> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SysTag::getDeleted, 0)
+                .eq(SysTag::getTagType, TagConstants.TYPE_SYSTEM)
+                .eq(SysTag::getStatus, 1)
+                .orderByAsc(SysTag::getId);
+        return list(wrapper);
     }
 
     @Override

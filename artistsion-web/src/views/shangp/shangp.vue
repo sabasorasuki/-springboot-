@@ -105,7 +105,7 @@ export default {
   },
   methods: {
     goto() {
-      this.$router.push({ name: 'fabusp' })
+      this.$router.push({ path: '/publish/work', query: { type: 'huagao' }})
     },
     handleAvatarSuccess(res, file) {
       console.log(res, 'oss1')
@@ -168,8 +168,7 @@ export default {
         this.title = '新增用户'
       } else {
         this.title = '修改用户'
-        // 根据id查询用户数据
-        this.$router.push({ name: 'fabusp', params: { id: id }})
+        this.$router.push({ path: '/publish/work', query: { type: 'huagao', id: id }})
         // api.getById(id).then(response => {
         //     this.Form = response.data;
         // })

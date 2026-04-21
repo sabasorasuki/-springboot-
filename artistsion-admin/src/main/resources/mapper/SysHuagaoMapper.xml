@@ -13,11 +13,13 @@
         <result column="type" property="type" />
         <result column="shangjiaids" property="shangjiaids" />
         <result column="status" property="status" />
+        <result column="zhekou" property="zhekou" />
+        <result column="fujin" property="fujin" />
     </resultMap>
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, name, photo, price, fenlei, content, type,shangjiaids,status
+        id, name, photo, price, fenlei, content, type, shangjiaids, status, zhekou, fujin
     </sql>
 
 </mapper>

@@ -1,14 +1,16 @@
 package com.lf.entity;
 
-import java.math.BigDecimal;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import java.io.Serializable;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 /**
  * <p>
  *
@@ -69,5 +71,13 @@ public class SysHuagao implements Serializable {
     @TableField(exist = false)
     private String artistName;
 
+    @TableField(exist = false)
+    private List<Long> systemTagIds = new ArrayList<>();
+
+    @TableField(exist = false)
+    private List<String> freeTagNames = new ArrayList<>();
+
+    @TableField(exist = false)
+    private List<SysTag> systemTags = new ArrayList<>();
 
 }

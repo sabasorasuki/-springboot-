@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -37,6 +38,11 @@ public class SysTagController {
     @GetMapping("/getById/{id}")
     public Result<SysTag> getById(@PathVariable("id") Long id) {
         return Result.success(sysTagService.getActiveById(id));
+    }
+
+    @GetMapping("/systemOptions")
+    public Result<List<SysTag>> systemOptions() {
+        return Result.success(sysTagService.listEnabledSystemTags());
     }
 
     @PostMapping("/add")
