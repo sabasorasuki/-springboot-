@@ -22,9 +22,92 @@
         id, name, photo, price, fenlei, content, type, shangjiaids, status, zhekou, fujin
     </sql>
 
+    <sql id="SearchScoreSelect">
+        <choose>
+            <when test="keyword != null and keyword != ''">
+                (
+                    CASE
+                        WHEN h.name = #{keyword} THEN 120
+                        ELSE 0
+                    END
+                    + CASE
+                        WHEN h.name &lt;&gt; #{keyword}
+                         AND h.name LIKE CONCAT(#{escapedKeyword}, '%') ESCAPE '\\'
+                        THEN 80
+                        ELSE 0
+                    END
+                    + CASE
+                        WHEN h.name &lt;&gt; #{keyword}
+                         AND h.name NOT LIKE CONCAT(#{escapedKeyword}, '%') ESCAPE '\\'
+                         AND h.name LIKE CONCAT('%', #{escapedKeyword}, '%') ESCAPE '\\'
+                        THEN 40
+                        ELSE 0
+                    END
+                    + CASE
+                        WHEN h.fenlei = #{keyword} THEN 30
+                        ELSE 0
+                    END
+                    + COALESCE((
+                        SELECT LEAST(COUNT(DISTINCT st.id), 3) * 18
+                        FROM sys_huagao_tag ht
+                        INNER JOIN sys_tag st ON st.id = ht.tag_id
+                        WHERE ht.huagao_id = h.id
+                          AND st.deleted = 0
+                          AND st.tag_type = 'system'
+                          AND st.name LIKE CONCAT('%', #{escapedKeyword}, '%') ESCAPE '\\'
+                    ), 0)
+                    + COALESCE((
+                        SELECT LEAST(COUNT(DISTINCT st.id), 3) * 14
+                        FROM sys_huagao_tag ht
+                        INNER JOIN sys_tag st ON st.id = ht.tag_id
+                        WHERE ht.huagao_id = h.id
+                          AND st.deleted = 0
+                          AND st.tag_type = 'free'
+                          AND st.name LIKE CONCAT('%', #{escapedKeyword}, '%') ESCAPE '\\'
+                    ), 0)
+                    + COALESCE((
+                        SELECT LEAST(COUNT(DISTINCT sta.tag_id), 3) * 10
+                        FROM sys_huagao_tag ht
+                        INNER JOIN sys_tag_alias sta ON sta.tag_id = ht.tag_id
+                        INNER JOIN sys_tag st ON st.id = sta.tag_id
+                        WHERE ht.huagao_id = h.id
+                          AND st.deleted = 0
+                          AND sta.alias_name LIKE CONCAT('%', #{escapedKeyword}, '%') ESCAPE '\\'
+                    ), 0)
+                    + <choose>
+                        <when test="normalizedKeyword != null and normalizedKeyword != ''">
+                            COALESCE((
+                                SELECT LEAST(COUNT(DISTINCT normalized_hits.tag_id), 3) * 8
+                                FROM (
+                                    SELECT st.id AS tag_id
+                                    FROM sys_huagao_tag ht
+                                    INNER JOIN sys_tag st ON st.id = ht.tag_id
+                                    WHERE ht.huagao_id = h.id
+                                      AND st.deleted = 0
+                                      AND st.normalized_name LIKE CONCAT('%', #{escapedNormalizedKeyword}, '%') ESCAPE '\\'
+                                    UNION
+                                    SELECT sta.tag_id AS tag_id
+                                    FROM sys_huagao_tag ht
+                                    INNER JOIN sys_tag_alias sta ON sta.tag_id = ht.tag_id
+                                    INNER JOIN sys_tag st ON st.id = sta.tag_id
+                                    WHERE ht.huagao_id = h.id
+                                      AND st.deleted = 0
+                                      AND sta.normalized_name LIKE CONCAT('%', #{escapedNormalizedKeyword}, '%') ESCAPE '\\'
+                                ) normalized_hits
+                            ), 0)
+                        </when>
+                        <otherwise>0</otherwise>
+                    </choose>
+                ) AS search_score
+            </when>
+            <otherwise>NULL AS search_score</otherwise>
+        </choose>
+    </sql>
+
     <select id="selectFrontPage" resultMap="BaseResultMap">
         SELECT
-        <include refid="Base_Column_List"/>
+        <include refid="Base_Column_List"/>,
+        <include refid="SearchScoreSelect"/>
         FROM sys_huagao h
         <where>
             <if test="name != null and name != ''">
@@ -58,19 +141,25 @@
             </if>
             <if test="keyword != null and keyword != ''">
                 AND (
-                    h.name LIKE CONCAT('%', #{keyword}, '%')
+                    h.name LIKE CONCAT('%', #{escapedKeyword}, '%') ESCAPE '\\'
+                    OR h.fenlei = #{keyword}
                     OR EXISTS (
                         SELECT 1
                         FROM sys_huagao_tag ht
                         INNER JOIN sys_tag st ON st.id = ht.tag_id
                         WHERE ht.huagao_id = h.id
                           AND st.deleted = 0
-                          AND (
-                              st.name LIKE CONCAT('%', #{keyword}, '%')
-                              <if test="normalizedKeyword != null and normalizedKeyword != ''">
-                                  OR st.normalized_name LIKE CONCAT('%', #{normalizedKeyword}, '%')
-                              </if>
-                          )
+                          AND st.tag_type = 'system'
+                          AND st.name LIKE CONCAT('%', #{escapedKeyword}, '%') ESCAPE '\\'
+                    )
+                    OR EXISTS (
+                        SELECT 1
+                        FROM sys_huagao_tag ht
+                        INNER JOIN sys_tag st ON st.id = ht.tag_id
+                        WHERE ht.huagao_id = h.id
+                          AND st.deleted = 0
+                          AND st.tag_type = 'free'
+                          AND st.name LIKE CONCAT('%', #{escapedKeyword}, '%') ESCAPE '\\'
                     )
                     OR EXISTS (
                         SELECT 1
@@ -79,17 +168,38 @@
                         INNER JOIN sys_tag st ON st.id = sta.tag_id
                         WHERE ht.huagao_id = h.id
                           AND st.deleted = 0
-                          AND (
-                              sta.alias_name LIKE CONCAT('%', #{keyword}, '%')
-                              <if test="normalizedKeyword != null and normalizedKeyword != ''">
-                                  OR sta.normalized_name LIKE CONCAT('%', #{normalizedKeyword}, '%')
-                              </if>
-                          )
+                          AND sta.alias_name LIKE CONCAT('%', #{escapedKeyword}, '%') ESCAPE '\\'
                     )
+                    <if test="normalizedKeyword != null and normalizedKeyword != ''">
+                        OR EXISTS (
+                            SELECT 1
+                            FROM sys_huagao_tag ht
+                            INNER JOIN sys_tag st ON st.id = ht.tag_id
+                            WHERE ht.huagao_id = h.id
+                              AND st.deleted = 0
+                              AND st.normalized_name LIKE CONCAT('%', #{escapedNormalizedKeyword}, '%') ESCAPE '\\'
+                        )
+                        OR EXISTS (
+                            SELECT 1
+                            FROM sys_huagao_tag ht
+                            INNER JOIN sys_tag_alias sta ON sta.tag_id = ht.tag_id
+                            INNER JOIN sys_tag st ON st.id = sta.tag_id
+                            WHERE ht.huagao_id = h.id
+                              AND st.deleted = 0
+                              AND sta.normalized_name LIKE CONCAT('%', #{escapedNormalizedKeyword}, '%') ESCAPE '\\'
+                        )
+                    </if>
                 )
             </if>
         </where>
-        ORDER BY h.id DESC
+        <choose>
+            <when test="keyword != null and keyword != ''">
+                ORDER BY search_score DESC, h.id DESC
+            </when>
+            <otherwise>
+                ORDER BY h.id DESC
+            </otherwise>
+        </choose>
     </select>
 
 </mapper>

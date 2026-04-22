@@ -21,6 +21,8 @@ public interface SysHuagaoMapper extends BaseMapper<SysHuagao> {
                                     @Param("name") String name,
                                     @Param("keyword") String keyword,
                                     @Param("normalizedKeyword") String normalizedKeyword,
+                                    @Param("escapedKeyword") String escapedKeyword,
+                                    @Param("escapedNormalizedKeyword") String escapedNormalizedKeyword,
                                     @Param("id") String id,
                                     @Param("type") String type,
                                     @Param("fenlei") String fenlei,

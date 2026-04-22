@@ -83,6 +83,8 @@ public class SysHuagaoServiceImpl extends ServiceImpl<SysHuagaoMapper, SysHuagao
         String normalizedKeyword = StringUtils.hasText(sanitizedKeyword)
                 ? TagNormalizationUtil.normalize(sanitizedKeyword)
                 : null;
+        String escapedKeyword = escapeLikeKeyword(sanitizedKeyword);
+        String escapedNormalizedKeyword = escapeLikeKeyword(normalizedKeyword);
         Long sanitizedTagId = tagId != null && tagId > 0 ? tagId : null;
         String fenleiFilter = normalizeFenleiFilter(fenlei);
         List<SysHuagao> records = baseMapper.selectFrontPage(
@@ -90,6 +92,8 @@ public class SysHuagaoServiceImpl extends ServiceImpl<SysHuagaoMapper, SysHuagao
                 name,
                 sanitizedKeyword,
                 normalizedKeyword,
+                escapedKeyword,
+                escapedNormalizedKeyword,
                 id,
                 type,
                 fenleiFilter,
@@ -202,6 +206,16 @@ public class SysHuagaoServiceImpl extends ServiceImpl<SysHuagaoMapper, SysHuagao
     private String sanitizeKeyword(String keyword) {
         String sanitizedKeyword = TagNormalizationUtil.sanitizeDisplayName(keyword);
         return StringUtils.hasText(sanitizedKeyword) ? sanitizedKeyword : null;
+    }
+
+    private String escapeLikeKeyword(String keyword) {
+        if (!StringUtils.hasText(keyword)) {
+            return null;
+        }
+        return keyword
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
     }
 
     private String normalizeFenleiFilter(String fenlei) {
