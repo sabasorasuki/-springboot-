@@ -167,7 +167,7 @@ export default {
 
     /** 分类标签 */
     fetchCategories() {
-      fenleiApi.getList1().then(res => {
+      fenleiApi.getFixedList().then(res => {
         this.categories = res.data.rows || []
       }).catch(() => {})
     },

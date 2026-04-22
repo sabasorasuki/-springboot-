@@ -159,7 +159,7 @@ export default {
       }
     },
     fetchCategories() {
-      fenleiApi.getList1().then(res => {
+      fenleiApi.getFixedList().then(res => {
         const cats = [...new Set((res.data.rows || []).map(c => c.fenlei).filter(Boolean))]
         this.filterTags = ['全部', ...cats]
       }).catch(() => {})

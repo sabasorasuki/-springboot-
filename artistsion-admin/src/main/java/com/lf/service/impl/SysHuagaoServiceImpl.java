@@ -220,6 +220,7 @@ public class SysHuagaoServiceImpl extends ServiceImpl<SysHuagaoMapper, SysHuagao
         wrapper.eq(SysFenlei::getFenlei, fenlei)
                 .eq(SysFenlei::getDeleted, 0)
                 .eq(SysFenlei::getStatus, 1)
+                .eq(SysFenlei::getIsFixed, 1)
                 .last("LIMIT 1");
         SysFenlei category = sysFenleiMapper.selectOne(wrapper);
         if (category == null) {
