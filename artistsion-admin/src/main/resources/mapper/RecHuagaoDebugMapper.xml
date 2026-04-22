@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lf.dao.RecHuagaoDebugMapper">
+
+    <select id="selectItemDailyRebuildCheck" resultType="map">
+        WITH impression_raw AS (
+            SELECT
+                DATE(i.created_at) AS dt,
+                i.huagao_id,
+                MAX(i.shangjia_id) AS shangjia_id,
+                COUNT(*) AS impression_cnt,
+                SUM(CASE WHEN i.keyword IS NOT NULL AND i.keyword &lt;&gt; '' THEN 1 ELSE 0 END) AS search_impression_cnt,
+                SUM(CASE WHEN i.fenlei IS NOT NULL AND i.fenlei &lt;&gt; '' THEN 1 ELSE 0 END) AS filter_fenlei_impression_cnt,
+                SUM(CASE WHEN i.tag_id IS NOT NULL THEN 1 ELSE 0 END) AS filter_tag_impression_cnt
+            FROM rec_huagao_impression_log i
+            WHERE DATE(i.created_at) = #{dt}
+            GROUP BY DATE(i.created_at), i.huagao_id
+        ),
+        action_raw AS (
+            SELECT
+                DATE(a.created_at) AS dt,
+                a.huagao_id,
+                MAX(a.shangjia_id) AS shangjia_id,
+                SUM(CASE WHEN a.event_type = 'click_detail' THEN 1 ELSE 0 END) AS click_detail_cnt,
+                SUM(CASE WHEN a.event_type = 'favorite' THEN 1 ELSE 0 END) AS favorite_cnt,
+                SUM(CASE WHEN a.event_type = 'click_detail' AND COALESCE(r.has_search, 0) = 1 THEN 1 ELSE 0 END) AS search_click_detail_cnt,
+                SUM(CASE WHEN a.event_type = 'favorite' AND COALESCE(r.has_search, 0) = 1 THEN 1 ELSE 0 END) AS search_favorite_cnt
+            FROM rec_huagao_action_log a
+            LEFT JOIN rec_huagao_request_log r ON r.request_id = a.request_id
+            WHERE DATE(a.created_at) = #{dt}
+            GROUP BY DATE(a.created_at), a.huagao_id
+        ),
+        keyset AS (
+            SELECT dt, huagao_id FROM impression_raw
+            UNION
+            SELECT dt, huagao_id FROM action_raw
+            UNION
+            SELECT dt, huagao_id FROM rec_huagao_item_stat_daily WHERE dt = #{dt}
+        )
+        SELECT
+            k.dt,
+            k.huagao_id,
+            COALESCE(d.shangjia_id, i.shangjia_id, a.shangjia_id) AS shangjia_id,
+            COALESCE(i.impression_cnt, 0) AS raw_impression_cnt,
+            COALESCE(d.impression_cnt, 0) AS agg_impression_cnt,
+            COALESCE(a.click_detail_cnt, 0) AS raw_click_detail_cnt,
+            COALESCE(d.click_detail_cnt, 0) AS agg_click_detail_cnt,
+            COALESCE(a.favorite_cnt, 0) AS raw_favorite_cnt,
+            COALESCE(d.favorite_cnt, 0) AS agg_favorite_cnt,
+            COALESCE(i.search_impression_cnt, 0) AS raw_search_impression_cnt,
+            COALESCE(d.search_impression_cnt, 0) AS agg_search_impression_cnt,
+            COALESCE(i.filter_fenlei_impression_cnt, 0) AS raw_filter_fenlei_impression_cnt,
+            COALESCE(d.filter_fenlei_impression_cnt, 0) AS agg_filter_fenlei_impression_cnt,
+            COALESCE(i.filter_tag_impression_cnt, 0) AS raw_filter_tag_impression_cnt,
+            COALESCE(d.filter_tag_impression_cnt, 0) AS agg_filter_tag_impression_cnt,
+            COALESCE(a.search_click_detail_cnt, 0) AS raw_search_click_detail_cnt,
+            COALESCE(d.search_click_detail_cnt, 0) AS agg_search_click_detail_cnt,
+            COALESCE(a.search_favorite_cnt, 0) AS raw_search_favorite_cnt,
+            COALESCE(d.search_favorite_cnt, 0) AS agg_search_favorite_cnt,
+            CASE
+                WHEN COALESCE(i.impression_cnt, 0) = COALESCE(d.impression_cnt, 0)
+                 AND COALESCE(a.click_detail_cnt, 0) = COALESCE(d.click_detail_cnt, 0)
+                 AND COALESCE(a.favorite_cnt, 0) = COALESCE(d.favorite_cnt, 0)
+                 AND COALESCE(i.search_impression_cnt, 0) = COALESCE(d.search_impression_cnt, 0)
+                 AND COALESCE(i.filter_fenlei_impression_cnt, 0) = COALESCE(d.filter_fenlei_impression_cnt, 0)
+                 AND COALESCE(i.filter_tag_impression_cnt, 0) = COALESCE(d.filter_tag_impression_cnt, 0)
+                 AND COALESCE(a.search_click_detail_cnt, 0) = COALESCE(d.search_click_detail_cnt, 0)
+                 AND COALESCE(a.search_favorite_cnt, 0) = COALESCE(d.search_favorite_cnt, 0)
+                THEN 1 ELSE 0
+            END AS is_match
+        FROM keyset k
+        LEFT JOIN impression_raw i ON i.dt = k.dt AND i.huagao_id = k.huagao_id
+        LEFT JOIN action_raw a ON a.dt = k.dt AND a.huagao_id = k.huagao_id
+        LEFT JOIN rec_huagao_item_stat_daily d ON d.dt = k.dt AND d.huagao_id = k.huagao_id
+        ORDER BY is_match ASC, k.huagao_id ASC
+    </select>
+
+    <select id="selectQueryDailyRebuildCheck" resultType="map">
+        WITH request_raw AS (
+            SELECT
+                DATE(r.created_at) AS dt,
+                r.query_key,
+                MAX(r.scene) AS scene,
+                MAX(r.keyword) AS keyword,
+                MAX(r.normalized_keyword) AS normalized_keyword,
+                MAX(r.fenlei) AS fenlei,
+                MAX(r.tag_id) AS tag_id,
+                MAX(r.has_search) AS has_search,
+                MAX(r.has_fenlei_filter) AS has_fenlei_filter,
+                MAX(r.has_tag_filter) AS has_tag_filter,
+                COUNT(*) AS request_cnt
+            FROM rec_huagao_request_log r
+            WHERE DATE(r.created_at) = #{dt}
+            GROUP BY DATE(r.created_at), r.query_key
+        ),
+        impression_raw AS (
+            SELECT
+                DATE(i.created_at) AS dt,
+                r.query_key,
+                COUNT(*) AS impression_cnt
+            FROM rec_huagao_impression_log i
+            INNER JOIN rec_huagao_request_log r ON r.request_id = i.request_id
+            WHERE DATE(i.created_at) = #{dt}
+            GROUP BY DATE(i.created_at), r.query_key
+        ),
+        action_raw AS (
+            SELECT
+                DATE(a.created_at) AS dt,
+                r.query_key,
+                SUM(CASE WHEN a.event_type = 'click_detail' THEN 1 ELSE 0 END) AS click_detail_cnt,
+                SUM(CASE WHEN a.event_type = 'favorite' THEN 1 ELSE 0 END) AS favorite_cnt
+            FROM rec_huagao_action_log a
+            INNER JOIN rec_huagao_request_log r ON r.request_id = a.request_id
+            WHERE DATE(a.created_at) = #{dt}
+            GROUP BY DATE(a.created_at), r.query_key
+        ),
+        keyset AS (
+            SELECT dt, query_key FROM request_raw
+            UNION
+            SELECT dt, query_key FROM impression_raw
+            UNION
+            SELECT dt, query_key FROM action_raw
+            UNION
+            SELECT dt, query_key FROM rec_huagao_query_stat_daily WHERE dt = #{dt}
+        )
+        SELECT
+            k.dt,
+            k.query_key,
+            COALESCE(d.scene, rq.scene) AS scene,
+            COALESCE(d.keyword, rq.keyword) AS keyword,
+            COALESCE(d.normalized_keyword, rq.normalized_keyword) AS normalized_keyword,
+            COALESCE(d.fenlei, rq.fenlei) AS fenlei,
+            COALESCE(d.tag_id, rq.tag_id) AS tag_id,
+            COALESCE(rq.request_cnt, 0) AS raw_request_cnt,
+            COALESCE(d.request_cnt, 0) AS agg_request_cnt,
+            COALESCE(ir.impression_cnt, 0) AS raw_impression_cnt,
+            COALESCE(d.impression_cnt, 0) AS agg_impression_cnt,
+            COALESCE(ar.click_detail_cnt, 0) AS raw_click_detail_cnt,
+            COALESCE(d.click_detail_cnt, 0) AS agg_click_detail_cnt,
+            COALESCE(ar.favorite_cnt, 0) AS raw_favorite_cnt,
+            COALESCE(d.favorite_cnt, 0) AS agg_favorite_cnt,
+            CASE
+                WHEN COALESCE(rq.request_cnt, 0) = COALESCE(d.request_cnt, 0)
+                 AND COALESCE(ir.impression_cnt, 0) = COALESCE(d.impression_cnt, 0)
+                 AND COALESCE(ar.click_detail_cnt, 0) = COALESCE(d.click_detail_cnt, 0)
+                 AND COALESCE(ar.favorite_cnt, 0) = COALESCE(d.favorite_cnt, 0)
+                THEN 1 ELSE 0
+            END AS is_match
+        FROM keyset k
+        LEFT JOIN request_raw rq ON rq.dt = k.dt AND rq.query_key = k.query_key
+        LEFT JOIN impression_raw ir ON ir.dt = k.dt AND ir.query_key = k.query_key
+        LEFT JOIN action_raw ar ON ar.dt = k.dt AND ar.query_key = k.query_key
+        LEFT JOIN rec_huagao_query_stat_daily d ON d.dt = k.dt AND d.query_key = k.query_key
+        ORDER BY is_match ASC, k.query_key ASC
+    </select>
+
+    <select id="selectTrainingSamplePreview" resultType="map">
+        SELECT
+            r.request_id,
+            r.scene,
+            r.user_id,
+            r.visitor_id,
+            r.session_id,
+            r.keyword,
+            r.normalized_keyword,
+            r.fenlei,
+            r.tag_id,
+            r.page_no,
+            r.page_size,
+            r.sort_mode,
+            r.has_search,
+            r.has_fenlei_filter,
+            r.has_tag_filter,
+            i.huagao_id,
+            i.shangjia_id,
+            i.position,
+            i.search_score,
+            i.created_at AS impression_at,
+            COALESCE(a.click_detail_cnt, 0) AS click_detail_cnt,
+            COALESCE(a.favorite_cnt, 0) AS favorite_cnt,
+            a.first_click_detail_at,
+            a.first_favorite_at,
+            CASE
+                WHEN COALESCE(a.favorite_cnt, 0) &gt; 0 THEN 2
+                WHEN COALESCE(a.click_detail_cnt, 0) &gt; 0 THEN 1
+                ELSE 0
+            END AS relevance,
+            CASE
+                WHEN COALESCE(a.favorite_cnt, 0) &gt; 0 THEN 'favorite'
+                WHEN COALESCE(a.click_detail_cnt, 0) &gt; 0 THEN 'click_detail'
+                ELSE 'impression'
+            END AS label_source
+        FROM rec_huagao_request_log r
+        INNER JOIN rec_huagao_impression_log i ON i.request_id = r.request_id
+        LEFT JOIN (
+            SELECT
+                request_id,
+                huagao_id,
+                SUM(CASE WHEN event_type = 'click_detail' THEN 1 ELSE 0 END) AS click_detail_cnt,
+                SUM(CASE WHEN event_type = 'favorite' THEN 1 ELSE 0 END) AS favorite_cnt,
+                MIN(CASE WHEN event_type = 'click_detail' THEN created_at END) AS first_click_detail_at,
+                MIN(CASE WHEN event_type = 'favorite' THEN created_at END) AS first_favorite_at
+            FROM rec_huagao_action_log
+            GROUP BY request_id, huagao_id
+        ) a ON a.request_id = i.request_id AND a.huagao_id = i.huagao_id
+        WHERE DATE(r.created_at) BETWEEN #{dateFrom} AND #{dateTo}
+        ORDER BY r.created_at DESC, i.position ASC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

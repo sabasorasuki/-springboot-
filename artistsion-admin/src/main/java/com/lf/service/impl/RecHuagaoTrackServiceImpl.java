@@ -1,6 +1,8 @@
 package com.lf.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.lf.dao.RecHuagaoActionLogMapper;
+import com.lf.dao.RecHuagaoDebugMapper;
 import com.lf.dao.RecHuagaoImpressionLogMapper;
 import com.lf.dao.RecHuagaoItemStatDailyMapper;
 import com.lf.dao.RecHuagaoQueryStatDailyMapper;
@@ -28,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +58,9 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
 
     @Resource
     private RecHuagaoActionLogMapper actionLogMapper;
+
+    @Resource
+    private RecHuagaoDebugMapper debugMapper;
 
     @Resource
     private RecHuagaoItemStatDailyMapper itemStatDailyMapper;
@@ -161,6 +167,120 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
             requestLog = requestLogMapper.selectById(actionLog.getRequestId());
         }
         safeUpsertActionAggregates(actionLog, requestLog, today);
+    }
+
+    @Override
+    public Map<String, Object> getRequestDebug(String requestId) {
+        String sanitizedRequestId = sanitizeValue(requestId);
+        if (!StringUtils.hasText(sanitizedRequestId)) {
+            throw new BusinessException(20001, "requestId不能为空");
+        }
+
+        RecHuagaoRequestLog requestLog = requestLogMapper.selectById(sanitizedRequestId);
+        if (requestLog == null) {
+            throw new BusinessException(20001, "请求日志不存在");
+        }
+
+        List<RecHuagaoImpressionLog> impressions = impressionLogMapper.selectList(
+                new LambdaQueryWrapper<RecHuagaoImpressionLog>()
+                        .eq(RecHuagaoImpressionLog::getRequestId, sanitizedRequestId)
+                        .orderByAsc(RecHuagaoImpressionLog::getPosition)
+                        .orderByAsc(RecHuagaoImpressionLog::getId)
+        );
+        List<RecHuagaoActionLog> actions = actionLogMapper.selectList(
+                new LambdaQueryWrapper<RecHuagaoActionLog>()
+                        .eq(RecHuagaoActionLog::getRequestId, sanitizedRequestId)
+                        .orderByAsc(RecHuagaoActionLog::getCreatedAt)
+                        .orderByAsc(RecHuagaoActionLog::getId)
+        );
+
+        long clickDetailCount = actions.stream()
+                .filter(this::isClickDetail)
+                .count();
+        long favoriteCount = actions.stream()
+                .filter(this::isFavorite)
+                .count();
+        Set<Long> exposedHuagaoIds = impressions.stream()
+                .map(RecHuagaoImpressionLog::getHuagaoId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        Set<Long> actedHuagaoIds = actions.stream()
+                .map(RecHuagaoActionLog::getHuagaoId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        Map<String, Object> summary = new LinkedHashMap<>();
+        summary.put("requestId", sanitizedRequestId);
+        summary.put("scene", requestLog.getScene());
+        summary.put("hasSearch", intValue(requestLog.getHasSearch()));
+        summary.put("hasFenleiFilter", intValue(requestLog.getHasFenleiFilter()));
+        summary.put("hasTagFilter", intValue(requestLog.getHasTagFilter()));
+        summary.put("impressionCount", impressions.size());
+        summary.put("clickDetailCount", clickDetailCount);
+        summary.put("favoriteCount", favoriteCount);
+        summary.put("exposedHuagaoIds", exposedHuagaoIds);
+        summary.put("actedHuagaoIds", actedHuagaoIds);
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("summary", summary);
+        data.put("request", requestLog);
+        data.put("impressions", impressions);
+        data.put("actions", actions);
+        return data;
+    }
+
+    @Override
+    public Map<String, Object> getDailyRebuildCheck(LocalDate dt) {
+        LocalDate targetDt = dt == null ? LocalDate.now() : dt;
+        List<Map<String, Object>> itemRows = debugMapper.selectItemDailyRebuildCheck(targetDt);
+        List<Map<String, Object>> queryRows = debugMapper.selectQueryDailyRebuildCheck(targetDt);
+
+        long itemMismatchCount = countMismatchRows(itemRows);
+        long queryMismatchCount = countMismatchRows(queryRows);
+
+        Map<String, Object> summary = new LinkedHashMap<>();
+        summary.put("dt", targetDt);
+        summary.put("itemRowCount", itemRows.size());
+        summary.put("itemMismatchCount", itemMismatchCount);
+        summary.put("queryRowCount", queryRows.size());
+        summary.put("queryMismatchCount", queryMismatchCount);
+        summary.put("allMatched", itemMismatchCount == 0 && queryMismatchCount == 0);
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("summary", summary);
+        data.put("itemRows", itemRows);
+        data.put("queryRows", queryRows);
+        return data;
+    }
+
+    @Override
+    public Map<String, Object> getTrainingSamplePreview(LocalDate dateFrom,
+                                                        LocalDate dateTo,
+                                                        Integer limit) {
+        LocalDate safeDateTo = dateTo == null ? LocalDate.now() : dateTo;
+        LocalDate safeDateFrom = dateFrom == null ? safeDateTo : dateFrom;
+        if (safeDateFrom.isAfter(safeDateTo)) {
+            throw new BusinessException(20001, "dateFrom不能晚于dateTo");
+        }
+        int safeLimit = normalizePreviewLimit(limit);
+        List<Map<String, Object>> rows = debugMapper.selectTrainingSamplePreview(safeDateFrom, safeDateTo, safeLimit);
+
+        Map<String, Object> summary = new LinkedHashMap<>();
+        summary.put("dateFrom", safeDateFrom);
+        summary.put("dateTo", safeDateTo);
+        summary.put("limit", safeLimit);
+        summary.put("rowCount", rows.size());
+
+        Map<String, Object> labelSummary = new LinkedHashMap<>();
+        labelSummary.put("impressionOnly", rows.stream().filter(row -> intValue(row.get("relevance")) == 0).count());
+        labelSummary.put("clickDetail", rows.stream().filter(row -> intValue(row.get("relevance")) == 1).count());
+        labelSummary.put("favorite", rows.stream().filter(row -> intValue(row.get("relevance")) == 2).count());
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("summary", summary);
+        data.put("labelSummary", labelSummary);
+        data.put("rows", rows);
+        return data;
     }
 
     private void validateActionRequest(RecHuagaoActionTrackRequest request) {
@@ -375,5 +495,32 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
 
     private int intValue(Integer value) {
         return value == null ? 0 : value;
+    }
+
+    private int intValue(Object value) {
+        if (value == null) {
+            return 0;
+        }
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+        try {
+            return Integer.parseInt(String.valueOf(value));
+        } catch (NumberFormatException ignored) {
+            return 0;
+        }
+    }
+
+    private long countMismatchRows(List<Map<String, Object>> rows) {
+        return rows.stream()
+                .filter(row -> intValue(row.get("is_match")) != 1)
+                .count();
+    }
+
+    private int normalizePreviewLimit(Integer limit) {
+        if (limit == null || limit < 1) {
+            return 100;
+        }
+        return Math.min(limit, 500);
     }
 }
