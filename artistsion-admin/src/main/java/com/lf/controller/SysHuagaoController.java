@@ -10,6 +10,7 @@ import com.lf.common.request.SysHuagaoPublishRequest;
 import com.lf.entity.SysHuagao;
 import com.lf.entity.User;
 import com.lf.dao.UserMapper;
+import com.lf.service.RecHuagaoTrackService;
 import com.lf.service.SysHuagaoService;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -43,6 +44,9 @@ public class SysHuagaoController {
 
     @Resource
     private JwtUtil jwtUtil;
+
+    @Resource
+    private RecHuagaoTrackService recHuagaoTrackService;
 
 
     @GetMapping("/tuijianlist")
@@ -104,22 +108,45 @@ public class SysHuagaoController {
 
     @GetMapping("/list")
     public Result<Map<String,Object>> getList(
+            HttpServletRequest request,
             @RequestParam(value = "name",required = false) String name,
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "tagId", required = false) Long tagId,
             @RequestParam(value = "id",required = false) String id,
             @RequestParam(value = "type",required = false) String type,
             @RequestParam(value = "fenlei",required = false) String fenlei,
+            @RequestParam(value = "scene", required = false) String scene,
             @RequestParam(value = "shangjiaids",required = false) String shangjiaids,
             @RequestParam(value = "status",required = false) String status,
             @RequestParam(value = "pageNo") Long pageNo,
             @RequestParam(value = "pageSize") Long pageSize){
         Page<SysHuagao> page = service.getFrontPage(name, keyword, tagId, id, type, fenlei, shangjiaids, status, pageNo, pageSize);
         populateArtistNames(page.getRecords());
+        String requestId = null;
+        try {
+            User loginUser = resolveOptionalLoginUser(request);
+            requestId = recHuagaoTrackService.trackListIfNeeded(
+                    scene,
+                    keyword,
+                    fenlei,
+                    tagId,
+                    pageNo,
+                    pageSize,
+                    page.getTotal(),
+                    page.getRecords(),
+                    loginUser == null || loginUser.getId() == null ? null : Long.valueOf(loginUser.getId()),
+                    sanitizeHeader(request.getHeader("X-Visitor-Id")),
+                    sanitizeHeader(request.getHeader("X-Session-Id"))
+            );
+        } catch (Exception ignored) {
+        }
 
         Map<String,Object> data = new HashMap<>();
         data.put("total",page.getTotal());
         data.put("rows",page.getRecords());
+        if (StringUtils.hasText(requestId)) {
+            data.put("requestId", requestId);
+        }
 
         return Result.success(data);
 
@@ -250,6 +277,26 @@ public class SysHuagaoController {
             return null;
         }
         return StringUtils.hasLength(artist.getName()) ? artist.getName() : artist.getUsername();
+    }
+
+    private User resolveOptionalLoginUser(HttpServletRequest request) {
+        String token = request.getHeader("X-Token");
+        if (!StringUtils.hasText(token)) {
+            return null;
+        }
+        try {
+            return jwtUtil.parseToken(token, User.class);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private String sanitizeHeader(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        String sanitized = value.trim();
+        return StringUtils.hasText(sanitized) ? sanitized : null;
     }
 
 

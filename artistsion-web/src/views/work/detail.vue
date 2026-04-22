@@ -207,10 +207,12 @@ import huagaoApi from '@/api/huagao'
 import shoucangApi from '@/api/shoucang'
 import orderApi from '@/api/order'
 import pinglunApi from '@/api/pinglun'
+import recHuagaoApi from '@/api/recHuagao'
 import userApi from '@/api/userManage'
 import ReportDialog from '@/components/ReportDialog'
 import { normalizeImageUrl } from '@/utils/oss'
 import { buildCenterProfileRoute, buildOtherArtistProfileRoute } from '@/utils/centerProfile'
+import { createClientEventId } from '@/utils/visitor'
 
 export default {
   name: 'WorkDetail',
@@ -346,7 +348,7 @@ export default {
           this.favId = null
           this.$message.success('已取消收藏')
         } else {
-          await shoucangApi.add({
+          const res = await shoucangApi.add({
             title: this.work.name,
             wzids: String(this.work.id),
             photo: this.workPhotoUrl || this.work.photo || '',
@@ -354,8 +356,14 @@ export default {
             price: String(this.work.price),
             userids: String(this.userId)
           })
+          if (res && res.message === '已收藏') {
+            this.$message.success('已收藏')
+            await this.checkFav()
+            return
+          }
           this.$message.success('收藏成功')
           await this.checkFav()
+          this.trackFavoriteAction()
         }
       } catch (e) {
         this.$message.error('操作失败')
@@ -417,6 +425,19 @@ export default {
         return
       }
       this.$router.push(buildOtherArtistProfileRoute(artistId, 'showcase'))
+    },
+    trackFavoriteAction() {
+      if (!this.work || !this.work.id) return
+      recHuagaoApi.trackAction({
+        eventId: createClientEventId('favorite'),
+        eventType: 'favorite',
+        requestId: this.$route.query.requestId || '',
+        huagaoId: this.work.id,
+        shangjiaId: this.work.shangjiaids ? Number(this.work.shangjiaids) : null,
+        position: this.$route.query.position ? Number(this.$route.query.position) : null,
+        scene: this.$route.query.scene || 'work_detail',
+        source: 'detail_favorite_button'
+      }).catch(() => {})
     },
     handlePhotoError() {
       this.photoBroken = true

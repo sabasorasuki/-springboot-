@@ -68,7 +68,7 @@
           v-for="item in items"
           :key="item.id"
           class="showcase-card"
-          @click="goDetail(item.id)"
+          @click="goDetail(item)"
         >
           <div class="card-cover">
             <img
@@ -106,10 +106,12 @@
 <script>
 import { mapGetters } from 'vuex'
 import huagaoApi from '@/api/huagao'
+import recHuagaoApi from '@/api/recHuagao'
 import fenleiApi from '@/api/fenlei'
 import tagApi from '@/api/tag'
 import { normalizeImageUrl } from '@/utils/oss'
 import { buildCenterProfileRoute, buildOtherArtistProfileRoute } from '@/utils/centerProfile'
+import { createClientEventId } from '@/utils/visitor'
 
 export default {
   name: 'ShowcasePage',
@@ -173,6 +175,7 @@ export default {
       const params = {
         pageNo: this.pageNo,
         pageSize: 16,
+        scene: 'showcase',
         type: '上架',
         status: '审核成功'
       }
@@ -192,7 +195,14 @@ export default {
       const params = this.buildListParams()
       huagaoApi.getList(params).then(res => {
         const rows = res.data.rows || []
-        const normalizedRows = rows.map(this.normalizeItem)
+        const requestId = res.data.requestId || ''
+        const pageSize = params.pageSize || 16
+        const normalizedRows = rows.map((item, index) => {
+          const normalizedItem = this.normalizeItem(item)
+          normalizedItem.trackingRequestId = requestId || ''
+          normalizedItem.trackingPosition = ((this.pageNo - 1) * pageSize) + index + 1
+          return normalizedItem
+        })
         this.items = this.pageNo === 1 ? normalizedRows : this.items.concat(normalizedRows)
         this.total = res.data.total || 0
       }).catch(() => {}).finally(() => {
@@ -218,8 +228,26 @@ export default {
       this.pageNo++
       this.fetchItems()
     },
-    goDetail(id) {
-      this.$router.push('/work/' + id)
+    goDetail(item) {
+      if (!item || !item.id) return
+      const query = {}
+      if (item.trackingRequestId) {
+        recHuagaoApi.trackAction({
+          eventId: createClientEventId('click'),
+          eventType: 'click_detail',
+          requestId: item.trackingRequestId,
+          huagaoId: item.id,
+          shangjiaId: item.shangjiaids ? Number(item.shangjiaids) : null,
+          position: item.trackingPosition,
+          scene: 'showcase',
+          source: 'showcase_card'
+        }).catch(() => {})
+        query.requestId = item.trackingRequestId
+        query.position = item.trackingPosition
+        query.scene = 'showcase'
+        query.source = 'showcase_card'
+      }
+      this.$router.push({ path: '/work/' + item.id, query })
     },
     handleImageError(item) {
       this.$set(item, 'photoBroken', true)

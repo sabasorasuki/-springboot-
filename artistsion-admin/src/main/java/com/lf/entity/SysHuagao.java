@@ -80,4 +80,7 @@ public class SysHuagao implements Serializable {
     @TableField(exist = false)
     private List<SysTag> systemTags = new ArrayList<>();
 
+    @TableField(exist = false)
+    private Integer searchScore;
+
 }

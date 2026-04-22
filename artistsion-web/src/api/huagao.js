@@ -14,6 +14,7 @@ export default {
         tagId: searchModel.tagId,
         type: searchModel.type,
         status: searchModel.status,
+        scene: searchModel.scene,
         name: searchModel.name,
         fenlei: searchModel.fenlei,
         id: searchModel.id
