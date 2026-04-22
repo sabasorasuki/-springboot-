@@ -46,8 +46,19 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
 
     private static final String SCENE_SHOWCASE = "showcase";
     private static final String EVENT_CLICK_DETAIL = "click_detail";
+    private static final String EVENT_DETAIL_VIEW = "detail_view";
+    private static final String EVENT_DETAIL_DWELL = "detail_dwell";
     private static final String EVENT_FAVORITE = "favorite";
-    private static final Set<String> ALLOWED_ACTION_TYPES = Arrays.stream(new String[]{EVENT_CLICK_DETAIL, EVENT_FAVORITE})
+    private static final String EVENT_ADD_TO_CART = "add_to_cart";
+    private static final String EVENT_CREATE_ORDER = "create_order";
+    private static final Set<String> ALLOWED_ACTION_TYPES = Arrays.stream(new String[]{
+                    EVENT_CLICK_DETAIL,
+                    EVENT_DETAIL_VIEW,
+                    EVENT_DETAIL_DWELL,
+                    EVENT_FAVORITE,
+                    EVENT_ADD_TO_CART,
+                    EVENT_CREATE_ORDER
+            })
             .collect(Collectors.toSet());
 
     @Resource
@@ -151,6 +162,7 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
         actionLog.setVisitorId(sanitizeValue(visitorId));
         actionLog.setSessionId(sanitizeValue(sessionId));
         actionLog.setPosition(request.getPosition());
+        actionLog.setEventValue(normalizeEventValue(request));
         actionLog.setScene(sanitizeScene(request.getScene()));
         actionLog.setSource(sanitizeValue(request.getSource()));
         actionLog.setCreatedAt(now);
@@ -197,8 +209,26 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
         long clickDetailCount = actions.stream()
                 .filter(this::isClickDetail)
                 .count();
+        long detailViewCount = actions.stream()
+                .filter(this::isDetailView)
+                .count();
+        long detailDwellCount = actions.stream()
+                .filter(this::isDetailDwell)
+                .count();
+        long detailDwellTotalMs = actions.stream()
+                .filter(this::isDetailDwell)
+                .map(RecHuagaoActionLog::getEventValue)
+                .filter(Objects::nonNull)
+                .mapToLong(Long::longValue)
+                .sum();
         long favoriteCount = actions.stream()
                 .filter(this::isFavorite)
+                .count();
+        long addCartCount = actions.stream()
+                .filter(this::isAddToCart)
+                .count();
+        long createOrderCount = actions.stream()
+                .filter(this::isCreateOrder)
                 .count();
         Set<Long> exposedHuagaoIds = impressions.stream()
                 .map(RecHuagaoImpressionLog::getHuagaoId)
@@ -217,7 +247,12 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
         summary.put("hasTagFilter", intValue(requestLog.getHasTagFilter()));
         summary.put("impressionCount", impressions.size());
         summary.put("clickDetailCount", clickDetailCount);
+        summary.put("detailViewCount", detailViewCount);
+        summary.put("detailDwellCount", detailDwellCount);
+        summary.put("detailDwellTotalMs", detailDwellTotalMs);
         summary.put("favoriteCount", favoriteCount);
+        summary.put("addCartCount", addCartCount);
+        summary.put("createOrderCount", createOrderCount);
         summary.put("exposedHuagaoIds", exposedHuagaoIds);
         summary.put("actedHuagaoIds", actedHuagaoIds);
 
@@ -275,6 +310,8 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
         labelSummary.put("impressionOnly", rows.stream().filter(row -> intValue(row.get("relevance")) == 0).count());
         labelSummary.put("clickDetail", rows.stream().filter(row -> intValue(row.get("relevance")) == 1).count());
         labelSummary.put("favorite", rows.stream().filter(row -> intValue(row.get("relevance")) == 2).count());
+        labelSummary.put("addToCart", rows.stream().filter(row -> intValue(row.get("relevance")) == 3).count());
+        labelSummary.put("createOrder", rows.stream().filter(row -> intValue(row.get("relevance")) == 4).count());
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("summary", summary);
@@ -304,6 +341,12 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
         }
         if (request.getPosition() != null && request.getPosition() <= 0) {
             throw new BusinessException(20001, "位置参数不合法");
+        }
+        if (EVENT_DETAIL_DWELL.equals(request.getEventType().trim())) {
+            Long eventValue = request.getEventValue();
+            if (eventValue == null || eventValue <= 0) {
+                throw new BusinessException(20001, "停留时长不合法");
+            }
         }
     }
 
@@ -357,12 +400,22 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
                 itemStat.setShangjiaId(impression.getShangjiaId());
                 itemStat.setImpressionCnt(1L);
                 itemStat.setClickDetailCnt(0L);
+                itemStat.setDetailViewCnt(0L);
+                itemStat.setDetailDwellCnt(0L);
+                itemStat.setDetailDwellTotalMs(0L);
                 itemStat.setFavoriteCnt(0L);
+                itemStat.setAddCartCnt(0L);
+                itemStat.setCreateOrderCnt(0L);
                 itemStat.setSearchImpressionCnt(hasSearch == 1 ? 1L : 0L);
                 itemStat.setFilterFenleiImpressionCnt(hasFenleiFilter == 1 ? 1L : 0L);
                 itemStat.setFilterTagImpressionCnt(hasTagFilter == 1 ? 1L : 0L);
                 itemStat.setSearchClickDetailCnt(0L);
+                itemStat.setSearchDetailViewCnt(0L);
+                itemStat.setSearchDetailDwellCnt(0L);
+                itemStat.setSearchDetailDwellTotalMs(0L);
                 itemStat.setSearchFavoriteCnt(0L);
+                itemStat.setSearchAddCartCnt(0L);
+                itemStat.setSearchCreateOrderCnt(0L);
                 itemStatDailyMapper.upsert(itemStat);
             } catch (Exception ex) {
                 log.warn("Failed to upsert huagao item daily stat, requestId={}, huagaoId={}",
@@ -385,7 +438,12 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
             queryStat.setRequestCnt(1L);
             queryStat.setImpressionCnt((long) impressions.size());
             queryStat.setClickDetailCnt(0L);
+            queryStat.setDetailViewCnt(0L);
+            queryStat.setDetailDwellCnt(0L);
+            queryStat.setDetailDwellTotalMs(0L);
             queryStat.setFavoriteCnt(0L);
+            queryStat.setAddCartCnt(0L);
+            queryStat.setCreateOrderCnt(0L);
             queryStatDailyMapper.upsert(queryStat);
         } catch (Exception ex) {
             log.warn("Failed to upsert huagao query daily stat, requestId={}", requestLog.getRequestId(), ex);
@@ -403,12 +461,22 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
             itemStat.setShangjiaId(actionLog.getShangjiaId());
             itemStat.setImpressionCnt(0L);
             itemStat.setClickDetailCnt(isClickDetail(actionLog) ? 1L : 0L);
+            itemStat.setDetailViewCnt(isDetailView(actionLog) ? 1L : 0L);
+            itemStat.setDetailDwellCnt(isDetailDwell(actionLog) ? 1L : 0L);
+            itemStat.setDetailDwellTotalMs(isDetailDwell(actionLog) ? longValue(actionLog.getEventValue()) : 0L);
             itemStat.setFavoriteCnt(isFavorite(actionLog) ? 1L : 0L);
+            itemStat.setAddCartCnt(isAddToCart(actionLog) ? 1L : 0L);
+            itemStat.setCreateOrderCnt(isCreateOrder(actionLog) ? 1L : 0L);
             itemStat.setSearchImpressionCnt(0L);
             itemStat.setFilterFenleiImpressionCnt(0L);
             itemStat.setFilterTagImpressionCnt(0L);
             itemStat.setSearchClickDetailCnt(isSearchRequest && isClickDetail(actionLog) ? 1L : 0L);
+            itemStat.setSearchDetailViewCnt(isSearchRequest && isDetailView(actionLog) ? 1L : 0L);
+            itemStat.setSearchDetailDwellCnt(isSearchRequest && isDetailDwell(actionLog) ? 1L : 0L);
+            itemStat.setSearchDetailDwellTotalMs(isSearchRequest && isDetailDwell(actionLog) ? longValue(actionLog.getEventValue()) : 0L);
             itemStat.setSearchFavoriteCnt(isSearchRequest && isFavorite(actionLog) ? 1L : 0L);
+            itemStat.setSearchAddCartCnt(isSearchRequest && isAddToCart(actionLog) ? 1L : 0L);
+            itemStat.setSearchCreateOrderCnt(isSearchRequest && isCreateOrder(actionLog) ? 1L : 0L);
             itemStatDailyMapper.upsert(itemStat);
         } catch (Exception ex) {
             log.warn("Failed to upsert huagao item daily action stat, eventId={}", actionLog.getEventId(), ex);
@@ -433,7 +501,12 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
             queryStat.setRequestCnt(0L);
             queryStat.setImpressionCnt(0L);
             queryStat.setClickDetailCnt(isClickDetail(actionLog) ? 1L : 0L);
+            queryStat.setDetailViewCnt(isDetailView(actionLog) ? 1L : 0L);
+            queryStat.setDetailDwellCnt(isDetailDwell(actionLog) ? 1L : 0L);
+            queryStat.setDetailDwellTotalMs(isDetailDwell(actionLog) ? longValue(actionLog.getEventValue()) : 0L);
             queryStat.setFavoriteCnt(isFavorite(actionLog) ? 1L : 0L);
+            queryStat.setAddCartCnt(isAddToCart(actionLog) ? 1L : 0L);
+            queryStat.setCreateOrderCnt(isCreateOrder(actionLog) ? 1L : 0L);
             queryStatDailyMapper.upsert(queryStat);
         } catch (Exception ex) {
             log.warn("Failed to upsert huagao query daily action stat, eventId={}", actionLog.getEventId(), ex);
@@ -448,8 +521,24 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
         return Objects.equals(EVENT_CLICK_DETAIL, actionLog.getEventType());
     }
 
+    private boolean isDetailView(RecHuagaoActionLog actionLog) {
+        return Objects.equals(EVENT_DETAIL_VIEW, actionLog.getEventType());
+    }
+
+    private boolean isDetailDwell(RecHuagaoActionLog actionLog) {
+        return Objects.equals(EVENT_DETAIL_DWELL, actionLog.getEventType());
+    }
+
     private boolean isFavorite(RecHuagaoActionLog actionLog) {
         return Objects.equals(EVENT_FAVORITE, actionLog.getEventType());
+    }
+
+    private boolean isAddToCart(RecHuagaoActionLog actionLog) {
+        return Objects.equals(EVENT_ADD_TO_CART, actionLog.getEventType());
+    }
+
+    private boolean isCreateOrder(RecHuagaoActionLog actionLog) {
+        return Objects.equals(EVENT_CREATE_ORDER, actionLog.getEventType());
     }
 
     private String sanitizeKeyword(String keyword) {
@@ -497,6 +586,10 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
         return value == null ? 0 : value;
     }
 
+    private long longValue(Long value) {
+        return value == null ? 0L : value;
+    }
+
     private int intValue(Object value) {
         if (value == null) {
             return 0;
@@ -522,5 +615,12 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
             return 100;
         }
         return Math.min(limit, 500);
+    }
+
+    private Long normalizeEventValue(RecHuagaoActionTrackRequest request) {
+        if (request == null || request.getEventValue() == null) {
+            return null;
+        }
+        return request.getEventValue() < 0 ? 0L : request.getEventValue();
     }
 }

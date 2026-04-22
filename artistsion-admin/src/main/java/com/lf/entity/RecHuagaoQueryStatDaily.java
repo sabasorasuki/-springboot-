@@ -39,7 +39,17 @@ public class RecHuagaoQueryStatDaily implements Serializable {
 
     private Long clickDetailCnt;
 
+    private Long detailViewCnt;
+
+    private Long detailDwellCnt;
+
+    private Long detailDwellTotalMs;
+
     private Long favoriteCnt;
+
+    private Long addCartCnt;
+
+    private Long createOrderCnt;
 
     private LocalDateTime updatedAt;
 }

@@ -23,7 +23,17 @@ public class RecHuagaoItemStatDaily implements Serializable {
 
     private Long clickDetailCnt;
 
+    private Long detailViewCnt;
+
+    private Long detailDwellCnt;
+
+    private Long detailDwellTotalMs;
+
     private Long favoriteCnt;
+
+    private Long addCartCnt;
+
+    private Long createOrderCnt;
 
     private Long searchImpressionCnt;
 
@@ -33,7 +43,17 @@ public class RecHuagaoItemStatDaily implements Serializable {
 
     private Long searchClickDetailCnt;
 
+    private Long searchDetailViewCnt;
+
+    private Long searchDetailDwellCnt;
+
+    private Long searchDetailDwellTotalMs;
+
     private Long searchFavoriteCnt;
+
+    private Long searchAddCartCnt;
+
+    private Long searchCreateOrderCnt;
 
     private LocalDateTime updatedAt;
 }

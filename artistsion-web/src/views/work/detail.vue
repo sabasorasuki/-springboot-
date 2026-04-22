@@ -239,7 +239,11 @@ export default {
       commentSubmitting: false,
       // misc
       reportVisible: false,
-      deleteLoading: false
+      deleteLoading: false,
+      detailViewTracked: false,
+      detailDwellTimer: null,
+      detailDwellActiveAt: null,
+      visibilityHandler: null
     }
   },
   computed: {
@@ -267,6 +271,24 @@ export default {
   created() {
     this.fetchWork()
   },
+  mounted() {
+    if (typeof document !== 'undefined') {
+      this.visibilityHandler = this.handleVisibilityChange
+      document.addEventListener('visibilitychange', this.visibilityHandler)
+    }
+  },
+  beforeDestroy() {
+    this.flushDetailDwell(true)
+    this.stopDetailDwellTimer()
+    if (typeof document !== 'undefined' && this.visibilityHandler) {
+      document.removeEventListener('visibilitychange', this.visibilityHandler)
+      this.visibilityHandler = null
+    }
+  },
+  beforeRouteLeave(to, from, next) {
+    this.flushDetailDwell(true)
+    next()
+  },
   methods: {
     normalizeImageUrl,
     async fetchWork() {
@@ -280,6 +302,7 @@ export default {
           this.checkFav()
           this.fetchArtist()
           this.fetchComments()
+          this.trackDetailView()
         }
       } catch (e) {
         console.error('获取作品详情失败', e)
@@ -385,6 +408,9 @@ export default {
           status: '购物车'
         })
         this.$message.success((res && res.message) || '已加入购物车')
+        if (!res || res.message !== '该橱窗已在购物车中') {
+          this.trackAddToCartAction()
+        }
       } catch (e) {
         this.$message.error(e.message || '加入购物车失败')
       } finally {
@@ -395,7 +421,7 @@ export default {
       if (!this.userId) { this.$message.warning('请先登录'); return }
       this.buyLoading = true
       try {
-        await orderApi.add({
+        const res = await orderApi.add({
           name: this.work.name,
           photo: this.workPhotoUrl || this.work.photo || '',
           price: this.work.price,
@@ -405,6 +431,7 @@ export default {
           status: '待付款'
         })
         this.$message.success('订单已创建')
+        this.trackCreateOrderAction()
         // 跳转到订单页
         this.$router.push('/center/profile?tab=orders')
       } catch (e) {
@@ -426,18 +453,83 @@ export default {
       }
       this.$router.push(buildOtherArtistProfileRoute(artistId, 'showcase'))
     },
-    trackFavoriteAction() {
-      if (!this.work || !this.work.id) return
-      recHuagaoApi.trackAction({
-        eventId: createClientEventId('favorite'),
-        eventType: 'favorite',
+    buildTrackPayload(eventType, extra = {}) {
+      if (!this.work || !this.work.id) return null
+      return {
+        eventId: createClientEventId(eventType),
+        eventType,
         requestId: this.$route.query.requestId || '',
         huagaoId: this.work.id,
         shangjiaId: this.work.shangjiaids ? Number(this.work.shangjiaids) : null,
         position: this.$route.query.position ? Number(this.$route.query.position) : null,
+        eventValue: extra.eventValue != null ? Number(extra.eventValue) : null,
         scene: this.$route.query.scene || 'work_detail',
+        source: extra.source || this.$route.query.source || 'detail_direct'
+      }
+    },
+    trackDetailView() {
+      if (this.detailViewTracked || !this.work || !this.work.id) return
+      this.detailViewTracked = true
+      recHuagaoApi.trackAction(this.buildTrackPayload('detail_view', {
+        source: this.$route.query.source || 'detail_direct'
+      })).catch(() => {})
+      this.startDetailDwellTimer()
+    },
+    startDetailDwellTimer() {
+      this.stopDetailDwellTimer()
+      this.detailDwellActiveAt = Date.now()
+      this.detailDwellTimer = setInterval(() => {
+        if (typeof document !== 'undefined' && document.hidden) return
+        this.flushDetailDwell(false)
+      }, 5000)
+    },
+    stopDetailDwellTimer() {
+      if (this.detailDwellTimer) {
+        clearInterval(this.detailDwellTimer)
+        this.detailDwellTimer = null
+      }
+      this.detailDwellActiveAt = null
+    },
+    handleVisibilityChange() {
+      if (typeof document === 'undefined') return
+      if (document.hidden) {
+        this.flushDetailDwell(true)
+        this.detailDwellActiveAt = null
+        return
+      }
+      if (this.detailViewTracked && this.work && this.work.id) {
+        this.detailDwellActiveAt = Date.now()
+      }
+    },
+    flushDetailDwell(force) {
+      if (!this.detailViewTracked || !this.work || !this.work.id || !this.detailDwellActiveAt) return
+      const now = Date.now()
+      const delta = now - this.detailDwellActiveAt
+      const threshold = force ? 1000 : 5000
+      if (delta < threshold) return
+      this.detailDwellActiveAt = now
+      recHuagaoApi.trackAction(this.buildTrackPayload('detail_dwell', {
+        eventValue: delta,
+        source: 'detail_dwell_timer'
+      })).catch(() => {})
+    },
+    trackFavoriteAction() {
+      if (!this.work || !this.work.id) return
+      recHuagaoApi.trackAction(this.buildTrackPayload('favorite', {
         source: 'detail_favorite_button'
-      }).catch(() => {})
+      })).catch(() => {})
+    },
+    trackAddToCartAction() {
+      if (!this.work || !this.work.id) return
+      recHuagaoApi.trackAction(this.buildTrackPayload('add_to_cart', {
+        source: 'detail_add_to_cart_button'
+      })).catch(() => {})
+    },
+    trackCreateOrderAction() {
+      if (!this.work || !this.work.id) return
+      recHuagaoApi.trackAction(this.buildTrackPayload('create_order', {
+        source: 'detail_buy_now_button'
+      })).catch(() => {})
     },
     handlePhotoError() {
       this.photoBroken = true

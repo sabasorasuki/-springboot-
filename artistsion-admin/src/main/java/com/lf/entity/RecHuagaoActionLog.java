@@ -35,6 +35,8 @@ public class RecHuagaoActionLog implements Serializable {
 
     private Integer position;
 
+    private Long eventValue;
+
     private String scene;
 
     private String source;

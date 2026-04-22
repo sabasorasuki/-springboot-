@@ -22,9 +22,19 @@
                 a.huagao_id,
                 MAX(a.shangjia_id) AS shangjia_id,
                 SUM(CASE WHEN a.event_type = 'click_detail' THEN 1 ELSE 0 END) AS click_detail_cnt,
+                SUM(CASE WHEN a.event_type = 'detail_view' THEN 1 ELSE 0 END) AS detail_view_cnt,
+                SUM(CASE WHEN a.event_type = 'detail_dwell' THEN 1 ELSE 0 END) AS detail_dwell_cnt,
+                SUM(CASE WHEN a.event_type = 'detail_dwell' THEN COALESCE(a.event_value, 0) ELSE 0 END) AS detail_dwell_total_ms,
                 SUM(CASE WHEN a.event_type = 'favorite' THEN 1 ELSE 0 END) AS favorite_cnt,
+                SUM(CASE WHEN a.event_type = 'add_to_cart' THEN 1 ELSE 0 END) AS add_cart_cnt,
+                SUM(CASE WHEN a.event_type = 'create_order' THEN 1 ELSE 0 END) AS create_order_cnt,
                 SUM(CASE WHEN a.event_type = 'click_detail' AND COALESCE(r.has_search, 0) = 1 THEN 1 ELSE 0 END) AS search_click_detail_cnt,
-                SUM(CASE WHEN a.event_type = 'favorite' AND COALESCE(r.has_search, 0) = 1 THEN 1 ELSE 0 END) AS search_favorite_cnt
+                SUM(CASE WHEN a.event_type = 'detail_view' AND COALESCE(r.has_search, 0) = 1 THEN 1 ELSE 0 END) AS search_detail_view_cnt,
+                SUM(CASE WHEN a.event_type = 'detail_dwell' AND COALESCE(r.has_search, 0) = 1 THEN 1 ELSE 0 END) AS search_detail_dwell_cnt,
+                SUM(CASE WHEN a.event_type = 'detail_dwell' AND COALESCE(r.has_search, 0) = 1 THEN COALESCE(a.event_value, 0) ELSE 0 END) AS search_detail_dwell_total_ms,
+                SUM(CASE WHEN a.event_type = 'favorite' AND COALESCE(r.has_search, 0) = 1 THEN 1 ELSE 0 END) AS search_favorite_cnt,
+                SUM(CASE WHEN a.event_type = 'add_to_cart' AND COALESCE(r.has_search, 0) = 1 THEN 1 ELSE 0 END) AS search_add_cart_cnt,
+                SUM(CASE WHEN a.event_type = 'create_order' AND COALESCE(r.has_search, 0) = 1 THEN 1 ELSE 0 END) AS search_create_order_cnt
             FROM rec_huagao_action_log a
             LEFT JOIN rec_huagao_request_log r ON r.request_id = a.request_id
             WHERE DATE(a.created_at) = #{dt}
@@ -45,8 +55,18 @@
             COALESCE(d.impression_cnt, 0) AS agg_impression_cnt,
             COALESCE(a.click_detail_cnt, 0) AS raw_click_detail_cnt,
             COALESCE(d.click_detail_cnt, 0) AS agg_click_detail_cnt,
+            COALESCE(a.detail_view_cnt, 0) AS raw_detail_view_cnt,
+            COALESCE(d.detail_view_cnt, 0) AS agg_detail_view_cnt,
+            COALESCE(a.detail_dwell_cnt, 0) AS raw_detail_dwell_cnt,
+            COALESCE(d.detail_dwell_cnt, 0) AS agg_detail_dwell_cnt,
+            COALESCE(a.detail_dwell_total_ms, 0) AS raw_detail_dwell_total_ms,
+            COALESCE(d.detail_dwell_total_ms, 0) AS agg_detail_dwell_total_ms,
             COALESCE(a.favorite_cnt, 0) AS raw_favorite_cnt,
             COALESCE(d.favorite_cnt, 0) AS agg_favorite_cnt,
+            COALESCE(a.add_cart_cnt, 0) AS raw_add_cart_cnt,
+            COALESCE(d.add_cart_cnt, 0) AS agg_add_cart_cnt,
+            COALESCE(a.create_order_cnt, 0) AS raw_create_order_cnt,
+            COALESCE(d.create_order_cnt, 0) AS agg_create_order_cnt,
             COALESCE(i.search_impression_cnt, 0) AS raw_search_impression_cnt,
             COALESCE(d.search_impression_cnt, 0) AS agg_search_impression_cnt,
             COALESCE(i.filter_fenlei_impression_cnt, 0) AS raw_filter_fenlei_impression_cnt,
@@ -55,17 +75,37 @@
             COALESCE(d.filter_tag_impression_cnt, 0) AS agg_filter_tag_impression_cnt,
             COALESCE(a.search_click_detail_cnt, 0) AS raw_search_click_detail_cnt,
             COALESCE(d.search_click_detail_cnt, 0) AS agg_search_click_detail_cnt,
+            COALESCE(a.search_detail_view_cnt, 0) AS raw_search_detail_view_cnt,
+            COALESCE(d.search_detail_view_cnt, 0) AS agg_search_detail_view_cnt,
+            COALESCE(a.search_detail_dwell_cnt, 0) AS raw_search_detail_dwell_cnt,
+            COALESCE(d.search_detail_dwell_cnt, 0) AS agg_search_detail_dwell_cnt,
+            COALESCE(a.search_detail_dwell_total_ms, 0) AS raw_search_detail_dwell_total_ms,
+            COALESCE(d.search_detail_dwell_total_ms, 0) AS agg_search_detail_dwell_total_ms,
             COALESCE(a.search_favorite_cnt, 0) AS raw_search_favorite_cnt,
             COALESCE(d.search_favorite_cnt, 0) AS agg_search_favorite_cnt,
+            COALESCE(a.search_add_cart_cnt, 0) AS raw_search_add_cart_cnt,
+            COALESCE(d.search_add_cart_cnt, 0) AS agg_search_add_cart_cnt,
+            COALESCE(a.search_create_order_cnt, 0) AS raw_search_create_order_cnt,
+            COALESCE(d.search_create_order_cnt, 0) AS agg_search_create_order_cnt,
             CASE
                 WHEN COALESCE(i.impression_cnt, 0) = COALESCE(d.impression_cnt, 0)
                  AND COALESCE(a.click_detail_cnt, 0) = COALESCE(d.click_detail_cnt, 0)
+                 AND COALESCE(a.detail_view_cnt, 0) = COALESCE(d.detail_view_cnt, 0)
+                 AND COALESCE(a.detail_dwell_cnt, 0) = COALESCE(d.detail_dwell_cnt, 0)
+                 AND COALESCE(a.detail_dwell_total_ms, 0) = COALESCE(d.detail_dwell_total_ms, 0)
                  AND COALESCE(a.favorite_cnt, 0) = COALESCE(d.favorite_cnt, 0)
+                 AND COALESCE(a.add_cart_cnt, 0) = COALESCE(d.add_cart_cnt, 0)
+                 AND COALESCE(a.create_order_cnt, 0) = COALESCE(d.create_order_cnt, 0)
                  AND COALESCE(i.search_impression_cnt, 0) = COALESCE(d.search_impression_cnt, 0)
                  AND COALESCE(i.filter_fenlei_impression_cnt, 0) = COALESCE(d.filter_fenlei_impression_cnt, 0)
                  AND COALESCE(i.filter_tag_impression_cnt, 0) = COALESCE(d.filter_tag_impression_cnt, 0)
                  AND COALESCE(a.search_click_detail_cnt, 0) = COALESCE(d.search_click_detail_cnt, 0)
+                 AND COALESCE(a.search_detail_view_cnt, 0) = COALESCE(d.search_detail_view_cnt, 0)
+                 AND COALESCE(a.search_detail_dwell_cnt, 0) = COALESCE(d.search_detail_dwell_cnt, 0)
+                 AND COALESCE(a.search_detail_dwell_total_ms, 0) = COALESCE(d.search_detail_dwell_total_ms, 0)
                  AND COALESCE(a.search_favorite_cnt, 0) = COALESCE(d.search_favorite_cnt, 0)
+                 AND COALESCE(a.search_add_cart_cnt, 0) = COALESCE(d.search_add_cart_cnt, 0)
+                 AND COALESCE(a.search_create_order_cnt, 0) = COALESCE(d.search_create_order_cnt, 0)
                 THEN 1 ELSE 0
             END AS is_match
         FROM keyset k
@@ -108,7 +148,12 @@
                 DATE(a.created_at) AS dt,
                 r.query_key,
                 SUM(CASE WHEN a.event_type = 'click_detail' THEN 1 ELSE 0 END) AS click_detail_cnt,
-                SUM(CASE WHEN a.event_type = 'favorite' THEN 1 ELSE 0 END) AS favorite_cnt
+                SUM(CASE WHEN a.event_type = 'detail_view' THEN 1 ELSE 0 END) AS detail_view_cnt,
+                SUM(CASE WHEN a.event_type = 'detail_dwell' THEN 1 ELSE 0 END) AS detail_dwell_cnt,
+                SUM(CASE WHEN a.event_type = 'detail_dwell' THEN COALESCE(a.event_value, 0) ELSE 0 END) AS detail_dwell_total_ms,
+                SUM(CASE WHEN a.event_type = 'favorite' THEN 1 ELSE 0 END) AS favorite_cnt,
+                SUM(CASE WHEN a.event_type = 'add_to_cart' THEN 1 ELSE 0 END) AS add_cart_cnt,
+                SUM(CASE WHEN a.event_type = 'create_order' THEN 1 ELSE 0 END) AS create_order_cnt
             FROM rec_huagao_action_log a
             INNER JOIN rec_huagao_request_log r ON r.request_id = a.request_id
             WHERE DATE(a.created_at) = #{dt}
@@ -137,13 +182,28 @@
             COALESCE(d.impression_cnt, 0) AS agg_impression_cnt,
             COALESCE(ar.click_detail_cnt, 0) AS raw_click_detail_cnt,
             COALESCE(d.click_detail_cnt, 0) AS agg_click_detail_cnt,
+            COALESCE(ar.detail_view_cnt, 0) AS raw_detail_view_cnt,
+            COALESCE(d.detail_view_cnt, 0) AS agg_detail_view_cnt,
+            COALESCE(ar.detail_dwell_cnt, 0) AS raw_detail_dwell_cnt,
+            COALESCE(d.detail_dwell_cnt, 0) AS agg_detail_dwell_cnt,
+            COALESCE(ar.detail_dwell_total_ms, 0) AS raw_detail_dwell_total_ms,
+            COALESCE(d.detail_dwell_total_ms, 0) AS agg_detail_dwell_total_ms,
             COALESCE(ar.favorite_cnt, 0) AS raw_favorite_cnt,
             COALESCE(d.favorite_cnt, 0) AS agg_favorite_cnt,
+            COALESCE(ar.add_cart_cnt, 0) AS raw_add_cart_cnt,
+            COALESCE(d.add_cart_cnt, 0) AS agg_add_cart_cnt,
+            COALESCE(ar.create_order_cnt, 0) AS raw_create_order_cnt,
+            COALESCE(d.create_order_cnt, 0) AS agg_create_order_cnt,
             CASE
                 WHEN COALESCE(rq.request_cnt, 0) = COALESCE(d.request_cnt, 0)
                  AND COALESCE(ir.impression_cnt, 0) = COALESCE(d.impression_cnt, 0)
                  AND COALESCE(ar.click_detail_cnt, 0) = COALESCE(d.click_detail_cnt, 0)
+                 AND COALESCE(ar.detail_view_cnt, 0) = COALESCE(d.detail_view_cnt, 0)
+                 AND COALESCE(ar.detail_dwell_cnt, 0) = COALESCE(d.detail_dwell_cnt, 0)
+                 AND COALESCE(ar.detail_dwell_total_ms, 0) = COALESCE(d.detail_dwell_total_ms, 0)
                  AND COALESCE(ar.favorite_cnt, 0) = COALESCE(d.favorite_cnt, 0)
+                 AND COALESCE(ar.add_cart_cnt, 0) = COALESCE(d.add_cart_cnt, 0)
+                 AND COALESCE(ar.create_order_cnt, 0) = COALESCE(d.create_order_cnt, 0)
                 THEN 1 ELSE 0
             END AS is_match
         FROM keyset k
@@ -177,15 +237,27 @@
             i.search_score,
             i.created_at AS impression_at,
             COALESCE(a.click_detail_cnt, 0) AS click_detail_cnt,
+            COALESCE(a.detail_view_cnt, 0) AS detail_view_cnt,
+            COALESCE(a.detail_dwell_cnt, 0) AS detail_dwell_cnt,
+            COALESCE(a.detail_dwell_total_ms, 0) AS detail_dwell_total_ms,
             COALESCE(a.favorite_cnt, 0) AS favorite_cnt,
+            COALESCE(a.add_cart_cnt, 0) AS add_cart_cnt,
+            COALESCE(a.create_order_cnt, 0) AS create_order_cnt,
             a.first_click_detail_at,
+            a.first_detail_view_at,
             a.first_favorite_at,
+            a.first_add_to_cart_at,
+            a.first_create_order_at,
             CASE
+                WHEN COALESCE(a.create_order_cnt, 0) &gt; 0 THEN 4
+                WHEN COALESCE(a.add_cart_cnt, 0) &gt; 0 THEN 3
                 WHEN COALESCE(a.favorite_cnt, 0) &gt; 0 THEN 2
                 WHEN COALESCE(a.click_detail_cnt, 0) &gt; 0 THEN 1
                 ELSE 0
             END AS relevance,
             CASE
+                WHEN COALESCE(a.create_order_cnt, 0) &gt; 0 THEN 'create_order'
+                WHEN COALESCE(a.add_cart_cnt, 0) &gt; 0 THEN 'add_to_cart'
                 WHEN COALESCE(a.favorite_cnt, 0) &gt; 0 THEN 'favorite'
                 WHEN COALESCE(a.click_detail_cnt, 0) &gt; 0 THEN 'click_detail'
                 ELSE 'impression'
@@ -197,9 +269,17 @@
                 request_id,
                 huagao_id,
                 SUM(CASE WHEN event_type = 'click_detail' THEN 1 ELSE 0 END) AS click_detail_cnt,
+                SUM(CASE WHEN event_type = 'detail_view' THEN 1 ELSE 0 END) AS detail_view_cnt,
+                SUM(CASE WHEN event_type = 'detail_dwell' THEN 1 ELSE 0 END) AS detail_dwell_cnt,
+                SUM(CASE WHEN event_type = 'detail_dwell' THEN COALESCE(event_value, 0) ELSE 0 END) AS detail_dwell_total_ms,
                 SUM(CASE WHEN event_type = 'favorite' THEN 1 ELSE 0 END) AS favorite_cnt,
+                SUM(CASE WHEN event_type = 'add_to_cart' THEN 1 ELSE 0 END) AS add_cart_cnt,
+                SUM(CASE WHEN event_type = 'create_order' THEN 1 ELSE 0 END) AS create_order_cnt,
                 MIN(CASE WHEN event_type = 'click_detail' THEN created_at END) AS first_click_detail_at,
-                MIN(CASE WHEN event_type = 'favorite' THEN created_at END) AS first_favorite_at
+                MIN(CASE WHEN event_type = 'detail_view' THEN created_at END) AS first_detail_view_at,
+                MIN(CASE WHEN event_type = 'favorite' THEN created_at END) AS first_favorite_at,
+                MIN(CASE WHEN event_type = 'add_to_cart' THEN created_at END) AS first_add_to_cart_at,
+                MIN(CASE WHEN event_type = 'create_order' THEN created_at END) AS first_create_order_at
             FROM rec_huagao_action_log
             GROUP BY request_id, huagao_id
         ) a ON a.request_id = i.request_id AND a.huagao_id = i.huagao_id
