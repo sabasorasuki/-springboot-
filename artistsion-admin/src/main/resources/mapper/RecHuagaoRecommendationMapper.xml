@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lf.dao.RecHuagaoRecommendationMapper">
+
+    <resultMap id="HuagaoResultMap" type="com.lf.entity.SysHuagao">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="photo" property="photo" />
+        <result column="price" property="price" />
+        <result column="fenlei" property="fenlei" />
+        <result column="content" property="content" />
+        <result column="type" property="type" />
+        <result column="shangjiaids" property="shangjiaids" />
+        <result column="status" property="status" />
+        <result column="zhekou" property="zhekou" />
+        <result column="fujin" property="fujin" />
+        <result column="search_score" property="searchScore" />
+    </resultMap>
+
+    <select id="selectActiveModelVersion" resultType="string">
+        SELECT model_version
+        FROM rec_huagao_model_version
+        WHERE status = 'active'
+        ORDER BY COALESCE(activated_at, trained_at, created_at) DESC
+        LIMIT 1
+    </select>
+
+    <select id="countAvailableRecommendations" resultType="long">
+        SELECT COUNT(1)
+        FROM rec_huagao_user_recommendation r
+        INNER JOIN sys_huagao h ON h.id = r.huagao_id
+        WHERE r.model_version = #{modelVersion}
+          AND r.actor_key = #{actorKey}
+          AND h.status = '审核成功'
+          AND h.type = '上架'
+    </select>
+
+    <select id="selectAvailableRecommendations" resultMap="HuagaoResultMap">
+        SELECT
+            h.id,
+            h.name,
+            h.photo,
+            h.price,
+            h.fenlei,
+            h.content,
+            h.type,
+            h.shangjiaids,
+            h.status,
+            h.zhekou,
+            h.fujin,
+            CAST(ROUND(r.score * 1000) AS SIGNED) AS search_score
+        FROM rec_huagao_user_recommendation r
+        INNER JOIN sys_huagao h ON h.id = r.huagao_id
+        WHERE r.model_version = #{modelVersion}
+          AND r.actor_key = #{actorKey}
+          AND h.status = '审核成功'
+          AND h.type = '上架'
+        ORDER BY r.rank_no ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+</mapper>

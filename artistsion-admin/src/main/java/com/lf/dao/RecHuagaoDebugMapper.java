@@ -15,4 +15,19 @@ public interface RecHuagaoDebugMapper {
     List<Map<String, Object>> selectTrainingSamplePreview(@Param("dateFrom") LocalDate dateFrom,
                                                           @Param("dateTo") LocalDate dateTo,
                                                           @Param("limit") Integer limit);
+
+    Map<String, Object> selectTrainingReadinessSummary(@Param("dateFrom") LocalDate dateFrom,
+                                                       @Param("dateTo") LocalDate dateTo);
+
+    List<Map<String, Object>> selectTrainingLabelDistribution(@Param("dateFrom") LocalDate dateFrom,
+                                                              @Param("dateTo") LocalDate dateTo);
+
+    List<Map<String, Object>> selectTrainingEventDistribution(@Param("dateFrom") LocalDate dateFrom,
+                                                              @Param("dateTo") LocalDate dateTo);
+
+    List<Map<String, Object>> selectTrainingDailyTrend(@Param("dateFrom") LocalDate dateFrom,
+                                                       @Param("dateTo") LocalDate dateTo);
+
+    List<Map<String, Object>> selectTrainingQualityChecks(@Param("dateFrom") LocalDate dateFrom,
+                                                          @Param("dateTo") LocalDate dateTo);
 }

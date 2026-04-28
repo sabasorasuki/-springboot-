@@ -1,104 +1,91 @@
-# 项目静态地图
+# Artistsion 项目地图
 
-## 产品定位
-Artistsion 是一个画师约稿 / 作品交易 / 社区内容平台。当前仍是单仓库、单前端、单后端结构：
+更新时间：`2026-04-28`
 
-- 一个 Vue 2 前端同时承载主站、个人中心和 admin 控制台
-- 一个 Spring Boot 后端同时提供公开内容、用户自助、平台管理、支付、推荐、AI 能力
+## 项目定位
 
-## 仓库结构
-- `artistsion-web`：前端应用
-- `artistsion-admin`：后端应用
-- `artistsion.sql`：主数据库导出
-- `artistsion-admin/sql`：增量 SQL 补丁
-- `docs/PROJECT_MAP.md`：静态结构
-- `docs/SESSION_HANDOFF.md`：当前动态状态
+Artistsion 是一个画师约稿、作品展示、橱窗交易和社区内容平台。当前仍是单仓库结构：
 
-## 当前前台信息架构（已扩展）
-### 主站一级频道
+- `artistsion-web`：Vue 2 前端，承载主站、个人中心和 admin 控制台
+- `artistsion-admin`：Spring Boot 后端，提供公开内容、用户、交易、推荐、AI、管理接口
+- `recsys/huagao_ltr`：`sys_huagao` 离线 LTR 训练和推荐结果落库
+- `artistsion.sql`：主库导出
+- `artistsion-admin/sql`：增量 SQL 与推荐调试 SQL
+- `docs`：只保留当前接手所需文档
+
+## 当前首读顺序
+
+1. `CLAUDE.md`
+2. 对应子系统的 `CLAUDE.md`
+3. `docs/README.md`
+4. `docs/HUAGAO_RECS_HANDOFF_2026-04-28.md`
+5. `docs/PROJECT_MAP.md`
+
+## 前台信息架构
+
 - `/home`：首页
 - `/artists`：画师广场
 - `/projects`：企划 / 需求广场
-- `/works`：作品频道（纯展示）
-- `/showcase`：橱窗频道（有价格的画稿展示）
+- `/works`：作品频道，偏展示
+- `/showcase`：橱窗频道，承载 `sys_huagao`
+- `/publish/work`：作品 / 橱窗发布
+- `/publish/project`：企划发布
+- `/center/profile`、`/center/orders`、`/center/submissions`、`/center/favorites`、`/center/cart`、`/center/follows`：个人中心
+- `/work/:id`、`/project/:id`、`/post/:id`：详情页
+- `/artist/:id`、`/userinfo`、`/fabusp`、`/myfenxiang`、`/liaotian`：兼容入口
 
-### 发布入口
-- `/publish/work`：投稿页（当前承载作品 / 橱窗发布）
-- `/publish/project`：发布企划 / 需求页
+## 前端关键文件
 
-### 个人中心
-- `/center/profile`：当前个人中心首页
-- `/center/orders`：订单
-- `/center/submissions`：投稿管理
-- `/center/favorites`：收藏
-- `/center/cart`：购物车
-- `/center/follows`：关注 / 好友 / 粉丝
+- `artistsion-web/src/router/index.js`：静态路由与 layout 入口
+- `artistsion-web/src/permission.js`：登录守卫、动态菜单注入、admin 兼容映射
+- `artistsion-web/src/utils/adminConsole.js`：admin 菜单白名单和标题覆写
+- `artistsion-web/src/store/modules/user.js`：token、角色、菜单、前台显示模式
+- `artistsion-web/src/layout/MainLayout.vue`：主站导航与用户入口
+- `artistsion-web/src/views/showcase/index.vue`：橱窗列表和 huagao 曝光 / 点击采集
+- `artistsion-web/src/views/home/index.vue`：首页推荐接入 `/recHuagao/recommendations`
+- `artistsion-web/src/views/work/detail.vue`：作品 / 橱窗详情和详情行为采集
+- `artistsion-web/src/api/recHuagao.js`：推荐拉取和行为上报
+- `artistsion-web/src/utils/request.js`、`artistsion-web/src/utils/visitor.js`：请求头、访客和会话标识
 
-### 详情页
-- `/work/:id`：作品 / 橱窗详情页
-- `/project/:id`：企划详情页
-- `/post/:id`：帖子详情页
+## 后端关键文件
 
-### 仍保留的兼容 / 旧语义路径
-- `/artist/:id`：当前仍是“他人主页”入口，尚未并入统一个人中心
-- `/userinfo`
-- `/fabusp`
-- `/myfenxiang`
-- `/liaotian`
-
-> 注意：当前“自己主页”与“他人主页”仍未完全统一。下一步目标是把 `profile` 收口成统一的个人中心承载页，并让 `/artist/:id` 变为兼容跳转壳。
-
-## 前端关键路径
-- `artistsion-web/src/router/index.js`：静态路由与两套 layout 入口
-- `artistsion-web/src/permission.js`：登录守卫、动态菜单注入、`/admin` 兼容映射
-- `artistsion-web/src/utils/adminConsole.js`：admin 菜单白名单、admin-only 路径、标题覆写
-- `artistsion-web/src/store/modules/user.js`：token、角色、`menuList`、前台显示模式状态
-- `artistsion-web/src/layout/MainLayout.vue`：主站导航、头像区、前台快捷入口
-- `artistsion-web/src/views/home`、`artists`、`projects`、`works`、`showcase`、`work`、`posts`、`center`、`publish`：主站、发布页、个人中心
-- `artistsion-web/src/views/dashboard`、`sys`、`report`、`shangp/shangpsh`、`order/orderadglqb`、`fenxiang/fenxiangad`、`liuyan/liuyan`、`fenlei`、`tongji`、`rizhi`、`lunbo`：admin 核心页
-- `artistsion-web/src/components/ReportDialog`：前台举报统一组件
-
-## 后端关键路径
 - `artistsion-admin/src/main/java/com/lf/controller/AuthController.java`：新认证
-- `artistsion-admin/src/main/java/com/lf/controller/UserController.java`：旧登录 / 旧 `user/info` 兼容与公开画师接口
-- `artistsion-admin/src/main/java/com/lf/controller/AdminDashboardController.java`：admin 看板汇总
-- `artistsion-admin/src/main/java/com/lf/controller/SysReportController.java`：举报闭环
-- `artistsion-admin/src/main/java/com/lf/controller/SysFollowController.java`：关注 / 粉丝 / 好友接口
-- `artistsion-admin/src/main/java/com/lf/service/impl/MenuServiceImpl.java`：角色菜单树
+- `artistsion-admin/src/main/java/com/lf/controller/UserController.java`：旧登录 / 旧 `user/info` 兼容
+- `artistsion-admin/src/main/java/com/lf/controller/SysHuagaoController.java`：橱窗列表、搜索与曝光采集入口
+- `artistsion-admin/src/main/java/com/lf/controller/RecHuagaoRecommendationController.java`：首页推荐结果接口
+- `artistsion-admin/src/main/java/com/lf/controller/RecHuagaoTrackController.java`：huagao 行为采集、调试、训练前检查
+- `artistsion-admin/src/main/java/com/lf/service/impl/RecHuagaoRecommendationServiceImpl.java`：LTR 结果读取、actor 兜底、最新橱窗降级
+- `artistsion-admin/src/main/java/com/lf/service/impl/RecHuagaoTrackServiceImpl.java`：huagao 采集与聚合核心逻辑
+- `artistsion-admin/src/main/resources/mapper/SysHuagaoMapper.xml`：huagao 搜索 SQL
+- `artistsion-admin/src/main/resources/mapper/RecHuagaoRecommendationMapper.xml`：离线推荐结果查询 SQL
+- `artistsion-admin/src/main/resources/mapper/RecHuagaoDebugMapper.xml`：调试、重建校验、样本预览 / 导出 SQL
 - `artistsion-admin/src/main/java/com/lf/config/MyWebConfig.java`：白名单与跨域
 - `artistsion-admin/src/main/java/com/lf/interceptor/JwtValidateInterceptor.java`：JWT 校验
-- `artistsion-admin/src/main/resources/mapper`：SQL 映射
 
-## 核心数据表与业务模块映射
+## 核心模块映射
+
 | 模块 | 关键表 | 前端 | 后端 |
 | --- | --- | --- | --- |
-| 用户与权限 | `x_user`、`x_role`、`x_menu`、`x_user_role`、`x_role_menu` | `auth`、`sys`、`store/modules/user.js`、`permission.js` | `AuthController`、`UserController`、`MenuServiceImpl` |
-| 作品 / 委托 / 橱窗 | `sys_huagao` | `work`、`showcase`、`publish/work`、`center/cart`、`home` | `SysHuagaoController` |
-| 纯展示作品 / 社区内容 | `sys_zuopin` | `works`、`posts`、`fenxiang`、`publish/work`、`home` | `SysZuopinController` |
-| 企划 / 需求 | 现有企划相关表与接口链路 | `projects`、`publish/project`、`center/submissions`、`center/favorites` | 对应 project controller / service |
-| 订单与支付 | `sys_order` | `center/orders`、`order/*`、`center/cart` | `SysOrderController`、`AliPayController` |
-| 关注关系 | `sys_follow` | `center/follows`、`api/follow.js`、`center/profile` | `SysFollowController` |
-| 举报审核 | `sys_report` | `report`、`ReportDialog` | `SysReportController` |
-| 反馈 / 工单 | `sys_liuyan`、`sys_liuyans` | `liuyan/*` | `SysLiuyanController`、`SysLiuyansController` |
-| 分类 / 运营 / 日志 | `sys_fenlei`、`sys_lunbo`、`sys_rizhi` | `fenlei`、`lunbo`、`tongji`、`rizhi` | 对应 controller |
-| 推荐 | `user_article_operation` | `home`、`src/api/tuijian.js` | `UserArticleOperationController` |
-| AI 助手 | 无专用业务主表 | `ai/ai.vue` | `AliAiController` |
+| 用户与权限 | `x_user`、`x_role`、`x_menu`、`x_user_role`、`x_role_menu` | `auth`、`sys`、`store/modules/user.js` | `AuthController`、`UserController`、`MenuServiceImpl` |
+| 橱窗画稿 | `sys_huagao`、`sys_huagao_tag` | `showcase`、`work/detail`、`publish/work`、`center/cart` | `SysHuagaoController`、`SysHuagaoMapper.xml` |
+| Huagao 推荐 | `rec_huagao_*` | `home`、`showcase`、`work/detail`、`api/recHuagao.js` | `RecHuagaoRecommendationController`、`RecHuagaoTrackController`、`RecHuagaoRecommendationServiceImpl`、`RecHuagaoTrackServiceImpl` |
+| 展示作品 / 社区 | `sys_zuopin`、`sys_pinglun`、`sys_dianzan` | `works`、`posts`、`fenxiang` | `SysZuopinController` 等 |
+| 企划 / 需求 | `sys_project` | `projects`、`publish/project` | `SysProjectController` |
+| 订单与支付 | `sys_order` | `center/orders`、`center/cart`、`order/*` | `SysOrderController`、`AliPayController` |
+| 收藏与关注 | `sys_shoucang`、`sys_follow` | `center/favorites`、`center/follows` | `SysShoucangController`、`SysFollowController` |
+| 举报与反馈 | `sys_report`、`sys_liuyan`、`sys_liuyans` | `report`、`ReportDialog`、`liuyan/*` | `SysReportController`、`SysLiuyanController` |
 
-## 当前前台与 admin 的关系
-- 主站统一从 `/auth` 登录后进入 `/home`
-- admin 统一入口是 `/admin`，内部实际落到 `/dashboard`
-- admin 当前没有改后端菜单表结构，而是在前端基于 `/user/info` -> `menuList` 做白名单收敛
-- 普通用户 / 画师自助流仍与 admin 共存于同一前端应用，只是 admin 主菜单不再暴露这些页
-- 当前前台已引入“显示模式（artist / client）”概念，但它只是 UI 过滤器，不是后端真实权限切换
-- 因此凡是改认证、菜单、角色、admin 边界的任务，都必须同时检查前端路由、守卫、菜单数据和后端权限链路
+## 当前注意事项
 
-## 当前最容易误解的产品语义
-- “作品” = 纯展示内容，使用 `sys_zuopin` 语义
-- “橱窗” = 有价格的画稿展示，优先沿用 `sys_huagao` 语义
-- “企划” = 需求发布
-- “购物车”当前是前台收口页，但是否为独立购物车模型仍需谨慎核对底层订单实现
-- “画师 / 用户切换”当前只应该作为前台显示模式，不应扩展成真实权限系统
+- 主站和 admin 仍在同一个前端应用里；admin 仍复用 `/user/info` 到 `menuList` 的旧动态菜单链路。
+- “作品”主要对应 `sys_zuopin`，“橱窗”主要对应 `sys_huagao`，不要混用训练口径。
+- 当前 huagao 推荐 v1 覆盖首页推荐、`/showcase`、`/work/:id` 的橱窗相关行为。
+- 旧 Mahout / `user_article_operation` 前台入口已断开；后端兼容代码、依赖和旧表暂留，等待 LTR 推荐接口验证后再物理删除。
+- 生产部署前必须替换 `application.properties` 里的数据库、JWT、支付、AI、邮件、OSS 等配置。
 
-## 文档使用建议
-静态地图只描述“当前仓库结构”和“模块归属”，不替代最新任务状态。  
-具体本轮已做完什么、还有哪些缺口、下一步先修什么，请看 `docs/SESSION_HANDOFF.md`。
+## 推荐训练入口
+
+- 训练代码：`recsys/huagao_ltr/run_pipeline.py`
+- 依赖文件：`recsys/huagao_ltr/requirements.txt`
+- 推荐结果表 SQL：`artistsion-admin/sql/2026-04-28-rec-huagao-ltr-recommendation-schema.sql`
+- 固定命令：`python recsys/huagao_ltr/run_pipeline.py --source synthetic --top-k 50`

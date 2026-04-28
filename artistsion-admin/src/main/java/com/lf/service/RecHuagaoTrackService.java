@@ -33,4 +33,11 @@ public interface RecHuagaoTrackService {
     Map<String, Object> getTrainingSamplePreview(LocalDate dateFrom,
                                                  LocalDate dateTo,
                                                  Integer limit);
+
+    Map<String, Object> getTrainingReadiness(LocalDate dateFrom,
+                                             LocalDate dateTo);
+
+    List<Map<String, Object>> getTrainingSampleExportRows(LocalDate dateFrom,
+                                                          LocalDate dateTo,
+                                                          Integer limit);
 }

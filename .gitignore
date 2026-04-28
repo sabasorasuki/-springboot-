@@ -51,6 +51,9 @@ tools/db_readonly.local.env
 __pycache__/
 *.pyc
 
+# ===== Recommender artifacts =====
+recsys/huagao_ltr/artifacts/
+
 # ===== 前端 =====
 node_modules/
 dist/

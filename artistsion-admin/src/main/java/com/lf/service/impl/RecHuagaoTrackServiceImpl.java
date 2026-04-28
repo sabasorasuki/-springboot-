@@ -29,6 +29,7 @@ import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
@@ -45,6 +46,7 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
     private static final Logger log = LoggerFactory.getLogger(RecHuagaoTrackServiceImpl.class);
 
     private static final String SCENE_SHOWCASE = "showcase";
+    private static final String SCENE_HOME = "home";
     private static final String EVENT_CLICK_DETAIL = "click_detail";
     private static final String EVENT_DETAIL_VIEW = "detail_view";
     private static final String EVENT_DETAIL_DWELL = "detail_dwell";
@@ -92,7 +94,7 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
                                     Long userId,
                                     String visitorId,
                                     String sessionId) {
-        if (!isShowcaseScene(scene)) {
+        if (!isTrackableListScene(scene)) {
             return null;
         }
 
@@ -112,7 +114,7 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
         RecHuagaoRequestLog requestLog = new RecHuagaoRequestLog();
         requestLog.setRequestId(requestId);
         requestLog.setQueryKey(queryKey);
-        requestLog.setScene(SCENE_SHOWCASE);
+        requestLog.setScene(sanitizeScene(scene));
         requestLog.setUserId(userId);
         requestLog.setVisitorId(sanitizeValue(visitorId));
         requestLog.setSessionId(sanitizeValue(sessionId));
@@ -292,11 +294,9 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
     public Map<String, Object> getTrainingSamplePreview(LocalDate dateFrom,
                                                         LocalDate dateTo,
                                                         Integer limit) {
-        LocalDate safeDateTo = dateTo == null ? LocalDate.now() : dateTo;
-        LocalDate safeDateFrom = dateFrom == null ? safeDateTo : dateFrom;
-        if (safeDateFrom.isAfter(safeDateTo)) {
-            throw new BusinessException(20001, "dateFrom不能晚于dateTo");
-        }
+        LocalDate[] range = normalizeDateRange(dateFrom, dateTo);
+        LocalDate safeDateFrom = range[0];
+        LocalDate safeDateTo = range[1];
         int safeLimit = normalizePreviewLimit(limit);
         List<Map<String, Object>> rows = debugMapper.selectTrainingSamplePreview(safeDateFrom, safeDateTo, safeLimit);
 
@@ -318,6 +318,78 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
         data.put("labelSummary", labelSummary);
         data.put("rows", rows);
         return data;
+    }
+
+    @Override
+    public Map<String, Object> getTrainingReadiness(LocalDate dateFrom,
+                                                   LocalDate dateTo) {
+        LocalDate[] range = normalizeDateRange(dateFrom, dateTo);
+        LocalDate safeDateFrom = range[0];
+        LocalDate safeDateTo = range[1];
+
+        Map<String, Object> summary = debugMapper.selectTrainingReadinessSummary(safeDateFrom, safeDateTo);
+        List<Map<String, Object>> labelDistribution = debugMapper.selectTrainingLabelDistribution(safeDateFrom, safeDateTo);
+        List<Map<String, Object>> eventDistribution = debugMapper.selectTrainingEventDistribution(safeDateFrom, safeDateTo);
+        List<Map<String, Object>> dailyTrend = debugMapper.selectTrainingDailyTrend(safeDateFrom, safeDateTo);
+        List<Map<String, Object>> qualityChecks = debugMapper.selectTrainingQualityChecks(safeDateFrom, safeDateTo);
+
+        long qualityIssueCount = qualityChecks.stream()
+                .map(row -> row.get("issue_count"))
+                .mapToLong(this::longValue)
+                .sum();
+
+        long sampleCount = longValue(summary.get("sample_count"));
+        long impressionCount = longValue(summary.get("impression_count"));
+        long positiveSampleCount = longValue(summary.get("positive_sample_count"));
+        long queryCount = longValue(summary.get("query_count"));
+        long activeDayCount = longValue(summary.get("active_day_count"));
+        long actorCount = longValue(summary.get("actor_count"));
+        long labelLevelCount = longValue(summary.get("label_level_count"));
+
+        Map<String, Object> readiness = new LinkedHashMap<>();
+        readiness.put("qualityIssueCount", qualityIssueCount);
+        readiness.put("smokeTrainingReady",
+                qualityIssueCount == 0
+                        && sampleCount >= 100
+                        && positiveSampleCount >= 10
+                        && queryCount >= 5
+                        && activeDayCount >= 2
+                        && labelLevelCount >= 2);
+        readiness.put("v1TrainingReady",
+                qualityIssueCount == 0
+                        && impressionCount >= 3000
+                        && positiveSampleCount >= 300
+                        && queryCount >= 50
+                        && activeDayCount >= 7
+                        && actorCount >= 20
+                        && labelLevelCount >= 3);
+        readiness.put("thresholds", buildTrainingThresholds());
+        readiness.put("blockingReasons", buildTrainingBlockingReasons(
+                qualityIssueCount,
+                sampleCount,
+                impressionCount,
+                positiveSampleCount,
+                queryCount,
+                activeDayCount,
+                actorCount,
+                labelLevelCount));
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("summary", summary);
+        data.put("readiness", readiness);
+        data.put("labelDistribution", labelDistribution);
+        data.put("eventDistribution", eventDistribution);
+        data.put("dailyTrend", dailyTrend);
+        data.put("qualityChecks", qualityChecks);
+        return data;
+    }
+
+    @Override
+    public List<Map<String, Object>> getTrainingSampleExportRows(LocalDate dateFrom,
+                                                                 LocalDate dateTo,
+                                                                 Integer limit) {
+        LocalDate[] range = normalizeDateRange(dateFrom, dateTo);
+        return debugMapper.selectTrainingSamplePreview(range[0], range[1], normalizeExportLimit(limit));
     }
 
     private void validateActionRequest(RecHuagaoActionTrackRequest request) {
@@ -513,8 +585,9 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
         }
     }
 
-    private boolean isShowcaseScene(String scene) {
-        return SCENE_SHOWCASE.equalsIgnoreCase(sanitizeScene(scene));
+    private boolean isTrackableListScene(String scene) {
+        String sanitizedScene = sanitizeScene(scene);
+        return SCENE_SHOWCASE.equalsIgnoreCase(sanitizedScene) || SCENE_HOME.equalsIgnoreCase(sanitizedScene);
     }
 
     private boolean isClickDetail(RecHuagaoActionLog actionLog) {
@@ -604,6 +677,20 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
         }
     }
 
+    private long longValue(Object value) {
+        if (value == null) {
+            return 0L;
+        }
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+        try {
+            return Long.parseLong(String.valueOf(value));
+        } catch (NumberFormatException ignored) {
+            return 0L;
+        }
+    }
+
     private long countMismatchRows(List<Map<String, Object>> rows) {
         return rows.stream()
                 .filter(row -> intValue(row.get("is_match")) != 1)
@@ -615,6 +702,91 @@ public class RecHuagaoTrackServiceImpl implements RecHuagaoTrackService {
             return 100;
         }
         return Math.min(limit, 500);
+    }
+
+    private int normalizeExportLimit(Integer limit) {
+        if (limit == null || limit < 1) {
+            return 5000;
+        }
+        return Math.min(limit, 50000);
+    }
+
+    private LocalDate[] normalizeDateRange(LocalDate dateFrom, LocalDate dateTo) {
+        LocalDate safeDateTo = dateTo == null ? LocalDate.now() : dateTo;
+        LocalDate safeDateFrom = dateFrom == null ? safeDateTo : dateFrom;
+        if (safeDateFrom.isAfter(safeDateTo)) {
+            throw new BusinessException(20001, "dateFrom不能晚于dateTo");
+        }
+        return new LocalDate[]{safeDateFrom, safeDateTo};
+    }
+
+    private Map<String, Object> buildTrainingThresholds() {
+        Map<String, Object> thresholds = new LinkedHashMap<>();
+
+        Map<String, Object> smoke = new LinkedHashMap<>();
+        smoke.put("sampleCount", 100);
+        smoke.put("positiveSampleCount", 10);
+        smoke.put("queryCount", 5);
+        smoke.put("activeDayCount", 2);
+        smoke.put("labelLevelCount", 2);
+        smoke.put("qualityIssueCount", 0);
+        thresholds.put("smokeTraining", smoke);
+
+        Map<String, Object> v1 = new LinkedHashMap<>();
+        v1.put("impressionCount", 3000);
+        v1.put("positiveSampleCount", 300);
+        v1.put("queryCount", 50);
+        v1.put("activeDayCount", 7);
+        v1.put("actorCount", 20);
+        v1.put("labelLevelCount", 3);
+        v1.put("qualityIssueCount", 0);
+        thresholds.put("v1Training", v1);
+
+        return thresholds;
+    }
+
+    private List<String> buildTrainingBlockingReasons(long qualityIssueCount,
+                                                      long sampleCount,
+                                                      long impressionCount,
+                                                      long positiveSampleCount,
+                                                      long queryCount,
+                                                      long activeDayCount,
+                                                      long actorCount,
+                                                      long labelLevelCount) {
+        List<String> reasons = new ArrayList<>();
+        if (qualityIssueCount > 0) {
+            reasons.add("quality_checks_have_issues");
+        }
+        if (sampleCount < 100) {
+            reasons.add("sample_count_below_smoke_threshold");
+        }
+        if (impressionCount < 3000) {
+            reasons.add("impression_count_below_v1_threshold");
+        }
+        if (positiveSampleCount < 10) {
+            reasons.add("positive_sample_count_below_smoke_threshold");
+        } else if (positiveSampleCount < 300) {
+            reasons.add("positive_sample_count_below_v1_threshold");
+        }
+        if (queryCount < 5) {
+            reasons.add("query_count_below_smoke_threshold");
+        } else if (queryCount < 50) {
+            reasons.add("query_count_below_v1_threshold");
+        }
+        if (activeDayCount < 2) {
+            reasons.add("active_day_count_below_smoke_threshold");
+        } else if (activeDayCount < 7) {
+            reasons.add("active_day_count_below_v1_threshold");
+        }
+        if (actorCount < 20) {
+            reasons.add("actor_count_below_v1_threshold");
+        }
+        if (labelLevelCount < 2) {
+            reasons.add("label_level_count_below_smoke_threshold");
+        } else if (labelLevelCount < 3) {
+            reasons.add("label_level_count_below_v1_threshold");
+        }
+        return reasons;
     }
 
     private Long normalizeEventValue(RecHuagaoActionTrackRequest request) {

@@ -76,7 +76,6 @@
 <script>
 import api from '@/api/order.js'
 import { ossDownloadUrl } from '@/utils/oss'
-import tuijianApi from '@/api/tuijian.js'
 import { mapGetters } from 'vuex'
 import userApi from '@/api/userManage'
 
@@ -96,7 +95,6 @@ export default {
       },
       forms: {},
       allForm: [{}],
-      Formtj: {},
       formLabelWidth: '130px',
       rules: {
         title: [
@@ -167,13 +165,6 @@ export default {
             this.dialogFormVisible = false
             // 刷新表格
             this.getList()
-
-            this.Formtj.userId = this.Form.userids
-            this.Formtj.articleId = this.Form.id
-            this.Formtj.operationType = this.Form.pingjia
-            tuijianApi.saveOrUpdate(this.Formtj).then(response => {
-              // 成功提示
-            })
           })
         } else {
           console.log('error submit!!')

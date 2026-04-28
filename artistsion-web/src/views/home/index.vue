@@ -14,10 +14,10 @@
       </el-carousel>
     </section>
 
-    <!-- 推荐作品 / 最新作品 -->
+    <!-- 个性化推荐 -->
     <section class="section">
       <div class="section-header">
-        <h2 class="section-title">{{ isLoggedIn ? '为你推荐' : '最新作品' }}</h2>
+        <h2 class="section-title">为你推荐</h2>
       </div>
       <div v-if="recommendLoading" class="loading-placeholder">
         <i class="el-icon-loading" /> 加载中…
@@ -27,7 +27,7 @@
           v-for="work in recommendWorks"
           :key="work.id"
           class="work-card"
-          @click="goWorkDetail(work.id)"
+          @click="goWorkDetail(work)"
         >
           <div class="card-cover">
             <img v-if="work.photo" :src="work.photo" alt="" class="cover-img">
@@ -96,7 +96,7 @@
           v-for="work in allWorks"
           :key="work.id"
           class="work-card"
-          @click="goWorkDetail(work.id)"
+          @click="goWorkDetail(work)"
         >
           <div class="card-cover">
             <img v-if="work.photo" :src="work.photo" alt="" class="cover-img">
@@ -121,13 +121,12 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
 import huagaoApi from '@/api/huagao'
+import recHuagaoApi from '@/api/recHuagao'
 import fenleiApi from '@/api/fenlei'
 import lunboApi from '@/api/lunbo'
 import fenxiangApi from '@/api/fenxiang'
-import tuijianApi from '@/api/tuijian'
-import userManageApi from '@/api/userManage'
+import { createClientEventId } from '@/utils/visitor'
 
 export default {
   name: 'HomePage',
@@ -142,12 +141,6 @@ export default {
       allWorksTotal: 0,
       allWorksPage: 1,
       allWorksLoading: false
-    }
-  },
-  computed: {
-    ...mapGetters(['token']),
-    isLoggedIn() {
-      return !!this.token
     }
   },
   created() {
@@ -181,45 +174,28 @@ export default {
       }).catch(() => {})
     },
 
-    /** 推荐或最新作品 */
+    /** LTR 推荐，后端无结果时会降级为最新上架橱窗 */
     fetchRecommend() {
       this.recommendLoading = true
-      if (this.isLoggedIn) {
-        // 登录用户：通过 /user/info 拿 userId → 推荐链路
-        userManageApi.getInfo(this.token).then(res => {
-          const userId = res.data && res.data.userList && res.data.userList.id
-          if (userId) {
-            return this.fetchRecommendByUser(userId)
-          }
-          return this.fetchLatest()
-        }).catch(() => {
-          return this.fetchLatest()
-        }).finally(() => {
-          this.recommendLoading = false
-        })
-      } else {
-        this.fetchLatest().finally(() => {
-          this.recommendLoading = false
-        })
-      }
-    },
-
-    fetchRecommendByUser(userId) {
-      return tuijianApi.recommendations(userId).then(res => {
-        const ids = res.data
-        if (ids && ids.length) {
-          return huagaoApi.getListtuijian({
-            pageNo: 1,
-            pageSize: 12,
-            type: '上架',
-            status: '审核成功',
-            tuijian: ids
-          }).then(r => {
-            this.recommendWorks = r.data.rows || []
+      recHuagaoApi.recommendations({
+        pageNo: 1,
+        pageSize: 12,
+        scene: 'home'
+      }).then(res => {
+        const requestId = res.data.requestId || ''
+        const rows = res.data.rows || []
+        this.recommendWorks = rows.map((item, index) => {
+          return Object.assign({}, item, {
+            trackingRequestId: requestId,
+            trackingPosition: index + 1,
+            trackingScene: 'home',
+            trackingSource: 'home_recommend'
           })
-        }
-        // 推荐为空时降级到最新
+        })
+      }).catch(() => {
         return this.fetchLatest()
+      }).finally(() => {
+        this.recommendLoading = false
       })
     },
 
@@ -251,8 +227,27 @@ export default {
       this.fetchAllWorks()
     },
 
-    goWorkDetail(id) {
-      this.$router.push('/work/' + id)
+    goWorkDetail(work) {
+      const item = typeof work === 'object' ? work : { id: work }
+      if (!item || !item.id) return
+      const query = {}
+      if (item.trackingRequestId) {
+        recHuagaoApi.trackAction({
+          eventId: createClientEventId('click'),
+          eventType: 'click_detail',
+          requestId: item.trackingRequestId,
+          huagaoId: item.id,
+          shangjiaId: item.shangjiaids ? Number(item.shangjiaids) : null,
+          position: item.trackingPosition,
+          scene: item.trackingScene || 'home',
+          source: item.trackingSource || 'home_recommend'
+        }).catch(() => {})
+        query.requestId = item.trackingRequestId
+        query.position = item.trackingPosition
+        query.scene = item.trackingScene || 'home'
+        query.source = item.trackingSource || 'home_recommend'
+      }
+      this.$router.push({ path: '/work/' + item.id, query })
     },
 
     goPostDetail(id) {

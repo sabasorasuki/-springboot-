@@ -27,6 +27,7 @@ public class MyWebConfig implements WebMvcConfigurer {
                         "/sysZuopin/getById/**",
                         "/sysHuagao/list",
                         "/recHuagaoTrack/action",
+                        "/recHuagao/recommendations",
                         "/userArticleOperation/**",
                         "/sysFenlei/list",
                         "/sysLunbo/list",

@@ -22,8 +22,9 @@ Artistsion 是一个画师约稿 / 作品交易 / 社区内容平台。当前仓
 
 1. 本文件
 2. 任务对应的 `artistsion-web/CLAUDE.md` 或 `artistsion-admin/CLAUDE.md`
-3. `docs/PROJECT_MAP.md`
-4. `docs/SESSION_HANDOFF.md`
+3. `docs/README.md`
+4. `docs/HUAGAO_RECS_HANDOFF_2026-04-28.md`（当前 huagao 推荐任务）
+5. `docs/PROJECT_MAP.md`
 
 ## 启动方式
 
