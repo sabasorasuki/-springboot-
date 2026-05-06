@@ -208,7 +208,7 @@ import shoucangApi from '@/api/shoucang'
 import orderApi from '@/api/order'
 import pinglunApi from '@/api/pinglun'
 import recHuagaoApi from '@/api/recHuagao'
-import userApi from '@/api/userManage'
+import artistApi from '@/api/artist'
 import ReportDialog from '@/components/ReportDialog'
 import { normalizeImageUrl } from '@/utils/oss'
 import { buildCenterProfileRoute, buildOtherArtistProfileRoute } from '@/utils/centerProfile'
@@ -313,7 +313,7 @@ export default {
     async fetchArtist() {
       if (!this.work || !this.work.shangjiaids) return
       try {
-        const res = await userApi.getUserById(this.work.shangjiaids)
+        const res = await artistApi.getById(this.work.shangjiaids)
         if (res.code === 20000 && res.data) {
           this.artistInfo = res.data
         }

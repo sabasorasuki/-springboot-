@@ -32,7 +32,7 @@
         >
           <div class="artist-card__header">
             <img
-              :src="artist.avatar || defaultAvatar"
+              :src="artist.avatarUrl || defaultAvatar"
               class="artist-avatar"
               alt=""
             >
@@ -43,9 +43,9 @@
               </div>
             </div>
           </div>
-          <div v-if="artist.recentCovers && artist.recentCovers.length" class="artist-card__gallery">
+          <div v-if="artist.recentCoverUrls && artist.recentCoverUrls.length" class="artist-card__gallery">
             <div
-              v-for="(cover, idx) in artist.recentCovers"
+              v-for="(cover, idx) in artist.recentCoverUrls"
               :key="idx"
               class="gallery-thumb"
             >
@@ -53,7 +53,7 @@
             </div>
             <!-- 补空位保持 3 列对齐 -->
             <div
-              v-for="n in Math.max(0, 3 - artist.recentCovers.length)"
+              v-for="n in Math.max(0, 3 - artist.recentCoverUrls.length)"
               :key="'empty-' + n"
               class="gallery-thumb gallery-thumb--empty"
             />
@@ -87,6 +87,7 @@
 import artistApi from '@/api/artist'
 import fenleiApi from '@/api/fenlei'
 import { buildOtherArtistProfileRoute } from '@/utils/centerProfile'
+import { normalizeImageUrl } from '@/utils/oss'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
@@ -120,6 +121,15 @@ export default {
       }).catch(() => {})
     },
 
+    normalizeArtist(artist) {
+      const recentCovers = Array.isArray(artist.recentCovers) ? artist.recentCovers : []
+      return {
+        ...artist,
+        avatarUrl: normalizeImageUrl(artist.avatar),
+        recentCoverUrls: recentCovers.map(cover => normalizeImageUrl(cover)).filter(Boolean)
+      }
+    },
+
     fetchArtists() {
       this.loading = true
       artistApi.getList({
@@ -127,7 +137,7 @@ export default {
         pageSize: this.pageSize,
         fenlei: this.activeFilter || undefined
       }).then(res => {
-        this.artists = res.data.rows || []
+        this.artists = (res.data.rows || []).map(this.normalizeArtist)
         this.total = res.data.total || 0
       }).catch(() => {
         this.artists = []

@@ -172,6 +172,37 @@ public class UserController {
         return Result.success(vo);
     }
 
+    @ApiOperation("公开用户主页资料（安全投影）")
+    @GetMapping("/public/{id}")
+    public Result<ArtistVO> getPublicUserById(@PathVariable Integer id) {
+        User u = userService.getById(id);
+        if (u == null || u.getStatus() != 1) {
+            return Result.fail(20001, "用户不存在");
+        }
+
+        LambdaQueryWrapper<SysHuagao> hgWrapper = new LambdaQueryWrapper<>();
+        hgWrapper.eq(SysHuagao::getShangjiaids, String.valueOf(id));
+        hgWrapper.eq(SysHuagao::getType, "上架");
+        hgWrapper.eq(SysHuagao::getStatus, "审核成功");
+        hgWrapper.orderByDesc(SysHuagao::getId);
+        List<SysHuagao> works = sysHuagaoService.list(hgWrapper);
+
+        ArtistVO vo = new ArtistVO();
+        vo.setId(u.getId());
+        vo.setUsername(u.getUsername());
+        vo.setName(u.getName());
+        vo.setAvatar(u.getAvatar());
+        vo.setStatus(u.getStatus());
+        vo.setBio(u.getBio());
+        vo.setStyleTags(u.getStyleTags());
+        vo.setWorkCount((long) works.size());
+        vo.setRecentCovers(works.stream()
+                .limit(3)
+                .map(SysHuagao::getPhoto)
+                .collect(Collectors.toList()));
+        return Result.success(vo);
+    }
+
     @GetMapping("/all")
     public Result<List<User>> getAllUser() {
         List<User> list = userService.list();

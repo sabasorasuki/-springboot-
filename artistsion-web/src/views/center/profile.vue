@@ -711,6 +711,7 @@ import huagaoApi from '@/api/huagao'
 import projectApi from '@/api/project'
 import shoucangApi from '@/api/shoucang'
 import orderApi from '@/api/order'
+import artistApi from '@/api/artist'
 import { extractUploadFileName, normalizeImageUrl, ossUploadAction } from '@/utils/oss'
 import {
   buildCenterProfileRoute,
@@ -1091,7 +1092,7 @@ export default {
       return user
     },
     async fetchOtherProfile(userId) {
-      const res = await userApi.getUserById(userId)
+      const res = await artistApi.getPublicById(userId)
       if (!res || !res.data) {
         throw new Error('用户不存在')
       }

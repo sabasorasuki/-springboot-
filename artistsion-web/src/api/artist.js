@@ -21,5 +21,11 @@ export default {
       url: `/user/artist/${id}`,
       method: 'get'
     })
+  },
+  getPublicById(id) {
+    return request({
+      url: `/user/public/${id}`,
+      method: 'get'
+    })
   }
 }

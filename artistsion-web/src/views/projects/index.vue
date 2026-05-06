@@ -144,7 +144,10 @@ export default {
       this.$router.push(buildOtherClientProfileRoute(userId, 'projects'))
     },
     onApply(id) {
-      this.$message.info('应征功能即将上线')
+      this.$router.push({
+        path: '/project/' + id,
+        query: { apply: '1' }
+      })
     }
   }
 }

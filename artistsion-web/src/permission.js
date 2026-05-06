@@ -19,6 +19,24 @@ import {
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
 const whiteList = ['/auth'] // no redirect whitelist
+const publicPathPatterns = [
+  /^\/$/,
+  /^\/home$/,
+  /^\/artists$/,
+  /^\/artist\/\d+$/,
+  /^\/projects$/,
+  /^\/project\/\d+$/,
+  /^\/works$/,
+  /^\/work\/\d+$/,
+  /^\/showcase$/,
+  /^\/post\/\d+$/,
+  /^\/center\/profile\/\d+$/,
+  /^\/404$/
+]
+
+function isPublicPath(path) {
+  return publicPathPatterns.some(pattern => pattern.test(path))
+}
 
 function resolveLegacyAdminPath(path) {
   if (path === `${ADMIN_ENTRY_PATH}/`) {
@@ -94,7 +112,7 @@ router.beforeEach(async(to, from, next) => {
   } else {
     /* has no token*/
 
-    if (whiteList.indexOf(to.path) !== -1) {
+    if (whiteList.indexOf(to.path) !== -1 || isPublicPath(to.path)) {
       // in the free login whitelist, go directly
       next()
     } else {

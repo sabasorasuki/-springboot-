@@ -38,7 +38,16 @@
 
         <!-- 操作 -->
         <div class="action-row">
-          <el-button type="primary" round icon="el-icon-edit">我要应征</el-button>
+          <el-button
+            v-if="!isOwner"
+            type="primary"
+            round
+            icon="el-icon-edit"
+            :disabled="!canApply"
+            @click="openApplyDialog"
+          >
+            {{ canApply ? '我要应征' : '暂不可应征' }}
+          </el-button>
           <el-button round icon="el-icon-star-off">收藏企划</el-button>
           <el-button
             v-if="isOwner"
@@ -52,8 +61,74 @@
           </el-button>
         </div>
       </div>
+
+      <div v-if="isOwner" class="applications-card">
+        <div class="applications-header">
+          <h2>应征记录</h2>
+          <span>{{ applicationTotal }} 条</span>
+        </div>
+        <div v-if="applicationLoading" class="applications-loading">
+          <i class="el-icon-loading" /> 加载中…
+        </div>
+        <div v-else-if="applications.length" class="application-list">
+          <div
+            v-for="application in applications"
+            :key="application.id"
+            class="application-item"
+          >
+            <el-avatar :size="34" :src="application.applicantAvatar" icon="el-icon-user" />
+            <div class="application-main">
+              <div class="application-top">
+                <span class="application-name">{{ application.applicantName || '应征者' }}</span>
+                <span class="application-status">{{ application.status }}</span>
+              </div>
+              <p v-if="application.message" class="application-message">{{ application.message }}</p>
+              <a
+                v-if="application.portfolioUrl"
+                class="application-link"
+                :href="application.portfolioUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                查看作品集
+              </a>
+            </div>
+          </div>
+        </div>
+        <el-empty v-else description="暂无应征" :image-size="96" />
+      </div>
     </template>
     <el-empty v-else description="企划不存在" />
+
+    <el-dialog
+      title="应征企划"
+      :visible.sync="applyVisible"
+      width="520px"
+      append-to-body
+    >
+      <el-form ref="applyForm" :model="applyForm" :rules="applyRules" label-width="90px">
+        <el-form-item label="应征说明" prop="message">
+          <el-input
+            v-model="applyForm.message"
+            type="textarea"
+            :rows="5"
+            maxlength="1000"
+            show-word-limit
+            placeholder="介绍你的创作经验、档期和对该企划的理解"
+          />
+        </el-form-item>
+        <el-form-item label="作品集链接">
+          <el-input
+            v-model.trim="applyForm.portfolioUrl"
+            placeholder="可填写个人主页、作品集或代表作品链接"
+          />
+        </el-form-item>
+      </el-form>
+      <span slot="footer">
+        <el-button @click="applyVisible = false">取消</el-button>
+        <el-button type="primary" :loading="applyLoading" @click="submitApplication">提交应征</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -70,11 +145,23 @@ export default {
     return {
       loading: true,
       project: null,
-      deleteLoading: false
+      deleteLoading: false,
+      applyVisible: false,
+      applyLoading: false,
+      applyForm: {
+        message: '',
+        portfolioUrl: ''
+      },
+      applyRules: {
+        message: [{ required: true, message: '请填写应征说明', trigger: 'blur' }]
+      },
+      applications: [],
+      applicationTotal: 0,
+      applicationLoading: false
     }
   },
   computed: {
-    ...mapGetters(['userId']),
+    ...mapGetters(['userId', 'token']),
     statusClass() {
       if (!this.project) return ''
       const map = { '招募中': 'recruiting', '进行中': 'ongoing', '已完成': 'done', '已关闭': 'closed' }
@@ -83,6 +170,9 @@ export default {
     isOwner() {
       if (!this.project || !this.userId) return false
       return Number(this.project.userId) === Number(this.userId)
+    },
+    canApply() {
+      return this.project && this.project.status === '招募中'
     }
   },
   created() {
@@ -99,6 +189,12 @@ export default {
           this.project = {
             ...p,
             userAvatar: p.userAvatar || defaultAvatar
+          }
+          if (this.isOwner) {
+            this.fetchApplications()
+          }
+          if (this.$route.query.apply === '1') {
+            this.$nextTick(this.openApplyDialog)
           }
         }
       } catch (e) {
@@ -127,6 +223,55 @@ export default {
           this.deleteLoading = false
         }
       }).catch(() => {})
+    },
+    openApplyDialog() {
+      if (!this.token) {
+        this.$router.push('/auth')
+        return
+      }
+      if (this.isOwner || !this.canApply) {
+        return
+      }
+      this.applyVisible = true
+    },
+    submitApplication() {
+      this.$refs.applyForm.validate(async valid => {
+        if (!valid || !this.project) return
+        this.applyLoading = true
+        try {
+          const res = await projectApi.apply({
+            projectId: this.project.id,
+            message: this.applyForm.message,
+            portfolioUrl: this.applyForm.portfolioUrl
+          })
+          this.$message.success(res.message || '应征已提交')
+          this.applyVisible = false
+          this.applyForm.message = ''
+          this.applyForm.portfolioUrl = ''
+          if (this.$route.query.apply) {
+            const query = { ...this.$route.query }
+            delete query.apply
+            this.$router.replace({ path: this.$route.path, query }).catch(() => {})
+          }
+        } finally {
+          this.applyLoading = false
+        }
+      })
+    },
+    async fetchApplications() {
+      if (!this.project || !this.project.id) return
+      this.applicationLoading = true
+      try {
+        const res = await projectApi.getApplications({
+          projectId: this.project.id,
+          pageNo: 1,
+          pageSize: 50
+        })
+        this.applications = (res.data && res.data.rows) || []
+        this.applicationTotal = (res.data && res.data.total) || 0
+      } finally {
+        this.applicationLoading = false
+      }
     },
     goPublisherProfile() {
       if (!this.project || !this.project.userId) return
@@ -281,5 +426,90 @@ export default {
 .action-row {
   display: flex;
   gap: 12px;
+}
+
+.applications-card {
+  margin-top: 20px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 22px 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.applications-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+  }
+
+  span {
+    font-size: 13px;
+    color: #999;
+  }
+}
+
+.applications-loading {
+  padding: 24px 0;
+  text-align: center;
+  color: #999;
+}
+
+.application-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.application-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid #f3f3f3;
+}
+
+.application-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.application-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.application-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.application-status {
+  font-size: 12px;
+  color: #6c5ce7;
+  background: rgba(108, 92, 231, 0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.application-message {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #666;
+  white-space: pre-wrap;
+}
+
+.application-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #6c5ce7;
 }
 </style>

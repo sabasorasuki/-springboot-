@@ -10,7 +10,7 @@
           <h1>{{ post.title }}</h1>
           <div class="hero-meta">
             <span v-if="post.fenlei" class="meta-tag">{{ post.fenlei }}</span>
-            <span class="meta-item">{{ post.username || '匿名用户' }}</span>
+            <span class="meta-item meta-item--link" @click="goAuthor">{{ post.username || '匿名用户' }}</span>
             <span class="meta-item">{{ post.fbdate || '未记录发布时间' }}</span>
           </div>
         </div>
@@ -56,7 +56,7 @@
 import { mapGetters } from 'vuex'
 import fenxiangApi from '@/api/fenxiang'
 import ReportDialog from '@/components/ReportDialog'
-import { buildCenterProfileRoute } from '@/utils/centerProfile'
+import { buildCenterProfileRoute, buildOtherArtistProfileRoute } from '@/utils/centerProfile'
 
 export default {
   name: 'PostDetail',
@@ -123,6 +123,12 @@ export default {
     },
     openReportDialog() {
       this.reportVisible = true
+    },
+    goAuthor() {
+      const authorId = this.post && (this.post.userids || this.post.userId)
+      if (authorId) {
+        this.$router.push(buildOtherArtistProfileRoute(authorId, 'featuredWorks'))
+      }
     }
   }
 }
@@ -188,6 +194,14 @@ export default {
   background: rgba(255, 255, 255, 0.12);
   color: rgba(255, 255, 255, 0.88);
   font-size: 13px;
+}
+
+.meta-item--link {
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
 }
 
 .hero-actions {

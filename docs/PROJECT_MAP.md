@@ -70,7 +70,7 @@ Artistsion 是一个画师约稿、作品展示、橱窗交易和社区内容平
 | 橱窗画稿 | `sys_huagao`、`sys_huagao_tag` | `showcase`、`work/detail`、`publish/work`、`center/cart` | `SysHuagaoController`、`SysHuagaoMapper.xml` |
 | Huagao 推荐 | `rec_huagao_*` | `home`、`showcase`、`work/detail`、`api/recHuagao.js` | `RecHuagaoRecommendationController`、`RecHuagaoTrackController`、`RecHuagaoRecommendationServiceImpl`、`RecHuagaoTrackServiceImpl` |
 | 展示作品 / 社区 | `sys_zuopin`、`sys_pinglun`、`sys_dianzan` | `works`、`posts`、`fenxiang` | `SysZuopinController` 等 |
-| 企划 / 需求 | `sys_project` | `projects`、`publish/project` | `SysProjectController` |
+| 企划 / 需求 | `sys_project`、`sys_project_application` | `projects`、`publish/project` | `SysProjectController` |
 | 订单与支付 | `sys_order` | `center/orders`、`center/cart`、`order/*` | `SysOrderController`、`AliPayController` |
 | 收藏与关注 | `sys_shoucang`、`sys_follow` | `center/favorites`、`center/follows` | `SysShoucangController`、`SysFollowController` |
 | 举报与反馈 | `sys_report`、`sys_liuyan`、`sys_liuyans` | `report`、`ReportDialog`、`liuyan/*` | `SysReportController`、`SysLiuyanController` |

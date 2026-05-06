@@ -28,7 +28,7 @@
           v-for="item in works"
           :key="item.id"
           class="work-card"
-          @click="openPreview(item)"
+          @click="goPostDetail(item.id)"
         >
           <div class="card-cover">
             <img
@@ -173,6 +173,10 @@ export default {
     loadMore() {
       this.pageNo++
       this.fetchWorks()
+    },
+    goPostDetail(id) {
+      if (!id) return
+      this.$router.push(`/post/${id}`)
     },
     openPreview(item) {
       this.previewItem = this.normalizeWork(item)
