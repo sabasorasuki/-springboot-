@@ -4,6 +4,20 @@ import { buildCenterProfileRoute, getPersistedDisplayMode } from '@/utils/center
 
 Vue.use(Router)
 
+function patchRouterNavigation(methodName) {
+  const originalMethod = Router.prototype[methodName]
+  Router.prototype[methodName] = function patchedNavigation(location, onResolve, onReject) {
+    if (onResolve || onReject) {
+      return originalMethod.call(this, location, onResolve, onReject)
+    }
+    const result = originalMethod.call(this, location)
+    return result && typeof result.catch === 'function' ? result : Promise.resolve(result)
+  }
+}
+
+patchRouterNavigation('push')
+patchRouterNavigation('replace')
+
 function buildSelfCenterRedirect(tab, sub, mode = getPersistedDisplayMode()) {
   return buildCenterProfileRoute({
     isSelf: true,
