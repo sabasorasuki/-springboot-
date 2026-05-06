@@ -255,8 +255,10 @@ export default {
     },
 
     goCategory(fenlei) {
-      // TODO: Phase 5 — 按分类筛选
-      this.$message.info(`"${fenlei}"分类筛选即将上线`)
+      this.$router.push({
+        path: '/showcase',
+        query: fenlei ? { fenlei } : {}
+      })
     }
   }
 }

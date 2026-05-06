@@ -147,7 +147,17 @@ export default {
       return groups
     }
   },
+  watch: {
+    '$route.query': {
+      handler(query) {
+        if (this.applyRouteQuery(query)) {
+          this.resetAndFetch()
+        }
+      }
+    }
+  },
   created() {
+    this.applyRouteQuery()
     this.fetchCategories()
     this.fetchSystemTags()
     this.fetchItems()
@@ -159,6 +169,40 @@ export default {
         photoUrl: normalizeImageUrl(item && item.photo),
         photoBroken: false
       }
+    },
+    applyRouteQuery(query = this.$route.query) {
+      const nextKeyword = query.keyword ? String(query.keyword).trim() : ''
+      const nextFilter = query.fenlei ? String(query.fenlei).trim() : '全部'
+      const nextTagId = query.tagId ? Number(query.tagId) : null
+      const safeTagId = Number.isFinite(nextTagId) ? nextTagId : null
+      const changed = this.keyword !== nextKeyword ||
+        this.activeFilter !== nextFilter ||
+        this.activeTagId !== safeTagId
+
+      this.keyword = nextKeyword
+      this.activeFilter = nextFilter || '全部'
+      this.activeTagId = safeTagId
+      return changed
+    },
+    syncRouteQuery() {
+      const query = {}
+      if (this.keyword) {
+        query.keyword = this.keyword
+      }
+      if (this.activeFilter && this.activeFilter !== '全部') {
+        query.fenlei = this.activeFilter
+      }
+      if (this.activeTagId) {
+        query.tagId = this.activeTagId
+      }
+      const current = this.$route.query || {}
+      const sameKeyword = (current.keyword || '') === (query.keyword || '')
+      const sameFenlei = (current.fenlei || '') === (query.fenlei || '')
+      const sameTagId = String(current.tagId || '') === String(query.tagId || '')
+      if (sameKeyword && sameFenlei && sameTagId) {
+        return
+      }
+      this.$router.replace({ path: '/showcase', query }).catch(() => {})
     },
     fetchCategories() {
       fenleiApi.getFixedList().then(res => {
@@ -215,13 +259,16 @@ export default {
       this.fetchItems()
     },
     onSearch() {
+      this.syncRouteQuery()
       this.resetAndFetch()
     },
     onFilterChange(tag) {
       this.activeFilter = tag
+      this.syncRouteQuery()
       this.resetAndFetch()
     },
     onTagChange() {
+      this.syncRouteQuery()
       this.resetAndFetch()
     },
     loadMore() {
