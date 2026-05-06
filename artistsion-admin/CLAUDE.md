@@ -6,7 +6,7 @@
 - MyBatis-Plus + MySQL
 - Redis + JWT
 - Spring Mail + Swagger / Springfox
-- Alipay SDK + DashScope SDK + Mahout
+- Alipay SDK + DashScope SDK
 
 ## 启动方式
 
@@ -30,10 +30,10 @@
 - 认证 / 用户 / 菜单：`AuthController`、`UserController`、`MenuController`
 - admin 能力：`AdminDashboardController`、`SysReportController`
 - 内容与交易：`SysHuagaoController`、`SysZuopinController`、`SysOrderController`
-- 配套能力：`OSSController`、`AliPayController`、`AliAiController`、`UserArticleOperationController`
+- 配套能力：`OSSController`、`AliPayController`、`AliAiController`
 - 权限表：`x_user`、`x_role`、`x_menu`、`x_user_role`、`x_role_menu`
 - 业务表：`sys_huagao`、`sys_zuopin`、`sys_order`、`sys_report`、`sys_liuyan`、`sys_fenlei`、`sys_lunbo`
-- 推荐表：`user_article_operation`
+- 推荐表：`rec_huagao_model_version`、`rec_huagao_user_recommendation`、`rec_huagao_request_log`、`rec_huagao_impression_log`、`rec_huagao_action_log`
 
 ## 敏感配置提醒
 

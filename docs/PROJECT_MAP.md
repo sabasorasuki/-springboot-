@@ -80,7 +80,7 @@ Artistsion 是一个画师约稿、作品展示、橱窗交易和社区内容平
 - 主站和 admin 仍在同一个前端应用里；admin 仍复用 `/user/info` 到 `menuList` 的旧动态菜单链路。
 - “作品”主要对应 `sys_zuopin`，“橱窗”主要对应 `sys_huagao`，不要混用训练口径。
 - 当前 huagao 推荐 v1 覆盖首页推荐、`/showcase`、`/work/:id` 的橱窗相关行为。
-- 旧 Mahout / `user_article_operation` 前台入口已断开；后端兼容代码、依赖和旧表暂留，等待 LTR 推荐接口验证后再物理删除。
+- 旧 Mahout / `user_article_operation` 已下线；推荐只保留 Huagao LTR 结果表和行为日志链路。
 - 生产部署前必须替换 `application.properties` 里的数据库、JWT、支付、AI、邮件、OSS 等配置。
 
 ## 推荐训练入口

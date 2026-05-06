@@ -9,7 +9,7 @@
 1. 保持搜索、列表、详情、收藏、购物车、下单行为采集可用。
 2. 用 XGBoost Learning-to-Rank 训练离线推荐结果。
 3. 通过 `GET /recHuagao/recommendations` 给首页提供推荐。
-4. 新链路验证后，再物理删除旧 Mahout 协同过滤。
+4. 旧 Mahout 协同过滤已物理下线，后续推荐只走 Huagao LTR 链路。
 
 暂不纳入：`sys_zuopin`、社区帖子、企划、画师主页、售前咨询。
 
@@ -98,25 +98,19 @@ GET /recHuagao/recommendations?pageNo=1&pageSize=12&scene=home
 
 ### 旧协同过滤状态
 
-旧 Mahout / `user_article_operation` 前台入口已断开：
+旧 Mahout / `user_article_operation` 已从产品链路下线：
 
 - 首页不再调用 `/userArticleOperation/recommendations/{userid}`。
 - 订单评价成功后不再写 `/userArticleOperation/add`。
 - `artistsion-web/src/api/tuijian.js` 已删除。
-
-后端暂留：
-
-- `UserArticleOperation*`
-- `UserArticleOperationMapper.xml`
-- Mahout 依赖
-- `/userArticleOperation/**` 白名单
-- `user_article_operation` 表
-
-等 LTR 推荐接口构建和端到端验证通过后，再执行第二轮物理删除。
+- 后端 `UserArticleOperation*`、`UserArticleOperationMapper.xml` 已删除。
+- Mahout 依赖已从后端 `pom.xml` 删除。
+- `/userArticleOperation/**` 白名单已删除。
+- `user_article_operation` 表已备份为 `user_article_operation_backup_before_ltr` 后删除。
 
 ## 待验证
 
-推荐上线前至少完成：
+推荐上线检查：
 
 1. 执行推荐结果表 SQL。
 2. 安装 Python 依赖：`pip install -r recsys/huagao_ltr/requirements.txt`。
@@ -125,6 +119,7 @@ GET /recHuagao/recommendations?pageNo=1&pageSize=12&scene=home
 5. `npm run build:prod` 通过。
 6. 首页登录、匿名、无模型三种状态都能渲染 `rows`。
 7. 点击首页推荐卡片后，详情页能收到 `requestId`、`position`、`scene=home`。
+8. 源码无 `UserArticleOperation`、`userArticleOperation`、`mahout` 业务引用；文档和清理 SQL 只保留历史说明。
 
 ## 关键文件
 
@@ -164,5 +159,5 @@ SQL：
 
 1. 跑通 synthetic pipeline 和首页推荐端到端。
 2. 确认 `trainingReadiness`、`rebuildCheck`、孤儿 request/action/impression 检查为 0。
-3. 验证通过后删除旧 Mahout 后端代码、依赖、白名单和旧表。
-4. 推荐闭环稳定后，再补全首页、橱窗、作品/社区、企划、画师主页、个人中心的主路径。
+3. 推荐闭环稳定后，再补全首页、橱窗、作品/社区、企划、画师主页、个人中心的主路径。
+4. 当真实行为数据达到阈值后，把 pipeline 从 synthetic 扩展到 real / mixed 数据源。

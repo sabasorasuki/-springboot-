@@ -5,4 +5,4 @@ CREATE TABLE IF NOT EXISTS user_article_operation_backup_before_ltr AS
 SELECT *
 FROM user_article_operation;
 
--- DROP TABLE IF EXISTS user_article_operation;
+DROP TABLE IF EXISTS user_article_operation;
