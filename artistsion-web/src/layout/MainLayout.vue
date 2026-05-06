@@ -11,10 +11,11 @@
           <div class="topbar-search">
             <el-input
               v-model="searchQuery"
-              placeholder="搜索作品、画师..."
+              placeholder="搜索橱窗画稿、分类、标签..."
               prefix-icon="el-icon-search"
               clearable
               size="medium"
+              @clear="clearSearch"
               @keyup.enter.native="handleSearch"
             />
           </div>
@@ -120,14 +121,42 @@ export default {
       return getCenterDropdownItems(this.displayMode)
     }
   },
+  watch: {
+    '$route.query.keyword': {
+      immediate: true,
+      handler(keyword) {
+        this.searchQuery = keyword ? String(keyword) : ''
+      }
+    }
+  },
   methods: {
     isNavActive(path) {
       return this.$route.path === path || this.$route.path.startsWith(path + '/')
     },
     handleSearch() {
-      if (this.searchQuery.trim()) {
-        this.$message.info('搜索功能即将上线')
+      const keyword = this.searchQuery.trim()
+      if (!keyword) {
+        this.clearSearch()
+        return
       }
+      const query = {
+        keyword
+      }
+      this.$router.push({
+        path: '/showcase',
+        query
+      }).catch(() => {})
+    },
+    clearSearch() {
+      if (this.$route.path !== '/showcase' || !this.$route.query.keyword) {
+        return
+      }
+      const query = { ...this.$route.query }
+      delete query.keyword
+      this.$router.replace({
+        path: '/showcase',
+        query
+      }).catch(() => {})
     },
     handleMainAction() {
       if (this.displayMode === 'artist') {

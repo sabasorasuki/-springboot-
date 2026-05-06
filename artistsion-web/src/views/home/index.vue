@@ -18,6 +18,7 @@
     <section class="section">
       <div class="section-header">
         <h2 class="section-title">为你推荐</h2>
+        <el-button type="text" class="section-link" @click="goShowcase">查看更多</el-button>
       </div>
       <div v-if="recommendLoading" class="loading-placeholder">
         <i class="el-icon-loading" /> 加载中…
@@ -63,6 +64,7 @@
     <section v-if="communityPosts.length" class="section">
       <div class="section-header">
         <h2 class="section-title">社区精选</h2>
+        <el-button type="text" class="section-link" @click="goWorks">查看更多</el-button>
       </div>
       <div class="community-grid">
         <div
@@ -89,7 +91,8 @@
     <!-- 全部作品浏览 -->
     <section class="section">
       <div class="section-header">
-        <h2 class="section-title">浏览全部</h2>
+        <h2 class="section-title">最新上架</h2>
+        <el-button type="text" class="section-link" @click="goShowcase">查看全部</el-button>
       </div>
       <div v-if="allWorks.length" class="card-grid">
         <div
@@ -254,6 +257,14 @@ export default {
       this.$router.push('/post/' + id)
     },
 
+    goShowcase() {
+      this.$router.push('/showcase')
+    },
+
+    goWorks() {
+      this.$router.push('/works')
+    },
+
     goCategory(fenlei) {
       this.$router.push({
         path: '/showcase',
@@ -324,6 +335,11 @@ export default {
   font-weight: 600;
   color: #333;
   margin: 0;
+}
+
+.section-link {
+  margin-left: auto;
+  color: #6c5ce7;
 }
 
 /* ── 作品网格 ── */

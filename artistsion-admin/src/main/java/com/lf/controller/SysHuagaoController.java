@@ -89,12 +89,14 @@ public class SysHuagaoController {
 
 
     @GetMapping("/getzuixin")
-    public Result<Map<String,Object>> getzuixin(){
+    public Result<Map<String,Object>> getzuixin(
+            @RequestParam(value = "pageNo", required = false) Long pageNo,
+            @RequestParam(value = "pageSize", required = false) Long pageSize){
         LambdaQueryWrapper<SysHuagao> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SysHuagao::getStatus, "审核成功");
         wrapper.eq(SysHuagao::getType, "上架");
         wrapper.orderByDesc(SysHuagao::getId);
-        Page<SysHuagao> page = new Page<>(1,3);
+        Page<SysHuagao> page = new Page<>(normalizePageNo(pageNo), normalizePageSize(pageSize));
         service.page(page, wrapper);
         populateArtistNames(page.getRecords());
         Map<String,Object> data = new HashMap<>();
@@ -150,6 +152,20 @@ public class SysHuagaoController {
 
         return Result.success(data);
 
+    }
+
+    private long normalizePageNo(Long pageNo) {
+        if (pageNo == null || pageNo < 1) {
+            return 1L;
+        }
+        return pageNo;
+    }
+
+    private long normalizePageSize(Long pageSize) {
+        if (pageSize == null || pageSize < 1) {
+            return 12L;
+        }
+        return Math.min(pageSize, 50L);
     }
 
 
