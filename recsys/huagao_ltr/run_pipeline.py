@@ -14,6 +14,9 @@ TYPE_ON_SALE = "上架"
 SYN_PREFIX = "syn_"
 SYN_ITEM_MARK = "synthetic_ltr"
 DEFAULT_CATEGORIES = ["头像", "立绘", "插画", "Q版", "场景", "同人"]
+SOURCE_SYNTHETIC = "synthetic"
+SOURCE_REAL = "real"
+SOURCE_MIXED = "mixed"
 
 np = None
 pymysql = None
@@ -98,17 +101,47 @@ def ensure_recommendation_tables(conn):
     conn.commit()
 
 
-def old_synthetic_dates(conn):
+def source_dates(conn, source):
+    if source == SOURCE_SYNTHETIC:
+        request_where = "request_id LIKE %s"
+        request_params = [SYN_PREFIX + "%"]
+        impression_where = "request_id LIKE %s"
+        impression_params = [SYN_PREFIX + "%"]
+        action_where = "request_id LIKE %s OR event_id LIKE %s"
+        action_params = [SYN_PREFIX + "%", SYN_PREFIX + "%"]
+    elif source == SOURCE_REAL:
+        request_where = "request_id NOT LIKE %s"
+        request_params = [SYN_PREFIX + "%"]
+        impression_where = "request_id NOT LIKE %s"
+        impression_params = [SYN_PREFIX + "%"]
+        action_where = "request_id NOT LIKE %s AND event_id NOT LIKE %s"
+        action_params = [SYN_PREFIX + "%", SYN_PREFIX + "%"]
+    else:
+        request_where = "1 = 1"
+        request_params = []
+        impression_where = "1 = 1"
+        impression_params = []
+        action_where = "1 = 1"
+        action_params = []
+
     sql = """
-    SELECT DISTINCT DATE(created_at) AS dt FROM rec_huagao_request_log WHERE request_id LIKE %s
+    SELECT DISTINCT DATE(created_at) AS dt FROM rec_huagao_request_log WHERE {request_where}
     UNION
-    SELECT DISTINCT DATE(created_at) AS dt FROM rec_huagao_impression_log WHERE request_id LIKE %s
+    SELECT DISTINCT DATE(created_at) AS dt FROM rec_huagao_impression_log WHERE {impression_where}
     UNION
-    SELECT DISTINCT DATE(created_at) AS dt FROM rec_huagao_action_log WHERE request_id LIKE %s OR event_id LIKE %s
-    """
+    SELECT DISTINCT DATE(created_at) AS dt FROM rec_huagao_action_log WHERE {action_where}
+    """.format(
+        request_where=request_where,
+        impression_where=impression_where,
+        action_where=action_where,
+    )
     with conn.cursor() as cur:
-        cur.execute(sql, (SYN_PREFIX + "%", SYN_PREFIX + "%", SYN_PREFIX + "%", SYN_PREFIX + "%"))
+        cur.execute(sql, tuple(request_params + impression_params + action_params))
         return {row["dt"] for row in cur.fetchall() if row["dt"] is not None}
+
+
+def old_synthetic_dates(conn):
+    return source_dates(conn, SOURCE_SYNTHETIC)
 
 
 def reset_synthetic(conn):
@@ -359,7 +392,17 @@ def parse_int(value):
         return None
 
 
-def load_training_rows(conn):
+def training_source_filter(source, alias="r"):
+    if source == SOURCE_SYNTHETIC:
+        return "%s.request_id LIKE %%s" % alias, [SYN_PREFIX + "%"]
+    if source == SOURCE_REAL:
+        return "%s.request_id NOT LIKE %%s" % alias, [SYN_PREFIX + "%"]
+    return "1 = 1", []
+
+
+def load_training_rows(conn, source):
+    request_filter, request_params = training_source_filter(source, "r")
+    action_filter, action_params = training_source_filter(source, "rec_huagao_action_log")
     sql = """
     SELECT
         r.request_id,
@@ -393,15 +436,29 @@ def load_training_rows(conn):
             SUM(CASE WHEN event_type = 'add_to_cart' THEN 1 ELSE 0 END) AS add_cart_cnt,
             SUM(CASE WHEN event_type = 'create_order' THEN 1 ELSE 0 END) AS create_order_cnt
         FROM rec_huagao_action_log
-        WHERE request_id LIKE %s
+        WHERE {action_filter}
         GROUP BY request_id, huagao_id
     ) a ON a.request_id = i.request_id AND a.huagao_id = i.huagao_id
-    WHERE r.request_id LIKE %s
+    WHERE {request_filter}
     ORDER BY r.request_id, i.position
-    """
+    """.format(action_filter=action_filter, request_filter=request_filter)
     with conn.cursor() as cur:
-        cur.execute(sql, (SYN_PREFIX + "%", SYN_PREFIX + "%"))
+        cur.execute(sql, tuple(action_params + request_params))
         return cur.fetchall()
+
+
+def validate_training_rows(rows, source):
+    if not rows:
+        raise RuntimeError("No %s training rows were found." % source)
+    label_levels = {int(row["relevance"]) for row in rows}
+    positive_count = sum(1 for row in rows if row["relevance"] > 0)
+    group_count = len({row["request_id"] for row in rows})
+    if positive_count <= 0:
+        raise RuntimeError("No positive %s training samples were found." % source)
+    if len(label_levels) < 2:
+        raise RuntimeError("Only one label level found for %s training rows." % source)
+    if group_count < 2:
+        raise RuntimeError("Need at least two request groups for %s training." % source)
 
 
 class FeatureStore:
@@ -582,7 +639,7 @@ def insert_recommendations(conn, model, feature_store, rows, items, args, model_
                 item["huagao_id"],
                 rank,
                 float(scores[idx]),
-                "xgboost_ltr_synthetic",
+                "xgboost_ltr_%s" % args.source,
                 generated_at,
             ))
 
@@ -753,7 +810,7 @@ def rebuild_one_day(conn, dt):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--source", choices=["synthetic"], default="synthetic")
+    parser.add_argument("--source", choices=[SOURCE_SYNTHETIC, SOURCE_REAL, SOURCE_MIXED], default=SOURCE_SYNTHETIC)
     parser.add_argument("--top-k", type=int, default=50)
     parser.add_argument("--actors", type=int, default=40)
     parser.add_argument("--requests-per-actor", type=int, default=8)
@@ -769,17 +826,26 @@ def main():
     conn = connect()
     try:
         ensure_recommendation_tables(conn)
-        dates_to_rebuild = old_synthetic_dates(conn)
-        if not args.keep_synthetic:
+        dates_to_rebuild = source_dates(conn, args.source)
+        if args.source == SOURCE_SYNTHETIC and not args.keep_synthetic:
             reset_synthetic(conn)
-        items = ensure_synthetic_items(conn, args.min_active_items, rng)
-        dates_to_rebuild.update(generate_synthetic_logs(conn, args, items, rng))
-        rows = load_training_rows(conn)
-        if not rows:
-            raise RuntimeError("No synthetic training rows were generated.")
+        if args.source == SOURCE_SYNTHETIC:
+            items = ensure_synthetic_items(conn, args.min_active_items, rng)
+            dates_to_rebuild.update(generate_synthetic_logs(conn, args, items, rng))
+        else:
+            items = active_items(conn)
+            if not items:
+                raise RuntimeError("No active huagao catalog rows were found for recommendation generation.")
+        rows = load_training_rows(conn, args.source)
+        validate_training_rows(rows, args.source)
 
         model, feature_store, metrics = train_ranker(rows)
-        model_version = "xgb_ltr_syn_%s" % datetime.now().strftime("%Y%m%d%H%M%S")
+        source_slug = {
+            SOURCE_SYNTHETIC: "syn",
+            SOURCE_REAL: "real",
+            SOURCE_MIXED: "mix",
+        }[args.source]
+        model_version = "xgb_ltr_%s_%s" % (source_slug, datetime.now().strftime("%Y%m%d%H%M%S"))
         artifacts_dir = Path(__file__).resolve().parent / "artifacts"
         artifacts_dir.mkdir(parents=True, exist_ok=True)
         model_path = artifacts_dir / ("%s.json" % model_version)

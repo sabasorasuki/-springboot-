@@ -23,3 +23,11 @@ python recsys/huagao_ltr/run_pipeline.py --source synthetic --top-k 50
 ```
 
 The synthetic run mutates the configured database. It deletes previous synthetic rows by default, writes request/impression/action logs with `syn_` prefixes, creates synthetic catalog rows tagged with `fujin='synthetic_ltr'` only when the active huagao catalog is too small for a useful demo, and stores offline recommendations for `u:*`, `v:*`, and `global` actors.
+
+After the frontend has collected real request/impression/action logs, train from the production event tables without generating synthetic logs:
+
+```powershell
+python recsys/huagao_ltr/run_pipeline.py --source real --top-k 50
+```
+
+`--source real` reads only non-`syn_` request logs and activates a new `xgb_ltr_real_*` model version. `--source mixed` can be used for experiments that combine existing synthetic and real logs.
