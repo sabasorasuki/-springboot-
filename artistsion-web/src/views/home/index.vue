@@ -17,7 +17,7 @@
     <!-- 个性化推荐 -->
     <section class="section">
       <div class="section-header">
-        <h2 class="section-title">为你推荐</h2>
+        <h2 class="section-title">推荐橱窗</h2>
         <el-button type="text" class="section-link" @click="goShowcase">查看更多</el-button>
       </div>
       <div v-if="recommendLoading" class="loading-placeholder">
@@ -44,6 +44,87 @@
         </div>
       </div>
       <el-empty v-else description="暂无作品" :image-size="120" />
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">推荐作品</h2>
+        <el-button type="text" class="section-link" @click="goWorks">查看更多</el-button>
+      </div>
+      <div v-if="recWorksLoading" class="loading-placeholder">
+        <i class="el-icon-loading" /> 加载中…
+      </div>
+      <div v-else-if="recWorks.length" class="community-grid">
+        <div
+          v-for="post in recWorks"
+          :key="post.id"
+          class="community-card"
+          @click="goPostDetail(post)"
+        >
+          <div class="community-cover">
+            <img v-if="post.photo" :src="post.photo" alt="" class="cover-img">
+            <div v-else class="cover-placeholder" />
+          </div>
+          <div class="community-body">
+            <div class="community-title">{{ post.title || post.name }}</div>
+            <div class="community-meta">
+              <span v-if="post.fenlei" class="card-tag">{{ post.fenlei }}</span>
+              <span class="community-author">{{ post.username || post.authorName || '匿名用户' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <el-empty v-else description="暂无推荐作品" :image-size="120" />
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">推荐企划</h2>
+        <el-button type="text" class="section-link" @click="goProjects">查看更多</el-button>
+      </div>
+      <div v-if="recProjectsLoading" class="loading-placeholder">
+        <i class="el-icon-loading" /> 加载中…
+      </div>
+      <div v-else-if="recProjects.length" class="project-mini-list">
+        <div
+          v-for="project in recProjects"
+          :key="project.id"
+          class="project-mini-card"
+          @click="goProjectDetail(project)"
+        >
+          <div class="project-mini-title">{{ project.title || project.name }}</div>
+          <div class="project-mini-desc">{{ project.description || '暂无需求描述' }}</div>
+          <div class="project-mini-meta">
+            <span v-if="project.category" class="card-tag">{{ project.category }}</span>
+            <span v-if="project.style" class="card-tag">{{ project.style }}</span>
+            <span class="card-price">¥{{ project.budgetMin || 0 }}–{{ project.budgetMax || 0 }}</span>
+          </div>
+        </div>
+      </div>
+      <el-empty v-else description="暂无推荐企划" :image-size="120" />
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">推荐画师</h2>
+        <el-button type="text" class="section-link" @click="goArtists">查看更多</el-button>
+      </div>
+      <div v-if="recArtistsLoading" class="loading-placeholder">
+        <i class="el-icon-loading" /> 加载中…
+      </div>
+      <div v-else-if="recArtists.length" class="artist-mini-grid">
+        <div
+          v-for="artist in recArtists"
+          :key="artist.id"
+          class="artist-mini-card"
+          @click="goArtistDetail(artist)"
+        >
+          <img :src="artist.avatar || defaultAvatar" class="artist-mini-avatar" alt="">
+          <div class="artist-mini-name">{{ artist.name || artist.username }}</div>
+          <div class="artist-mini-stat">{{ artist.workCount || 0 }} 件橱窗</div>
+        </div>
+      </div>
+      <el-empty v-else description="暂无推荐画师" :image-size="120" />
     </section>
 
     <!-- 热门分类 -->
@@ -125,19 +206,29 @@
 
 <script>
 import huagaoApi from '@/api/huagao'
-import recHuagaoApi from '@/api/recHuagao'
+import recApi from '@/api/rec'
 import fenleiApi from '@/api/fenlei'
 import lunboApi from '@/api/lunbo'
 import fenxiangApi from '@/api/fenxiang'
 import { createClientEventId } from '@/utils/visitor'
+import { buildOtherArtistProfileRoute } from '@/utils/centerProfile'
+
+const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
 export default {
   name: 'HomePage',
   data() {
     return {
+      defaultAvatar,
       carouselItems: [],
       recommendWorks: [],
       recommendLoading: false,
+      recWorks: [],
+      recWorksLoading: false,
+      recProjects: [],
+      recProjectsLoading: false,
+      recArtists: [],
+      recArtistsLoading: false,
       categories: [],
       communityPosts: [],
       allWorks: [],
@@ -152,6 +243,9 @@ export default {
     this.fetchCommunityPosts()
     this.fetchAllWorks()
     this.fetchRecommend()
+    this.fetchDomainRecommend('zuopin', 'home_works', 'recWorks', 'recWorksLoading', 4)
+    this.fetchDomainRecommend('project', 'home_projects', 'recProjects', 'recProjectsLoading', 3)
+    this.fetchDomainRecommend('artist', 'home_artists', 'recArtists', 'recArtistsLoading', 4)
   },
   methods: {
     /** 轮播图 */
@@ -180,7 +274,8 @@ export default {
     /** LTR 推荐，后端无结果时会降级为最新上架橱窗 */
     fetchRecommend() {
       this.recommendLoading = true
-      recHuagaoApi.recommendations({
+      recApi.recommendations({
+        domain: 'huagao',
         pageNo: 1,
         pageSize: 12,
         scene: 'home'
@@ -192,13 +287,41 @@ export default {
             trackingRequestId: requestId,
             trackingPosition: index + 1,
             trackingScene: 'home',
-            trackingSource: 'home_recommend'
+            trackingSource: 'home_recommend',
+            trackingDomain: 'huagao',
+            trackingModelVersion: res.data.modelVersion || ''
           })
         })
       }).catch(() => {
         return this.fetchLatest()
       }).finally(() => {
         this.recommendLoading = false
+      })
+    },
+
+    fetchDomainRecommend(domain, scene, targetKey, loadingKey, pageSize) {
+      this[loadingKey] = true
+      recApi.recommendations({
+        domain,
+        pageNo: 1,
+        pageSize,
+        scene
+      }).then(res => {
+        const requestId = res.data.requestId || ''
+        const modelVersion = res.data.modelVersion || ''
+        const rows = res.data.rows || []
+        this[targetKey] = rows.map((item, index) => Object.assign({}, item, {
+          trackingRequestId: requestId,
+          trackingPosition: index + 1,
+          trackingScene: scene,
+          trackingSource: scene,
+          trackingDomain: domain,
+          trackingModelVersion: modelVersion
+        }))
+      }).catch(() => {
+        this[targetKey] = []
+      }).finally(() => {
+        this[loadingKey] = false
       })
     },
 
@@ -235,26 +358,81 @@ export default {
       if (!item || !item.id) return
       const query = {}
       if (item.trackingRequestId) {
-        recHuagaoApi.trackAction({
+        recApi.trackAction({
           eventId: createClientEventId('click'),
           eventType: 'click_detail',
+          domain: 'huagao',
           requestId: item.trackingRequestId,
-          huagaoId: item.id,
-          shangjiaId: item.shangjiaids ? Number(item.shangjiaids) : null,
+          itemId: item.id,
+          authorId: item.shangjiaids ? Number(item.shangjiaids) : null,
           position: item.trackingPosition,
           scene: item.trackingScene || 'home',
-          source: item.trackingSource || 'home_recommend'
+          source: item.trackingSource || 'home_recommend',
+          modelVersion: item.trackingModelVersion || ''
         }).catch(() => {})
         query.requestId = item.trackingRequestId
         query.position = item.trackingPosition
         query.scene = item.trackingScene || 'home'
         query.source = item.trackingSource || 'home_recommend'
+        query.modelVersion = item.trackingModelVersion || ''
+        query.domain = 'huagao'
       }
       this.$router.push({ path: '/work/' + item.id, query })
     },
 
-    goPostDetail(id) {
-      this.$router.push('/post/' + id)
+    goPostDetail(post) {
+      const item = typeof post === 'object' ? post : { id: post }
+      if (!item || !item.id) return
+      const query = this.buildRecQuery(item, 'zuopin', 'home_works')
+      this.trackDomainClick(item, 'zuopin', query)
+      this.$router.push({ path: '/post/' + item.id, query })
+    },
+
+    goProjectDetail(project) {
+      if (!project || !project.id) return
+      const query = this.buildRecQuery(project, 'project', 'home_projects')
+      this.trackDomainClick(project, 'project', query)
+      this.$router.push({ path: '/project/' + project.id, query })
+    },
+
+    goArtistDetail(artist) {
+      if (!artist || !artist.id) return
+      const query = this.buildRecQuery(artist, 'artist', 'home_artists')
+      this.trackDomainClick(artist, 'artist', query)
+      const route = buildOtherArtistProfileRoute(artist.id, 'featuredWorks')
+      this.$router.push({
+        path: route.path,
+        query: Object.assign({}, route.query, query)
+      })
+    },
+
+    buildRecQuery(item, domain, scene) {
+      const query = {}
+      if (item.trackingRequestId) {
+        query.requestId = item.trackingRequestId
+        query.position = item.trackingPosition
+        query.scene = item.trackingScene || scene
+        query.source = item.trackingSource || scene
+        query.modelVersion = item.trackingModelVersion || ''
+        query.domain = domain
+      }
+      return query
+    },
+
+    trackDomainClick(item, domain, query) {
+      if (!item || !item.id || !query.requestId) return
+      recApi.trackAction({
+        eventId: createClientEventId('click'),
+        eventType: 'click_detail',
+        domain,
+        requestId: query.requestId,
+        itemId: item.id,
+        authorId: item.authorId || item.userId || item.userids || item.shangjiaids || item.id,
+        position: query.position ? Number(query.position) : null,
+        scene: query.scene || domain,
+        source: query.source || domain,
+        modelVersion: query.modelVersion || ''
+      }).catch(() => {})
     },
 
     goShowcase() {
@@ -263,6 +441,14 @@ export default {
 
     goWorks() {
       this.$router.push('/works')
+    },
+
+    goProjects() {
+      this.$router.push('/projects')
+    },
+
+    goArtists() {
+      this.$router.push('/artists')
     },
 
     goCategory(fenlei) {
@@ -476,6 +662,84 @@ export default {
   font-weight: 500;
 }
 
+.project-mini-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.project-mini-card,
+.artist-mini-card {
+  background: #fff;
+  border: 1px solid #edf0f5;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.project-mini-card {
+  padding: 18px;
+}
+
+.project-mini-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.project-mini-desc {
+  height: 44px;
+  font-size: 13px;
+  color: #667085;
+  line-height: 1.6;
+  overflow: hidden;
+}
+
+.project-mini-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.artist-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.artist-mini-card {
+  padding: 18px;
+  text-align: center;
+}
+
+.artist-mini-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #f5f5f5;
+}
+
+.artist-mini-name {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.artist-mini-stat {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #9098a6;
+}
+
 /* ── 分类标签 ── */
 .tag-group {
   display: flex;
@@ -517,14 +781,18 @@ export default {
 /* ── 响应式 ── */
 @media (max-width: 900px) {
   .card-grid,
-  .community-grid {
+  .community-grid,
+  .project-mini-list,
+  .artist-mini-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (max-width: 600px) {
   .card-grid,
-  .community-grid {
+  .community-grid,
+  .project-mini-list,
+  .artist-mini-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 

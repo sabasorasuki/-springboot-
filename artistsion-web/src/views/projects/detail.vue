@@ -135,7 +135,9 @@
 <script>
 import { mapGetters } from 'vuex'
 import projectApi from '@/api/project'
+import recApi from '@/api/rec'
 import { buildCenterProfileRoute, buildOtherClientProfileRoute } from '@/utils/centerProfile'
+import { createClientEventId } from '@/utils/visitor'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
@@ -157,7 +159,8 @@ export default {
       },
       applications: [],
       applicationTotal: 0,
-      applicationLoading: false
+      applicationLoading: false,
+      detailViewTracked: false
     }
   },
   computed: {
@@ -190,6 +193,7 @@ export default {
             ...p,
             userAvatar: p.userAvatar || defaultAvatar
           }
+          this.trackProjectAction('detail_view', 'project_detail_view')
           if (this.isOwner) {
             this.fetchApplications()
           }
@@ -245,6 +249,7 @@ export default {
             portfolioUrl: this.applyForm.portfolioUrl
           })
           this.$message.success(res.message || '应征已提交')
+          this.trackProjectAction('apply_project', 'project_apply_submit')
           this.applyVisible = false
           this.applyForm.message = ''
           this.applyForm.portfolioUrl = ''
@@ -276,6 +281,25 @@ export default {
     goPublisherProfile() {
       if (!this.project || !this.project.userId) return
       this.$router.push(buildOtherClientProfileRoute(this.project.userId, 'projects'))
+    },
+    trackProjectAction(eventType, source) {
+      if (!this.project || !this.project.id) return
+      if (eventType === 'detail_view') {
+        if (this.detailViewTracked) return
+        this.detailViewTracked = true
+      }
+      recApi.trackAction({
+        eventId: createClientEventId(eventType),
+        eventType,
+        domain: 'project',
+        requestId: this.$route.query.requestId || '',
+        itemId: this.project.id,
+        authorId: this.project.userId,
+        position: this.$route.query.position ? Number(this.$route.query.position) : null,
+        scene: this.$route.query.scene || 'project_detail',
+        source: source || this.$route.query.source || 'project_detail',
+        modelVersion: this.$route.query.modelVersion || ''
+      }).catch(() => {})
     }
   }
 }

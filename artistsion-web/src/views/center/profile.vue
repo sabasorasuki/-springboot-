@@ -712,7 +712,9 @@ import projectApi from '@/api/project'
 import shoucangApi from '@/api/shoucang'
 import orderApi from '@/api/order'
 import artistApi from '@/api/artist'
+import recApi from '@/api/rec'
 import { extractUploadFileName, normalizeImageUrl, ossUploadAction } from '@/utils/oss'
+import { createClientEventId } from '@/utils/visitor'
 import {
   buildCenterProfileRoute,
   buildOtherArtistProfileRoute,
@@ -1453,6 +1455,7 @@ export default {
           })
           this.isFollowingProfile = true
           this.$message.success('关注成功')
+          this.trackArtistFollow()
         }
         await this.fetchFollowStats()
       } catch (error) {
@@ -1460,6 +1463,21 @@ export default {
       } finally {
         this.followLoading = false
       }
+    },
+    trackArtistFollow() {
+      if (!this.profileUserId) return
+      recApi.trackAction({
+        eventId: createClientEventId('follow'),
+        eventType: 'follow',
+        domain: 'artist',
+        requestId: this.$route.query.requestId || '',
+        itemId: Number(this.profileUserId),
+        authorId: Number(this.profileUserId),
+        position: this.$route.query.position ? Number(this.$route.query.position) : null,
+        scene: this.$route.query.scene || 'artist_profile',
+        source: this.$route.query.source || 'artist_follow_button',
+        modelVersion: this.$route.query.modelVersion || ''
+      }).catch(() => {})
     },
     async saveProfilePatch(overrides, successMessage) {
       this.saving = true

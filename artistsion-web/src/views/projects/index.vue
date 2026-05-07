@@ -76,7 +76,9 @@
 
 <script>
 import projectApi from '@/api/project'
+import recApi from '@/api/rec'
 import { buildOtherClientProfileRoute } from '@/utils/centerProfile'
+import { createClientEventId } from '@/utils/visitor'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
@@ -100,15 +102,30 @@ export default {
       this.loading = true
       try {
         const category = this.activeFilter === '全部' ? undefined : this.activeFilter
-        const res = await projectApi.getList({
-          pageNo: this.pageNo,
-          pageSize: 12,
-          category
-        })
+        const res = category
+          ? await projectApi.getList({
+            pageNo: this.pageNo,
+            pageSize: 12,
+            category
+          })
+          : await recApi.recommendations({
+            domain: 'project',
+            pageNo: this.pageNo,
+            pageSize: 12,
+            scene: 'projects'
+          })
         if (res.data && res.code === 20000) {
-          const rows = (res.data.rows || []).map(p => ({
+          const requestId = res.data.requestId || ''
+          const modelVersion = res.data.modelVersion || ''
+          const rawRows = res.data.rows || []
+          const rows = rawRows.map((p, index) => ({
             ...p,
-            userAvatar: p.userAvatar || defaultAvatar
+            userAvatar: p.userAvatar || defaultAvatar,
+            trackingRequestId: requestId,
+            trackingPosition: ((this.pageNo - 1) * 12) + index + 1,
+            trackingScene: 'projects',
+            trackingSource: 'projects_recommend',
+            trackingModelVersion: modelVersion
           }))
           if (this.pageNo === 1) {
             this.projects = rows
@@ -137,17 +154,50 @@ export default {
       return map[status] || 'open'
     },
     goDetail(id) {
-      this.$router.push('/project/' + id)
+      const project = this.projects.find(item => item.id === id) || { id }
+      const query = this.buildRecQuery(project)
+      this.trackProjectClick(project, query)
+      this.$router.push({ path: '/project/' + id, query })
     },
     goPublisher(userId) {
       if (!userId) return
       this.$router.push(buildOtherClientProfileRoute(userId, 'projects'))
     },
     onApply(id) {
+      const project = this.projects.find(item => item.id === id) || { id }
+      const query = Object.assign({ apply: '1' }, this.buildRecQuery(project))
+      this.trackProjectClick(project, query)
       this.$router.push({
         path: '/project/' + id,
-        query: { apply: '1' }
+        query
       })
+    },
+    buildRecQuery(project) {
+      const query = {}
+      if (project && project.trackingRequestId) {
+        query.requestId = project.trackingRequestId
+        query.position = project.trackingPosition
+        query.scene = project.trackingScene || 'projects'
+        query.source = project.trackingSource || 'projects_recommend'
+        query.domain = 'project'
+        query.modelVersion = project.trackingModelVersion || ''
+      }
+      return query
+    },
+    trackProjectClick(project, query) {
+      if (!project || !project.id || !query.requestId) return
+      recApi.trackAction({
+        eventId: createClientEventId('click'),
+        eventType: 'click_detail',
+        domain: 'project',
+        requestId: query.requestId,
+        itemId: project.id,
+        authorId: project.userId,
+        position: query.position ? Number(query.position) : null,
+        scene: query.scene || 'projects',
+        source: query.source || 'projects_recommend',
+        modelVersion: query.modelVersion || ''
+      }).catch(() => {})
     }
   }
 }

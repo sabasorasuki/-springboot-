@@ -207,7 +207,7 @@ import huagaoApi from '@/api/huagao'
 import shoucangApi from '@/api/shoucang'
 import orderApi from '@/api/order'
 import pinglunApi from '@/api/pinglun'
-import recHuagaoApi from '@/api/recHuagao'
+import recApi from '@/api/rec'
 import artistApi from '@/api/artist'
 import ReportDialog from '@/components/ReportDialog'
 import { normalizeImageUrl } from '@/utils/oss'
@@ -458,19 +458,21 @@ export default {
       return {
         eventId: createClientEventId(eventType),
         eventType,
+        domain: 'huagao',
         requestId: this.$route.query.requestId || '',
-        huagaoId: this.work.id,
-        shangjiaId: this.work.shangjiaids ? Number(this.work.shangjiaids) : null,
+        itemId: this.work.id,
+        authorId: this.work.shangjiaids ? Number(this.work.shangjiaids) : null,
         position: this.$route.query.position ? Number(this.$route.query.position) : null,
         eventValue: extra.eventValue != null ? Number(extra.eventValue) : null,
         scene: this.$route.query.scene || 'work_detail',
-        source: extra.source || this.$route.query.source || 'detail_direct'
+        source: extra.source || this.$route.query.source || 'detail_direct',
+        modelVersion: this.$route.query.modelVersion || ''
       }
     },
     trackDetailView() {
       if (this.detailViewTracked || !this.work || !this.work.id) return
       this.detailViewTracked = true
-      recHuagaoApi.trackAction(this.buildTrackPayload('detail_view', {
+      recApi.trackAction(this.buildTrackPayload('detail_view', {
         source: this.$route.query.source || 'detail_direct'
       })).catch(() => {})
       this.startDetailDwellTimer()
@@ -508,26 +510,26 @@ export default {
       const threshold = force ? 1000 : 5000
       if (delta < threshold) return
       this.detailDwellActiveAt = now
-      recHuagaoApi.trackAction(this.buildTrackPayload('detail_dwell', {
+      recApi.trackAction(this.buildTrackPayload('detail_dwell', {
         eventValue: delta,
         source: 'detail_dwell_timer'
       })).catch(() => {})
     },
     trackFavoriteAction() {
       if (!this.work || !this.work.id) return
-      recHuagaoApi.trackAction(this.buildTrackPayload('favorite', {
+      recApi.trackAction(this.buildTrackPayload('favorite', {
         source: 'detail_favorite_button'
       })).catch(() => {})
     },
     trackAddToCartAction() {
       if (!this.work || !this.work.id) return
-      recHuagaoApi.trackAction(this.buildTrackPayload('add_to_cart', {
+      recApi.trackAction(this.buildTrackPayload('add_to_cart', {
         source: 'detail_add_to_cart_button'
       })).catch(() => {})
     },
     trackCreateOrderAction() {
       if (!this.work || !this.work.id) return
-      recHuagaoApi.trackAction(this.buildTrackPayload('create_order', {
+      recApi.trackAction(this.buildTrackPayload('create_order', {
         source: 'detail_buy_now_button'
       })).catch(() => {})
     },

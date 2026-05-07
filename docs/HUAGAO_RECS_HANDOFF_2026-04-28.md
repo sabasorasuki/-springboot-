@@ -1,163 +1,111 @@
-# SysHuagao 个性化推荐 Handoff
+# 全站个性化推荐 Handoff
 
-更新时间：`2026-04-28`
+更新时间：`2026-05-07`
 
 ## 当前目标
 
-当前主线只覆盖 `sys_huagao` 橱窗画稿：
+推荐系统已从 `sys_huagao` 单域闭环升级为：
 
-1. 保持搜索、列表、详情、收藏、购物车、下单行为采集可用。
-2. 用 XGBoost Learning-to-Rank 训练离线推荐结果。
-3. 通过 `GET /recHuagao/recommendations` 给首页提供推荐。
-4. 旧 Mahout 协同过滤已物理下线，后续推荐只走 Huagao LTR 链路。
+- 全站共享兴趣画像
+- `huagao`、`zuopin`、`project`、`artist` 分域独立排序
+- 离线预计算推荐结果落库
+- 前端统一推荐上下文和行为上报
 
-暂不纳入：`sys_zuopin`、社区帖子、企划、画师主页、售前咨询。
+旧 `rec_huagao_*` 暂留，作为 huagao 历史日志回填来源和调试链路。
 
 ## 已完成
 
-### 搜索与行为采集
+- 新增通用表：
+  - `rec_request_log`
+  - `rec_impression_log`
+  - `rec_action_log`
+  - `rec_actor_profile`
+  - `rec_model_version`
+  - `rec_user_recommendation`
+- 新增接口：
+  - `GET /rec/recommendations?domain=huagao|zuopin|project|artist&pageNo=1&pageSize=12&scene=home`
+  - `POST /recTrack/action`
+- 新增训练目录：
+  - `recsys/site_recs`
+- 首页已改成多推荐区块：
+  - 推荐橱窗
+  - 推荐作品
+  - 推荐企划
+  - 推荐画师
+- `/showcase`、`/works`、`/projects`、`/artists` 默认接入对应 domain 推荐。
+- `/work/:id`、`/post/:id`、`/project/:id`、画师关注行为写入统一行为日志。
 
-- `/sysHuagao/list` 支持固定分类和关键词搜索。
-- `/showcase`、`/work/:id` 已采集：
-  - `impression`
-  - `click_detail`
-  - `detail_view`
-  - `detail_dwell`
-  - `favorite`
-  - `add_to_cart`
-  - `create_order`
-- 首页推荐列表现在也纳入 `scene=home` 的曝光和点击采集。
+## 行为和标签口径
 
-标签口径固定为：
+统一行为权重：
 
-- `create_order = 4`
-- `add_to_cart = 3`
-- `favorite = 2`
-- `click_detail = 1`
 - `impression = 0`
+- `click_detail/detail_view = 1`
+- `favorite/like/comment/follow = 2`
+- `add_to_cart/apply_project = 3`
+- `create_order = 4`
 
-### LTR 推荐闭环
+共享画像使用：
 
-新增结果表：
+- 内容域偏好
+- 分类 / 风格 / 标签偏好
+- 作者 / 画师偏好
+- 物品互动偏好
 
-- `rec_huagao_model_version`
-- `rec_huagao_user_recommendation`
+## 当前训练结果
 
-新增 SQL：
+最近训练命令：
 
-- `artistsion-admin/sql/2026-04-28-rec-huagao-ltr-recommendation-schema.sql`
-- `artistsion-admin/sql/2026-04-28-rec-huagao-legacy-cf-removal.sql`
-
-新增训练目录：
-
-- `recsys/huagao_ltr/`
-
-固定演示命令：
-
-```bash
-python recsys/huagao_ltr/run_pipeline.py --source synthetic --top-k 50
+```powershell
+python recsys/site_recs/run_pipeline.py --domains huagao,zuopin,project,artist --source real --top-k 50
 ```
 
-Pipeline 做的事：
+当前 active 模型：
 
-- 创建推荐结果表。
-- 在 active `sys_huagao` 少于阈值时补充 `fujin='synthetic_ltr'` 的模拟画稿。
-- 生成 `syn_` 前缀的 request、impression、action 日志。
-- 使用 `XGBRanker(objective='rank:ndcg')` 训练。
-- 输出 `ndcg@5`、`ndcg@10`、`map@10`、样本数、正样本数、用户数、物品数。
-- 写入 `u:*`、`v:*` 和 `global` 推荐结果。
+- `huagao`：`site_real_20260507175702_huagao`，`xgboost_ltr`，样本 `623`，正样本 `16`
+- `zuopin`：`site_real_20260507175702_zuopin`，`baseline`，正样本 `4`
+- `project`：`site_real_20260507175702_project`，`baseline`
+- `artist`：`site_real_20260507175702_artist`，`baseline`，正样本 `1`
 
-### 推荐服务接入
-
-新增接口：
-
-```http
-GET /recHuagao/recommendations?pageNo=1&pageSize=12&scene=home
-```
-
-返回：
-
-```json
-{
-  "total": 12,
-  "rows": [],
-  "requestId": "rec_hg_...",
-  "modelVersion": "ltr_xgb_...",
-  "fallback": false
-}
-```
-
-读取顺序：
-
-1. 登录用户：`actor_key = u:{userId}`
-2. 匿名访客：`actor_key = v:{visitorId}`
-3. 全局兜底：`actor_key = global`
-4. 仍无结果：最新上架橱窗
-
-首页已改为请求新接口；后端无模型、无表、无结果时自动降级到最新上架橱窗。
-
-### 旧协同过滤状态
-
-旧 Mahout / `user_article_operation` 已从产品链路下线：
-
-- 首页不再调用 `/userArticleOperation/recommendations/{userid}`。
-- 订单评价成功后不再写 `/userArticleOperation/add`。
-- `artistsion-web/src/api/tuijian.js` 已删除。
-- 后端 `UserArticleOperation*`、`UserArticleOperationMapper.xml` 已删除。
-- Mahout 依赖已从后端 `pom.xml` 删除。
-- `/userArticleOperation/**` 白名单已删除。
-- `user_article_operation` 表已备份为 `user_article_operation_backup_before_ltr` 后删除。
-
-## 待验证
-
-推荐上线检查：
-
-1. 执行推荐结果表 SQL。
-2. 安装 Python 依赖：`pip install -r recsys/huagao_ltr/requirements.txt`。
-3. 运行 synthetic pipeline，确认每个 actor 至少 12 条推荐。
-4. `mvn -q -DskipTests compile` 通过。
-5. `npm run build:prod` 通过。
-6. 首页登录、匿名、无模型三种状态都能渲染 `rows`。
-7. 点击首页推荐卡片后，详情页能收到 `requestId`、`position`、`scene=home`。
-8. 源码无 `UserArticleOperation`、`userArticleOperation`、`mahout` 业务引用；文档和清理 SQL 只保留历史说明。
+说明：作品、企划、画师域当前真实数据量很小，因此按计划使用 baseline，并在指标中标记 `fallbackRanker=true`。
 
 ## 关键文件
 
 后端：
 
-- `artistsion-admin/src/main/java/com/lf/controller/RecHuagaoRecommendationController.java`
-- `artistsion-admin/src/main/java/com/lf/service/impl/RecHuagaoRecommendationServiceImpl.java`
-- `artistsion-admin/src/main/resources/mapper/RecHuagaoRecommendationMapper.xml`
-- `artistsion-admin/src/main/java/com/lf/service/impl/RecHuagaoTrackServiceImpl.java`
-- `artistsion-admin/src/main/resources/mapper/RecHuagaoDebugMapper.xml`
+- `artistsion-admin/src/main/java/com/lf/controller/RecRecommendationController.java`
+- `artistsion-admin/src/main/java/com/lf/controller/RecTrackController.java`
+- `artistsion-admin/src/main/java/com/lf/service/impl/RecRecommendationServiceImpl.java`
+- `artistsion-admin/src/main/java/com/lf/service/impl/RecTrackServiceImpl.java`
+- `artistsion-admin/src/main/resources/mapper/RecRecommendationMapper.xml`
+- `artistsion-admin/src/main/resources/mapper/RecTrackMapper.xml`
 
 前端：
 
+- `artistsion-web/src/api/rec.js`
 - `artistsion-web/src/views/home/index.vue`
 - `artistsion-web/src/views/showcase/index.vue`
+- `artistsion-web/src/views/works/index.vue`
+- `artistsion-web/src/views/projects/index.vue`
+- `artistsion-web/src/views/artists/index.vue`
 - `artistsion-web/src/views/work/detail.vue`
-- `artistsion-web/src/api/recHuagao.js`
-- `artistsion-web/src/utils/visitor.js`
+- `artistsion-web/src/views/posts/detail.vue`
+- `artistsion-web/src/views/projects/detail.vue`
+- `artistsion-web/src/views/center/profile.vue`
 
 训练：
 
-- `recsys/huagao_ltr/run_pipeline.py`
-- `recsys/huagao_ltr/requirements.txt`
-- `recsys/huagao_ltr/README.md`
+- `recsys/site_recs/run_pipeline.py`
+- `recsys/site_recs/requirements.txt`
+- `recsys/site_recs/README.md`
 
 SQL：
 
-- `artistsion-admin/sql/2026-04-22-phase0-rec-huagao-event-schema.sql`
-- `artistsion-admin/sql/2026-04-22-phase05-rec-huagao-aggregate-rebuild.sql`
-- `artistsion-admin/sql/2026-04-28-rec-huagao-training-readiness-check.sql`
-- `artistsion-admin/sql/2026-04-28-rec-huagao-ltr-recommendation-schema.sql`
-- `artistsion-admin/sql/2026-04-28-rec-huagao-legacy-cf-removal.sql`
+- `artistsion-admin/sql/2026-05-07-site-recs-schema.sql`
 
 ## 下一步
 
-优先顺序：
-
-1. 跑通 synthetic pipeline 和首页推荐端到端。
-2. 确认 `trainingReadiness`、`rebuildCheck`、孤儿 request/action/impression 检查为 0。
-3. 推荐闭环稳定后，再补全首页、橱窗、作品/社区、企划、画师主页、个人中心的主路径。
-4. 当真实行为数据达到阈值后，把 pipeline 从 synthetic 扩展到 real / mixed 数据源。
+1. 补更多真实 `sys_zuopin`、`sys_project`、画师数据，避免作品/企划/画师域长期只有 baseline。
+2. 给购物车结算链路补推荐归因字段，使加购后的最终下单也能稳定回流同一个 `requestId`。
+3. 增加 admin 推荐健康页，展示 active 模型、样本量、fallback 状态、各域推荐覆盖率。
+4. 样本达标后，把 `zuopin`、`project`、`artist` 域逐步切到独立 LTR。

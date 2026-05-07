@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lf.dao.RecRecommendationMapper">
+
+    <select id="selectActiveModelVersion" resultType="string">
+        SELECT model_version
+        FROM rec_model_version
+        WHERE domain = #{domain}
+          AND status = 'active'
+        ORDER BY COALESCE(activated_at, trained_at, created_at) DESC
+        LIMIT 1
+    </select>
+
+    <select id="countAvailableRecommendations" resultType="long">
+        <choose>
+            <when test="domain == 'huagao'">
+                SELECT COUNT(1)
+                FROM rec_user_recommendation r
+                INNER JOIN sys_huagao h ON h.id = r.item_id
+                WHERE r.domain = #{domain}
+                  AND r.model_version = #{modelVersion}
+                  AND r.actor_key = #{actorKey}
+                  AND h.status = '审核成功'
+                  AND h.type = '上架'
+            </when>
+            <when test="domain == 'zuopin'">
+                SELECT COUNT(1)
+                FROM rec_user_recommendation r
+                INNER JOIN sys_zuopin z ON z.id = r.item_id
+                WHERE r.domain = #{domain}
+                  AND r.model_version = #{modelVersion}
+                  AND r.actor_key = #{actorKey}
+            </when>
+            <when test="domain == 'project'">
+                SELECT COUNT(1)
+                FROM rec_user_recommendation r
+                INNER JOIN sys_project p ON p.id = r.item_id
+                WHERE r.domain = #{domain}
+                  AND r.model_version = #{modelVersion}
+                  AND r.actor_key = #{actorKey}
+                  AND p.status = '招募中'
+            </when>
+            <otherwise>
+                SELECT COUNT(1)
+                FROM rec_user_recommendation r
+                INNER JOIN x_user u ON u.id = r.item_id
+                WHERE r.domain = #{domain}
+                  AND r.model_version = #{modelVersion}
+                  AND r.actor_key = #{actorKey}
+                  AND u.status = 1
+                  AND COALESCE(u.deleted, 0) = 0
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectAvailableRecommendations" resultType="map">
+        <choose>
+            <when test="domain == 'huagao'">
+                SELECT
+                    'huagao' AS domain,
+                    h.id AS id,
+                    h.id AS itemId,
+                    h.name AS name,
+                    h.name AS title,
+                    h.photo AS photo,
+                    h.price AS price,
+                    h.fenlei AS fenlei,
+                    h.fenlei AS category,
+                    h.content AS content,
+                    h.type AS type,
+                    h.status AS status,
+                    h.shangjiaids AS shangjiaids,
+                    h.shangjiaids AS authorId,
+                    COALESCE(u.name, u.username) AS artistName,
+                    COALESCE(u.name, u.username) AS authorName,
+                    h.zhekou AS zhekou,
+                    h.fujin AS fujin,
+                    r.score AS recScore,
+                    r.reason AS recReason
+                FROM rec_user_recommendation r
+                INNER JOIN sys_huagao h ON h.id = r.item_id
+                LEFT JOIN x_user u ON u.id = CAST(h.shangjiaids AS UNSIGNED)
+                WHERE r.domain = #{domain}
+                  AND r.model_version = #{modelVersion}
+                  AND r.actor_key = #{actorKey}
+                  AND h.status = '审核成功'
+                  AND h.type = '上架'
+                ORDER BY r.rank_no ASC
+                LIMIT #{limit} OFFSET #{offset}
+            </when>
+            <when test="domain == 'zuopin'">
+                SELECT
+                    'zuopin' AS domain,
+                    z.id AS id,
+                    z.id AS itemId,
+                    z.title AS title,
+                    z.title AS name,
+                    z.photo AS photo,
+                    NULL AS price,
+                    z.fenlei AS fenlei,
+                    z.fenlei AS category,
+                    z.content AS content,
+                    z.userids AS userids,
+                    z.userids AS authorId,
+                    z.username AS username,
+                    z.username AS authorName,
+                    z.dznum AS dznum,
+                    DATE_FORMAT(z.fbdate, '%Y-%m-%d') AS fbdate,
+                    r.score AS recScore,
+                    r.reason AS recReason
+                FROM rec_user_recommendation r
+                INNER JOIN sys_zuopin z ON z.id = r.item_id
+                WHERE r.domain = #{domain}
+                  AND r.model_version = #{modelVersion}
+                  AND r.actor_key = #{actorKey}
+                ORDER BY r.rank_no ASC
+                LIMIT #{limit} OFFSET #{offset}
+            </when>
+            <when test="domain == 'project'">
+                SELECT
+                    'project' AS domain,
+                    p.id AS id,
+                    p.id AS itemId,
+                    p.title AS title,
+                    p.title AS name,
+                    NULL AS photo,
+                    p.description AS description,
+                    p.category AS category,
+                    p.category AS fenlei,
+                    p.style AS style,
+                    p.budget_min AS budgetMin,
+                    p.budget_max AS budgetMax,
+                    DATE_FORMAT(p.deadline, '%Y-%m-%d') AS deadline,
+                    p.status AS status,
+                    p.user_id AS userId,
+                    p.user_id AS authorId,
+                    p.username AS username,
+                    p.username AS authorName,
+                    p.user_avatar AS userAvatar,
+                    r.score AS recScore,
+                    r.reason AS recReason
+                FROM rec_user_recommendation r
+                INNER JOIN sys_project p ON p.id = r.item_id
+                WHERE r.domain = #{domain}
+                  AND r.model_version = #{modelVersion}
+                  AND r.actor_key = #{actorKey}
+                  AND p.status = '招募中'
+                ORDER BY r.rank_no ASC
+                LIMIT #{limit} OFFSET #{offset}
+            </when>
+            <otherwise>
+                SELECT
+                    'artist' AS domain,
+                    u.id AS id,
+                    u.id AS itemId,
+                    u.id AS authorId,
+                    u.username AS username,
+                    COALESCE(u.name, u.username) AS name,
+                    u.avatar AS avatar,
+                    u.status AS status,
+                    u.bio AS bio,
+                    u.style_tags AS styleTags,
+                    COUNT(DISTINCT h.id) AS workCount,
+                    GROUP_CONCAT(DISTINCT h.photo ORDER BY h.id DESC SEPARATOR '|||') AS recentCovers,
+                    r.score AS recScore,
+                    r.reason AS recReason
+                FROM rec_user_recommendation r
+                INNER JOIN x_user u ON u.id = r.item_id
+                LEFT JOIN sys_huagao h ON h.shangjiaids = CAST(u.id AS CHAR)
+                    AND h.type = '上架'
+                    AND h.status = '审核成功'
+                WHERE r.domain = #{domain}
+                  AND r.model_version = #{modelVersion}
+                  AND r.actor_key = #{actorKey}
+                  AND u.status = 1
+                  AND COALESCE(u.deleted, 0) = 0
+                GROUP BY u.id, u.username, u.name, u.avatar, u.status, u.bio, u.style_tags, r.score, r.reason, r.rank_no
+                ORDER BY r.rank_no ASC
+                LIMIT #{limit} OFFSET #{offset}
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="countFallbackItems" resultType="long">
+        <choose>
+            <when test="domain == 'huagao'">
+                SELECT COUNT(1)
+                FROM sys_huagao
+                WHERE status = '审核成功'
+                  AND type = '上架'
+            </when>
+            <when test="domain == 'zuopin'">
+                SELECT COUNT(1) FROM sys_zuopin
+            </when>
+            <when test="domain == 'project'">
+                SELECT COUNT(1)
+                FROM sys_project
+                WHERE status = '招募中'
+            </when>
+            <otherwise>
+                SELECT COUNT(DISTINCT u.id)
+                FROM x_user u
+                INNER JOIN x_user_role ur ON ur.user_id = u.id
+                INNER JOIN x_role r ON r.role_id = ur.role_id
+                WHERE u.status = 1
+                  AND COALESCE(u.deleted, 0) = 0
+                  AND r.role_name = '画师角色'
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectFallbackItems" resultType="map">
+        <choose>
+            <when test="domain == 'huagao'">
+                SELECT
+                    'huagao' AS domain,
+                    h.id AS id,
+                    h.id AS itemId,
+                    h.name AS name,
+                    h.name AS title,
+                    h.photo AS photo,
+                    h.price AS price,
+                    h.fenlei AS fenlei,
+                    h.fenlei AS category,
+                    h.content AS content,
+                    h.type AS type,
+                    h.status AS status,
+                    h.shangjiaids AS shangjiaids,
+                    h.shangjiaids AS authorId,
+                    COALESCE(u.name, u.username) AS artistName,
+                    COALESCE(u.name, u.username) AS authorName,
+                    h.zhekou AS zhekou,
+                    h.fujin AS fujin
+                FROM sys_huagao h
+                LEFT JOIN x_user u ON u.id = CAST(h.shangjiaids AS UNSIGNED)
+                WHERE h.status = '审核成功'
+                  AND h.type = '上架'
+                ORDER BY h.id DESC
+                LIMIT #{limit} OFFSET #{offset}
+            </when>
+            <when test="domain == 'zuopin'">
+                SELECT
+                    'zuopin' AS domain,
+                    z.id AS id,
+                    z.id AS itemId,
+                    z.title AS title,
+                    z.title AS name,
+                    z.photo AS photo,
+                    NULL AS price,
+                    z.fenlei AS fenlei,
+                    z.fenlei AS category,
+                    z.content AS content,
+                    z.userids AS userids,
+                    z.userids AS authorId,
+                    z.username AS username,
+                    z.username AS authorName,
+                    z.dznum AS dznum,
+                    DATE_FORMAT(z.fbdate, '%Y-%m-%d') AS fbdate
+                FROM sys_zuopin z
+                ORDER BY z.id DESC
+                LIMIT #{limit} OFFSET #{offset}
+            </when>
+            <when test="domain == 'project'">
+                SELECT
+                    'project' AS domain,
+                    p.id AS id,
+                    p.id AS itemId,
+                    p.title AS title,
+                    p.title AS name,
+                    NULL AS photo,
+                    p.description AS description,
+                    p.category AS category,
+                    p.category AS fenlei,
+                    p.style AS style,
+                    p.budget_min AS budgetMin,
+                    p.budget_max AS budgetMax,
+                    DATE_FORMAT(p.deadline, '%Y-%m-%d') AS deadline,
+                    p.status AS status,
+                    p.user_id AS userId,
+                    p.user_id AS authorId,
+                    p.username AS username,
+                    p.username AS authorName,
+                    p.user_avatar AS userAvatar
+                FROM sys_project p
+                WHERE p.status = '招募中'
+                ORDER BY p.id DESC
+                LIMIT #{limit} OFFSET #{offset}
+            </when>
+            <otherwise>
+                SELECT
+                    'artist' AS domain,
+                    u.id AS id,
+                    u.id AS itemId,
+                    u.id AS authorId,
+                    u.username AS username,
+                    COALESCE(u.name, u.username) AS name,
+                    u.avatar AS avatar,
+                    u.status AS status,
+                    u.bio AS bio,
+                    u.style_tags AS styleTags,
+                    COUNT(DISTINCT h.id) AS workCount,
+                    GROUP_CONCAT(DISTINCT h.photo ORDER BY h.id DESC SEPARATOR '|||') AS recentCovers
+                FROM x_user u
+                INNER JOIN x_user_role ur ON ur.user_id = u.id
+                INNER JOIN x_role r ON r.role_id = ur.role_id
+                LEFT JOIN sys_huagao h ON h.shangjiaids = CAST(u.id AS CHAR)
+                    AND h.type = '上架'
+                    AND h.status = '审核成功'
+                WHERE u.status = 1
+                  AND COALESCE(u.deleted, 0) = 0
+                  AND r.role_name = '画师角色'
+                GROUP BY u.id, u.username, u.name, u.avatar, u.status, u.bio, u.style_tags
+                ORDER BY u.id DESC
+                LIMIT #{limit} OFFSET #{offset}
+            </otherwise>
+        </choose>
+    </select>
+
+</mapper>

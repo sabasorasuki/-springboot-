@@ -1,28 +1,33 @@
 # Docs Index
 
-更新时间：`2026-04-28`
+更新时间：`2026-05-07`
 
 ## 当前主线
 
-当前执行任务是 `sys_huagao` 个性化推荐闭环：行为采集、XGBoost LTR 训练、离线推荐结果落库、首页推荐接入。请先读：
+推荐系统已经从 `sys_huagao` 单域闭环升级为“全站共享兴趣画像 + 各内容域独立排序”：
+
+- `huagao`：橱窗画稿，样本达标时使用 XGBoost LTR。
+- `zuopin`：作品 / 社区内容，当前使用画像匹配 + 热度 + 新鲜度 baseline。
+- `project`：企划 / 委托需求，当前使用画像匹配 + 招募状态 + 新鲜度 baseline。
+- `artist`：画师，当前使用关注、作品/橱窗互动和发布活跃度 baseline。
+
+请先读：
 
 - `HUAGAO_RECS_HANDOFF_2026-04-28.md`
 - `PROJECT_MAP.md`
 
-## 文档状态
+## 当前状态
 
-已删除早期前台重构 brief、样式说明、旧 session handoff 和 archive 里的过期交接，避免和当前 huagao 推荐任务互相干扰。
+- 新接口：`GET /rec/recommendations`、`POST /recTrack/action`。
+- 新训练入口：`python recsys/site_recs/run_pipeline.py --domains huagao,zuopin,project,artist --source real --top-k 50`。
+- 新通用表：`rec_request_log`、`rec_impression_log`、`rec_action_log`、`rec_actor_profile`、`rec_model_version`、`rec_user_recommendation`。
+- 旧 `rec_huagao_*` 暂留为历史兼容和回填来源。
+- 旧 Mahout / `user_article_operation` 已下线，不再作为推荐入口。
+
+## 文档状态
 
 当前 `docs` 只保留：
 
 - `README.md`：文档索引
-- `HUAGAO_RECS_HANDOFF_2026-04-28.md`：当前推荐任务交接
+- `HUAGAO_RECS_HANDOFF_2026-04-28.md`：推荐任务交接，现已记录全站推荐升级
 - `PROJECT_MAP.md`：项目结构与关键文件地图
-
-## 当前判断
-
-- `sys_huagao` 搜索和主行为采集已完成。
-- 首页推荐已切到 `/recHuagao/recommendations`，无模型时降级最新上架橱窗。
-- `recsys/huagao_ltr` 已提供 synthetic LTR 训练和离线结果落库。
-- 旧 Mahout 前台入口已断开；后端兼容代码和旧表等待新链路验证后再删。
-- 下一步是执行推荐表 SQL、跑 synthetic pipeline，并完成前后端构建与端到端验证。

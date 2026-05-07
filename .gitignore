@@ -3,6 +3,7 @@
 *.err
 *.tmp
 *.temp
+.runtime/
 
 # 不想上传的大文件/个人文件
 *.mkv
@@ -53,6 +54,7 @@ __pycache__/
 
 # ===== Recommender artifacts =====
 recsys/huagao_ltr/artifacts/
+recsys/site_recs/artifacts/
 
 # ===== 前端 =====
 node_modules/

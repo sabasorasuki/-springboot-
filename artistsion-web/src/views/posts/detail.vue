@@ -55,8 +55,10 @@
 <script>
 import { mapGetters } from 'vuex'
 import fenxiangApi from '@/api/fenxiang'
+import recApi from '@/api/rec'
 import ReportDialog from '@/components/ReportDialog'
 import { buildCenterProfileRoute, buildOtherArtistProfileRoute } from '@/utils/centerProfile'
+import { createClientEventId } from '@/utils/visitor'
 
 export default {
   name: 'PostDetail',
@@ -68,7 +70,8 @@ export default {
       loading: true,
       post: null,
       reportVisible: false,
-      deleteLoading: false
+      deleteLoading: false,
+      detailViewTracked: false
     }
   },
   computed: {
@@ -92,6 +95,7 @@ export default {
         const response = await fenxiangApi.getById(id)
         if (response.code === 20000) {
           this.post = response.data
+          this.trackPostAction('detail_view', 'post_detail_view')
         }
       } catch (error) {
         console.error('获取帖子详情失败', error)
@@ -123,6 +127,25 @@ export default {
     },
     openReportDialog() {
       this.reportVisible = true
+    },
+    trackPostAction(eventType, source) {
+      if (!this.post || !this.post.id) return
+      if (eventType === 'detail_view') {
+        if (this.detailViewTracked) return
+        this.detailViewTracked = true
+      }
+      recApi.trackAction({
+        eventId: createClientEventId(eventType),
+        eventType,
+        domain: 'zuopin',
+        requestId: this.$route.query.requestId || '',
+        itemId: this.post.id,
+        authorId: this.post.userids ? Number(this.post.userids) : null,
+        position: this.$route.query.position ? Number(this.$route.query.position) : null,
+        scene: this.$route.query.scene || 'post_detail',
+        source: source || this.$route.query.source || 'post_detail',
+        modelVersion: this.$route.query.modelVersion || ''
+      }).catch(() => {})
     },
     goAuthor() {
       const authorId = this.post && (this.post.userids || this.post.userId)

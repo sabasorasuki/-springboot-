@@ -1,23 +1,19 @@
-import request from '@/utils/request'
+import recApi from '@/api/rec'
 
 export default {
   recommendations(searchModel) {
-    return request({
-      url: '/recHuagao/recommendations',
-      method: 'get',
-      params: {
-        pageNo: searchModel.pageNo,
-        pageSize: searchModel.pageSize,
-        scene: searchModel.scene
-      }
+    return recApi.recommendations({
+      ...searchModel,
+      domain: 'huagao'
     })
   },
 
   trackAction(payload) {
-    return request({
-      url: '/recHuagaoTrack/action',
-      method: 'post',
-      data: payload
+    return recApi.trackAction({
+      ...payload,
+      domain: 'huagao',
+      itemId: payload.itemId || payload.huagaoId,
+      authorId: payload.authorId || payload.shangjiaId
     })
   }
 }

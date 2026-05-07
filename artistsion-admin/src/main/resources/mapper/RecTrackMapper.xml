@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lf.dao.RecTrackMapper">
+
+    <insert id="insertRequestLog">
+        INSERT INTO rec_request_log (
+            request_id, domain, query_key, scene, user_id, visitor_id, session_id,
+            keyword, category, tag_id, page_no, page_size, sort_mode,
+            result_total, returned_count, fallback, model_version, created_at
+        )
+        VALUES (
+            #{row.requestId}, #{row.domain}, #{row.queryKey}, #{row.scene}, #{row.userId},
+            #{row.visitorId}, #{row.sessionId}, #{row.keyword}, #{row.category}, #{row.tagId},
+            #{row.pageNo}, #{row.pageSize}, #{row.sortMode}, #{row.resultTotal},
+            #{row.returnedCount}, #{row.fallback}, #{row.modelVersion}, #{row.createdAt}
+        )
+    </insert>
+
+    <insert id="insertImpressionLog">
+        INSERT IGNORE INTO rec_impression_log (
+            request_id, domain, item_id, author_id, position, page_no, page_size,
+            scene, model_version, created_at
+        )
+        VALUES (
+            #{row.requestId}, #{row.domain}, #{row.itemId}, #{row.authorId}, #{row.position},
+            #{row.pageNo}, #{row.pageSize}, #{row.scene}, #{row.modelVersion}, #{row.createdAt}
+        )
+    </insert>
+
+    <insert id="insertActionLog">
+        INSERT IGNORE INTO rec_action_log (
+            event_id, event_type, domain, request_id, item_id, author_id, user_id,
+            visitor_id, session_id, position, event_value, scene, source,
+            model_version, created_at
+        )
+        VALUES (
+            #{row.eventId}, #{row.eventType}, #{row.domain}, #{row.requestId}, #{row.itemId},
+            #{row.authorId}, #{row.userId}, #{row.visitorId}, #{row.sessionId},
+            #{row.position}, #{row.eventValue}, #{row.scene}, #{row.source},
+            #{row.modelVersion}, #{row.createdAt}
+        )
+    </insert>
+
+</mapper>

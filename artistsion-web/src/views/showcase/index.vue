@@ -106,7 +106,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import huagaoApi from '@/api/huagao'
-import recHuagaoApi from '@/api/recHuagao'
+import recApi from '@/api/rec'
 import fenleiApi from '@/api/fenlei'
 import tagApi from '@/api/tag'
 import { normalizeImageUrl } from '@/utils/oss'
@@ -234,17 +234,30 @@ export default {
       }
       return params
     },
+    shouldUseRecommendedList() {
+      return !this.keyword && this.activeFilter === '全部' && !this.activeTagId
+    },
     fetchItems() {
       this.loading = true
       const params = this.buildListParams()
-      huagaoApi.getList(params).then(res => {
+      const request = this.shouldUseRecommendedList()
+        ? recApi.recommendations({
+          domain: 'huagao',
+          pageNo: this.pageNo,
+          pageSize: 16,
+          scene: 'showcase'
+        })
+        : huagaoApi.getList(params)
+      request.then(res => {
         const rows = res.data.rows || []
         const requestId = res.data.requestId || ''
+        const modelVersion = res.data.modelVersion || ''
         const pageSize = params.pageSize || 16
         const normalizedRows = rows.map((item, index) => {
           const normalizedItem = this.normalizeItem(item)
           normalizedItem.trackingRequestId = requestId || ''
           normalizedItem.trackingPosition = ((this.pageNo - 1) * pageSize) + index + 1
+          normalizedItem.trackingModelVersion = modelVersion
           return normalizedItem
         })
         this.items = this.pageNo === 1 ? normalizedRows : this.items.concat(normalizedRows)
@@ -279,20 +292,24 @@ export default {
       if (!item || !item.id) return
       const query = {}
       if (item.trackingRequestId) {
-        recHuagaoApi.trackAction({
+        recApi.trackAction({
           eventId: createClientEventId('click'),
           eventType: 'click_detail',
+          domain: 'huagao',
           requestId: item.trackingRequestId,
-          huagaoId: item.id,
-          shangjiaId: item.shangjiaids ? Number(item.shangjiaids) : null,
+          itemId: item.id,
+          authorId: item.shangjiaids ? Number(item.shangjiaids) : null,
           position: item.trackingPosition,
           scene: 'showcase',
-          source: 'showcase_card'
+          source: 'showcase_card',
+          modelVersion: item.trackingModelVersion || ''
         }).catch(() => {})
         query.requestId = item.trackingRequestId
         query.position = item.trackingPosition
         query.scene = 'showcase'
         query.source = 'showcase_card'
+        query.modelVersion = item.trackingModelVersion || ''
+        query.domain = 'huagao'
       }
       this.$router.push({ path: '/work/' + item.id, query })
     },

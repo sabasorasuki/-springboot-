@@ -28,7 +28,7 @@
           v-for="item in works"
           :key="item.id"
           class="work-card"
-          @click="goPostDetail(item.id)"
+          @click="goPostDetail(item)"
         >
           <div class="card-cover">
             <img
@@ -106,8 +106,10 @@
 <script>
 import fenxiangApi from '@/api/fenxiang'
 import fenleiApi from '@/api/fenlei'
+import recApi from '@/api/rec'
 import { normalizeImageUrl } from '@/utils/oss'
 import { buildOtherArtistProfileRoute } from '@/utils/centerProfile'
+import { createClientEventId } from '@/utils/visitor'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
@@ -155,9 +157,25 @@ export default {
       if (this.activeFilter !== '全部') {
         params.fenlei = this.activeFilter
       }
-      fenxiangApi.getList(params).then(res => {
+      const request = this.activeFilter === '全部'
+        ? recApi.recommendations({
+          domain: 'zuopin',
+          pageNo: this.pageNo,
+          pageSize: 16,
+          scene: 'works'
+        })
+        : fenxiangApi.getList(params)
+      request.then(res => {
         const rows = res.data.rows || []
-        const normalizedRows = rows.map(this.normalizeWork)
+        const requestId = res.data.requestId || ''
+        const modelVersion = res.data.modelVersion || ''
+        const normalizedRows = rows.map((item, index) => Object.assign(this.normalizeWork(item), {
+          trackingRequestId: requestId,
+          trackingPosition: ((this.pageNo - 1) * 16) + index + 1,
+          trackingScene: 'works',
+          trackingSource: 'works_recommend',
+          trackingModelVersion: modelVersion
+        }))
         this.works = this.pageNo === 1 ? normalizedRows : this.works.concat(normalizedRows)
         this.total = res.data.total || 0
       }).catch(() => {}).finally(() => {
@@ -174,9 +192,30 @@ export default {
       this.pageNo++
       this.fetchWorks()
     },
-    goPostDetail(id) {
-      if (!id) return
-      this.$router.push(`/post/${id}`)
+    goPostDetail(item) {
+      if (!item || !item.id) return
+      const query = {}
+      if (item.trackingRequestId) {
+        recApi.trackAction({
+          eventId: createClientEventId('click'),
+          eventType: 'click_detail',
+          domain: 'zuopin',
+          requestId: item.trackingRequestId,
+          itemId: item.id,
+          authorId: item.userids ? Number(item.userids) : null,
+          position: item.trackingPosition,
+          scene: item.trackingScene || 'works',
+          source: item.trackingSource || 'works_recommend',
+          modelVersion: item.trackingModelVersion || ''
+        }).catch(() => {})
+        query.requestId = item.trackingRequestId
+        query.position = item.trackingPosition
+        query.scene = item.trackingScene || 'works'
+        query.source = item.trackingSource || 'works_recommend'
+        query.domain = 'zuopin'
+        query.modelVersion = item.trackingModelVersion || ''
+      }
+      this.$router.push({ path: `/post/${item.id}`, query })
     },
     openPreview(item) {
       this.previewItem = this.normalizeWork(item)

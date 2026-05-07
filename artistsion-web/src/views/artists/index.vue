@@ -86,8 +86,10 @@
 <script>
 import artistApi from '@/api/artist'
 import fenleiApi from '@/api/fenlei'
+import recApi from '@/api/rec'
 import { buildOtherArtistProfileRoute } from '@/utils/centerProfile'
 import { normalizeImageUrl } from '@/utils/oss'
+import { createClientEventId } from '@/utils/visitor'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
@@ -122,7 +124,10 @@ export default {
     },
 
     normalizeArtist(artist) {
-      const recentCovers = Array.isArray(artist.recentCovers) ? artist.recentCovers : []
+      const rawCovers = artist.recentCovers
+      const recentCovers = Array.isArray(rawCovers)
+        ? rawCovers
+        : (typeof rawCovers === 'string' ? rawCovers.split('|||') : [])
       return {
         ...artist,
         avatarUrl: normalizeImageUrl(artist.avatar),
@@ -132,12 +137,28 @@ export default {
 
     fetchArtists() {
       this.loading = true
-      artistApi.getList({
-        pageNo: this.pageNo,
-        pageSize: this.pageSize,
-        fenlei: this.activeFilter || undefined
-      }).then(res => {
-        this.artists = (res.data.rows || []).map(this.normalizeArtist)
+      const request = this.activeFilter
+        ? artistApi.getList({
+          pageNo: this.pageNo,
+          pageSize: this.pageSize,
+          fenlei: this.activeFilter || undefined
+        })
+        : recApi.recommendations({
+          domain: 'artist',
+          pageNo: this.pageNo,
+          pageSize: this.pageSize,
+          scene: 'artists'
+        })
+      request.then(res => {
+        const requestId = res.data.requestId || ''
+        const modelVersion = res.data.modelVersion || ''
+        this.artists = (res.data.rows || []).map((artist, index) => Object.assign(this.normalizeArtist(artist), {
+          trackingRequestId: requestId,
+          trackingPosition: ((this.pageNo - 1) * this.pageSize) + index + 1,
+          trackingScene: 'artists',
+          trackingSource: 'artists_recommend',
+          trackingModelVersion: modelVersion
+        }))
         this.total = res.data.total || 0
       }).catch(() => {
         this.artists = []
@@ -154,7 +175,33 @@ export default {
     },
 
     goArtistDetail(id) {
-      this.$router.push(buildOtherArtistProfileRoute(id, 'featuredWorks'))
+      const artist = this.artists.find(item => item.id === id) || { id }
+      const query = {}
+      if (artist.trackingRequestId) {
+        recApi.trackAction({
+          eventId: createClientEventId('click'),
+          eventType: 'click_detail',
+          domain: 'artist',
+          requestId: artist.trackingRequestId,
+          itemId: artist.id,
+          authorId: artist.id,
+          position: artist.trackingPosition,
+          scene: artist.trackingScene || 'artists',
+          source: artist.trackingSource || 'artists_recommend',
+          modelVersion: artist.trackingModelVersion || ''
+        }).catch(() => {})
+        query.requestId = artist.trackingRequestId
+        query.position = artist.trackingPosition
+        query.scene = artist.trackingScene || 'artists'
+        query.source = artist.trackingSource || 'artists_recommend'
+        query.domain = 'artist'
+        query.modelVersion = artist.trackingModelVersion || ''
+      }
+      const route = buildOtherArtistProfileRoute(id, 'featuredWorks')
+      this.$router.push({
+        path: route.path,
+        query: Object.assign({}, route.query, query)
+      })
     }
   }
 }
