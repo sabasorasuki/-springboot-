@@ -126,10 +126,12 @@ const NAV_GROUPS = [
     label: '运营配置',
     icon: 'el-icon-s-operation',
     path: '/fenlei/fenlei',
-    matchPaths: ['/fenlei', '/lunbo'],
+    matchPaths: ['/fenlei', '/lunbo', '/recs'],
     children: [
       { path: '/fenlei/fenlei', label: '分类管理' },
       { path: '/fenlei/tag', label: '标签管理' },
+      { path: '/fenlei/site-setting', label: '注册配置' },
+      { path: '/recs/health', label: '推荐健康' },
       { path: '/lunbo/lunbo', label: '轮播管理' }
     ]
   },

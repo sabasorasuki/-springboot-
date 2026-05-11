@@ -4,10 +4,12 @@ package com.lf.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lf.common.Result;
+import com.lf.common.request.RecActionTrackRequest;
 import com.lf.common.utils.JwtUtil;
 import com.lf.dao.UserMapper;
 import com.lf.entity.SysOrder;
 import com.lf.entity.User;
+import com.lf.service.RecTrackService;
 import com.lf.service.SysOrderService;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -41,6 +43,9 @@ public class SysOrderController {
 
     @Resource
     private UserMapper userMapper;
+
+    @Resource
+    private RecTrackService recTrackService;
 
     /**
      * 我的订单 — 从 X-Token 解析当前用户，按 role 参数决定视角。
@@ -143,7 +148,10 @@ public class SysOrderController {
 
     @PutMapping("/update")
     public Result<?> update(@RequestBody SysOrder shetuan){
+        SysOrder before = shetuan.getId() == null ? null : service.getById(shetuan.getId());
         service.updateById(shetuan);
+        SysOrder after = shetuan.getId() == null ? shetuan : service.getById(shetuan.getId());
+        trackCartCheckoutIfNeeded(before, after);
         return Result.success("修改成功");
     }
 
@@ -165,6 +173,46 @@ public class SysOrderController {
     public Result<SysOrder> deleteById(@PathVariable("id") Integer id){
         service.removeById(id);
         return Result.success("删除成功");
+    }
+
+    private void trackCartCheckoutIfNeeded(SysOrder before, SysOrder after) {
+        if (before == null || after == null) {
+            return;
+        }
+        if (!"购物车".equals(before.getStatus()) || "购物车".equals(after.getStatus())) {
+            return;
+        }
+        if (!StringUtils.hasText(after.getRecRequestId())) {
+            return;
+        }
+        Long itemId = parseLong(after.getSpids());
+        if (itemId == null) {
+            return;
+        }
+
+        RecActionTrackRequest request = new RecActionTrackRequest();
+        request.setEventId("order_create_" + after.getId());
+        request.setEventType("create_order");
+        request.setDomain("huagao");
+        request.setRequestId(after.getRecRequestId());
+        request.setItemId(itemId);
+        request.setAuthorId(parseLong(after.getShangjiaids()));
+        request.setPosition(after.getRecPosition());
+        request.setScene(StringUtils.hasText(after.getRecScene()) ? after.getRecScene() : "cart_checkout");
+        request.setSource(StringUtils.hasText(after.getRecSource()) ? after.getRecSource() : "cart_checkout");
+        request.setModelVersion(after.getRecModelVersion());
+        recTrackService.trackAction(request, parseLong(after.getUserids()), null, null);
+    }
+
+    private Long parseLong(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        try {
+            return Long.valueOf(value.trim());
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
     }
 
 

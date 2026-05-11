@@ -1,0 +1,831 @@
+{
+  "artists": [
+    {
+      "idx": 1,
+      "username": "pixiv_artist_01",
+      "name": "朝露 Akira",
+      "primary": "头像",
+      "secondary": "半身像",
+      "styles": [
+        "日系",
+        "柔和配色",
+        "头像可用"
+      ],
+      "avatar": "pixivseed_a01_avatar.png",
+      "cover": "pixivseed_a01_cover.jpg",
+      "style_tags": "日系,柔和配色,头像可用",
+      "bio": "素材样板画师，擅长头像、半身像与日系方向，用于完善作者-作品-橱窗闭环和推荐训练。"
+    },
+    {
+      "idx": 2,
+      "username": "pixiv_artist_02",
+      "name": "云澈 Chiyo",
+      "primary": "Q版",
+      "secondary": "表情包",
+      "styles": [
+        "Q版",
+        "元气",
+        "社媒头像"
+      ],
+      "avatar": "pixivseed_a02_avatar.png",
+      "cover": "pixivseed_a02_cover.jpg",
+      "style_tags": "Q版,元气,社媒头像",
+      "bio": "素材样板画师，擅长Q版、表情包与Q版方向，用于完善作者-作品-橱窗闭环和推荐训练。"
+    },
+    {
+      "idx": 3,
+      "username": "pixiv_artist_03",
+      "name": "兰舟 Lanzu",
+      "primary": "立绘",
+      "secondary": "live2d",
+      "styles": [
+        "国风",
+        "立绘展示",
+        "VTuber"
+      ],
+      "avatar": "pixivseed_a03_avatar.jpg",
+      "cover": "pixivseed_a03_cover.jpg",
+      "style_tags": "国风,立绘展示,VTuber",
+      "bio": "素材样板画师，擅长立绘、live2d与国风方向，用于完善作者-作品-橱窗闭环和推荐训练。"
+    },
+    {
+      "idx": 4,
+      "username": "pixiv_artist_04",
+      "name": "白桃 Haku",
+      "primary": "服饰",
+      "secondary": "组合页",
+      "styles": [
+        "服设参考",
+        "洛丽塔",
+        "偶像服"
+      ],
+      "avatar": "pixivseed_a04_avatar.png",
+      "cover": "pixivseed_a04_cover.jpg",
+      "style_tags": "服设参考,洛丽塔,偶像服",
+      "bio": "素材样板画师，擅长服饰、组合页与服设参考方向，用于完善作者-作品-橱窗闭环和推荐训练。"
+    },
+    {
+      "idx": 5,
+      "username": "pixiv_artist_05",
+      "name": "南栀 Natsu",
+      "primary": "平面设计",
+      "secondary": "头像",
+      "styles": [
+        "宣传海报",
+        "简约风",
+        "高饱和"
+      ],
+      "avatar": "pixivseed_a05_avatar.jpg",
+      "cover": "pixivseed_a05_cover.jpg",
+      "style_tags": "宣传海报,简约风,高饱和",
+      "bio": "素材样板画师，擅长平面设计、头像与宣传海报方向，用于完善作者-作品-橱窗闭环和推荐训练。"
+    },
+    {
+      "idx": 6,
+      "username": "pixiv_artist_06",
+      "name": "青禾 Aoba",
+      "primary": "半身像",
+      "secondary": "立绘",
+      "styles": [
+        "水彩风",
+        "治愈",
+        "含背景"
+      ],
+      "avatar": "pixivseed_a06_avatar.png",
+      "cover": "pixivseed_a06_cover.jpg",
+      "style_tags": "水彩风,治愈,含背景",
+      "bio": "素材样板画师，擅长半身像、立绘与水彩风方向，用于完善作者-作品-橱窗闭环和推荐训练。"
+    }
+  ],
+  "works": [
+    {
+      "artist": "pixiv_artist_01",
+      "artist_name": "朝露 Akira",
+      "title": "素材作品 A01-01 头像 以前画的大头",
+      "photo": "pixivseed_a01_work01.jpg",
+      "fenlei": "头像",
+      "content": "[seed:pixiv] 朝露 Akira 的头像作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材头像",
+        "素材日系",
+        "素材柔和配色",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_01",
+      "artist_name": "朝露 Akira",
+      "title": "素材作品 A01-02 半身像 袁基",
+      "photo": "pixivseed_a01_work02.jpg",
+      "fenlei": "半身像",
+      "content": "[seed:pixiv] 朝露 Akira 的半身像作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材半身像",
+        "素材日系",
+        "素材柔和配色",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_01",
+      "artist_name": "朝露 Akira",
+      "title": "素材作品 A01-03 头像 黑发骰娘",
+      "photo": "pixivseed_a01_work03.png",
+      "fenlei": "头像",
+      "content": "[seed:pixiv] 朝露 Akira 的头像作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材头像",
+        "素材日系",
+        "素材柔和配色",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_01",
+      "artist_name": "朝露 Akira",
+      "title": "素材作品 A01-04 半身像 头像样稿",
+      "photo": "pixivseed_a01_work04.jpg",
+      "fenlei": "半身像",
+      "content": "[seed:pixiv] 朝露 Akira 的半身像作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材半身像",
+        "素材日系",
+        "素材柔和配色",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_02",
+      "artist_name": "云澈 Chiyo",
+      "title": "素材作品 A02-01 Q版全身 Enkidu",
+      "photo": "pixivseed_a02_work01.jpg",
+      "fenlei": "Q版全身",
+      "content": "[seed:pixiv] 云澈 Chiyo 的Q版全身作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材Q版全身",
+        "素材Q版",
+        "素材元气",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_02",
+      "artist_name": "云澈 Chiyo",
+      "title": "素材作品 A02-02 表情包 ドルフロ 周年おめでとうございます",
+      "photo": "pixivseed_a02_work02.png",
+      "fenlei": "表情包",
+      "content": "[seed:pixiv] 云澈 Chiyo 的表情包作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材表情包",
+        "素材Q版",
+        "素材元气",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_02",
+      "artist_name": "云澈 Chiyo",
+      "title": "素材作品 A02-03 Q版全身 かわいい虹夏ちゃん",
+      "photo": "pixivseed_a02_work03.jpg",
+      "fenlei": "Q版全身",
+      "content": "[seed:pixiv] 云澈 Chiyo 的Q版全身作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材Q版全身",
+        "素材Q版",
+        "素材元气",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_02",
+      "artist_name": "云澈 Chiyo",
+      "title": "素材作品 A02-04 表情包 ふてぶてうさぎLINEスタンプ第3弾",
+      "photo": "pixivseed_a02_work04.png",
+      "fenlei": "表情包",
+      "content": "[seed:pixiv] 云澈 Chiyo 的表情包作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材表情包",
+        "素材Q版",
+        "素材元气",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_03",
+      "artist_name": "兰舟 Lanzu",
+      "title": "素材作品 A03-01 立绘 Holiday Pack Rat",
+      "photo": "pixivseed_a03_work01.jpg",
+      "fenlei": "立绘",
+      "content": "[seed:pixiv] 兰舟 Lanzu 的立绘作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材立绘",
+        "素材国风",
+        "素材立绘展示",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_03",
+      "artist_name": "兰舟 Lanzu",
+      "title": "素材作品 A03-02 Live2D きつねちゃんVTubeStudio対応",
+      "photo": "pixivseed_a03_work02.png",
+      "fenlei": "Live2D",
+      "content": "[seed:pixiv] 兰舟 Lanzu 的Live2D作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材Live2D",
+        "素材国风",
+        "素材立绘展示",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_03",
+      "artist_name": "兰舟 Lanzu",
+      "title": "素材作品 A03-03 立绘 T58",
+      "photo": "pixivseed_a03_work03.jpg",
+      "fenlei": "立绘",
+      "content": "[seed:pixiv] 兰舟 Lanzu 的立绘作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材立绘",
+        "素材国风",
+        "素材立绘展示",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_03",
+      "artist_name": "兰舟 Lanzu",
+      "title": "素材作品 A03-04 Live2D L2D立绘 VTUBER立绘",
+      "photo": "pixivseed_a03_work04.jpg",
+      "fenlei": "Live2D",
+      "content": "[seed:pixiv] 兰舟 Lanzu 的Live2D作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材Live2D",
+        "素材国风",
+        "素材立绘展示",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_04",
+      "artist_name": "白桃 Haku",
+      "title": "素材作品 A04-01 服设 服饰样稿",
+      "photo": "pixivseed_a04_work01.png",
+      "fenlei": "服设",
+      "content": "[seed:pixiv] 白桃 Haku 的服设作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材服设",
+        "素材服设参考",
+        "素材洛丽塔",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_04",
+      "artist_name": "白桃 Haku",
+      "title": "素材作品 A04-02 组合页 服饰样稿",
+      "photo": "pixivseed_a04_work02.jpg",
+      "fenlei": "组合页",
+      "content": "[seed:pixiv] 白桃 Haku 的组合页作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材组合页",
+        "素材服设参考",
+        "素材洛丽塔",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_04",
+      "artist_name": "白桃 Haku",
+      "title": "素材作品 A04-03 服设 服饰样稿",
+      "photo": "pixivseed_a04_work03.png",
+      "fenlei": "服设",
+      "content": "[seed:pixiv] 白桃 Haku 的服设作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材服设",
+        "素材服设参考",
+        "素材洛丽塔",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_04",
+      "artist_name": "白桃 Haku",
+      "title": "素材作品 A04-04 组合页 OC委托",
+      "photo": "pixivseed_a04_work04.jpg",
+      "fenlei": "组合页",
+      "content": "[seed:pixiv] 白桃 Haku 的组合页作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材组合页",
+        "素材服设参考",
+        "素材洛丽塔",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_05",
+      "artist_name": "南栀 Natsu",
+      "title": "素材作品 A05-01 平面设计 西武鉄道新2000系",
+      "photo": "pixivseed_a05_work01.jpg",
+      "fenlei": "平面设计",
+      "content": "[seed:pixiv] 南栀 Natsu 的平面设计作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材平面设计",
+        "素材宣传海报",
+        "素材简约风",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_05",
+      "artist_name": "南栀 Natsu",
+      "title": "素材作品 A05-02 头像 Amaryllis",
+      "photo": "pixivseed_a05_work02.png",
+      "fenlei": "头像",
+      "content": "[seed:pixiv] 南栀 Natsu 的头像作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材头像",
+        "素材宣传海报",
+        "素材简约风",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_05",
+      "artist_name": "南栀 Natsu",
+      "title": "素材作品 A05-03 平面设计 The mad bird jubjub",
+      "photo": "pixivseed_a05_work03.png",
+      "fenlei": "平面设计",
+      "content": "[seed:pixiv] 南栀 Natsu 的平面设计作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材平面设计",
+        "素材宣传海报",
+        "素材简约风",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_05",
+      "artist_name": "南栀 Natsu",
+      "title": "素材作品 A05-04 头像 标枪",
+      "photo": "pixivseed_a05_work04.jpg",
+      "fenlei": "头像",
+      "content": "[seed:pixiv] 南栀 Natsu 的头像作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材头像",
+        "素材宣传海报",
+        "素材简约风",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_06",
+      "artist_name": "青禾 Aoba",
+      "title": "素材作品 A06-01 半身像 俾斯麦Zwei",
+      "photo": "pixivseed_a06_work01.jpg",
+      "fenlei": "半身像",
+      "content": "[seed:pixiv] 青禾 Aoba 的半身像作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材半身像",
+        "素材水彩风",
+        "素材治愈",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_06",
+      "artist_name": "青禾 Aoba",
+      "title": "素材作品 A06-02 立绘 妮可",
+      "photo": "pixivseed_a06_work02.jpg",
+      "fenlei": "立绘",
+      "content": "[seed:pixiv] 青禾 Aoba 的立绘作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材立绘",
+        "素材水彩风",
+        "素材治愈",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_06",
+      "artist_name": "青禾 Aoba",
+      "title": "素材作品 A06-03 半身像 摸个耀骑士临光",
+      "photo": "pixivseed_a06_work03.png",
+      "fenlei": "半身像",
+      "content": "[seed:pixiv] 青禾 Aoba 的半身像作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材半身像",
+        "素材水彩风",
+        "素材治愈",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_06",
+      "artist_name": "青禾 Aoba",
+      "title": "素材作品 A06-04 立绘 Banshee Knight Lineart",
+      "photo": "pixivseed_a06_work04.jpg",
+      "fenlei": "立绘",
+      "content": "[seed:pixiv] 青禾 Aoba 的立绘作品样板。自由标签根据分类、画师风格和文件名弱拟定，主要用于作品展示、作者主页闭环和推荐训练。",
+      "tags": [
+        "素材立绘",
+        "素材水彩风",
+        "素材治愈",
+        "素材可委托"
+      ]
+    }
+  ],
+  "huagaos": [
+    {
+      "artist": "pixiv_artist_01",
+      "artist_name": "朝露 Akira",
+      "name": "素材橱窗 A01-01 半身像 客服小琉",
+      "photo": "pixivseed_a01_huagao01.jpg",
+      "fenlei": "半身像",
+      "price": 186,
+      "content": "[seed:pixiv] 朝露 Akira 的半身像橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材半身像",
+        "素材日系",
+        "素材柔和配色",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_01",
+      "artist_name": "朝露 Akira",
+      "name": "素材橱窗 A01-02 头像 稿",
+      "photo": "pixivseed_a01_huagao02.png",
+      "fenlei": "头像",
+      "price": 117,
+      "content": "[seed:pixiv] 朝露 Akira 的头像橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材头像",
+        "素材日系",
+        "素材柔和配色",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_01",
+      "artist_name": "朝露 Akira",
+      "name": "素材橱窗 A01-03 半身像 键山雏",
+      "photo": "pixivseed_a01_huagao03.jpg",
+      "fenlei": "半身像",
+      "price": 208,
+      "content": "[seed:pixiv] 朝露 Akira 的半身像橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材半身像",
+        "素材日系",
+        "素材柔和配色",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_01",
+      "artist_name": "朝露 Akira",
+      "name": "素材橱窗 A01-04 头像 诺瓦啊",
+      "photo": "pixivseed_a01_huagao04.jpg",
+      "fenlei": "头像",
+      "price": 139,
+      "content": "[seed:pixiv] 朝露 Akira 的头像橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材头像",
+        "素材日系",
+        "素材柔和配色",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_02",
+      "artist_name": "云澈 Chiyo",
+      "name": "素材橱窗 A02-01 表情包 スタンプ販売開始",
+      "photo": "pixivseed_a02_huagao01.jpg",
+      "fenlei": "表情包",
+      "price": 91,
+      "content": "[seed:pixiv] 云澈 Chiyo 的表情包橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材表情包",
+        "素材Q版",
+        "素材元气",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_02",
+      "artist_name": "云澈 Chiyo",
+      "name": "素材橱窗 A02-02 Q版全身 ペローナちゃん",
+      "photo": "pixivseed_a02_huagao02.jpg",
+      "fenlei": "Q版全身",
+      "price": 164,
+      "content": "[seed:pixiv] 云澈 Chiyo 的Q版全身橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材Q版全身",
+        "素材Q版",
+        "素材元气",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_02",
+      "artist_name": "云澈 Chiyo",
+      "name": "素材橱窗 A02-03 表情包 あひるのあいさつ",
+      "photo": "pixivseed_a02_huagao03.png",
+      "fenlei": "表情包",
+      "price": 113,
+      "content": "[seed:pixiv] 云澈 Chiyo 的表情包橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材表情包",
+        "素材Q版",
+        "素材元气",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_02",
+      "artist_name": "云澈 Chiyo",
+      "name": "素材橱窗 A02-04 Q版全身 059",
+      "photo": "pixivseed_a02_huagao04.jpg",
+      "fenlei": "Q版全身",
+      "price": 186,
+      "content": "[seed:pixiv] 云澈 Chiyo 的Q版全身橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材Q版全身",
+        "素材Q版",
+        "素材元气",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_03",
+      "artist_name": "兰舟 Lanzu",
+      "name": "素材橱窗 A03-01 Live2D 依頼絵 Commisson",
+      "photo": "pixivseed_a03_huagao01.png",
+      "fenlei": "Live2D",
+      "price": 552,
+      "content": "[seed:pixiv] 兰舟 Lanzu 的Live2D橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材Live2D",
+        "素材国风",
+        "素材立绘展示",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_03",
+      "artist_name": "兰舟 Lanzu",
+      "name": "素材橱窗 A03-02 立绘 电击小子",
+      "photo": "pixivseed_a03_huagao02.jpg",
+      "fenlei": "立绘",
+      "price": 303,
+      "content": "[seed:pixiv] 兰舟 Lanzu 的立绘橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材立绘",
+        "素材国风",
+        "素材立绘展示",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_03",
+      "artist_name": "兰舟 Lanzu",
+      "name": "素材橱窗 A03-03 Live2D 黒髪リボンちゃん",
+      "photo": "pixivseed_a03_huagao03.jpg",
+      "fenlei": "Live2D",
+      "price": 574,
+      "content": "[seed:pixiv] 兰舟 Lanzu 的Live2D橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材Live2D",
+        "素材国风",
+        "素材立绘展示",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_03",
+      "artist_name": "兰舟 Lanzu",
+      "name": "素材橱窗 A03-04 立绘 米画师过审核用",
+      "photo": "pixivseed_a03_huagao04.jpg",
+      "fenlei": "立绘",
+      "price": 325,
+      "content": "[seed:pixiv] 兰舟 Lanzu 的立绘橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材立绘",
+        "素材国风",
+        "素材立绘展示",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_04",
+      "artist_name": "白桃 Haku",
+      "name": "素材橱窗 A04-01 组合页 oc组合页",
+      "photo": "pixivseed_a04_huagao01.jpg",
+      "fenlei": "组合页",
+      "price": 359,
+      "content": "[seed:pixiv] 白桃 Haku 的组合页橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材组合页",
+        "素材服设参考",
+        "素材洛丽塔",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_04",
+      "artist_name": "白桃 Haku",
+      "name": "素材橱窗 A04-02 服设 雪ミク2026衣装デザイン",
+      "photo": "pixivseed_a04_huagao02.jpg",
+      "fenlei": "服设",
+      "price": 270,
+      "content": "[seed:pixiv] 白桃 Haku 的服设橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材服设",
+        "素材服设参考",
+        "素材洛丽塔",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_04",
+      "artist_name": "白桃 Haku",
+      "name": "素材橱窗 A04-03 组合页 鼠鼠",
+      "photo": "pixivseed_a04_huagao03.jpg",
+      "fenlei": "组合页",
+      "price": 381,
+      "content": "[seed:pixiv] 白桃 Haku 的组合页橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材组合页",
+        "素材服设参考",
+        "素材洛丽塔",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_04",
+      "artist_name": "白桃 Haku",
+      "name": "素材橱窗 A04-04 服设 Bonbon drop sugar",
+      "photo": "pixivseed_a04_huagao04.jpg",
+      "fenlei": "服设",
+      "price": 292,
+      "content": "[seed:pixiv] 白桃 Haku 的服设橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材服设",
+        "素材服设参考",
+        "素材洛丽塔",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_05",
+      "artist_name": "南栀 Natsu",
+      "name": "素材橱窗 A05-01 头像 大头JS9",
+      "photo": "pixivseed_a05_huagao01.jpg",
+      "fenlei": "头像",
+      "price": 134,
+      "content": "[seed:pixiv] 南栀 Natsu 的头像橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材头像",
+        "素材宣传海报",
+        "素材简约风",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_05",
+      "artist_name": "南栀 Natsu",
+      "name": "素材橱窗 A05-02 平面设计 cyber terrorism",
+      "photo": "pixivseed_a05_huagao02.png",
+      "fenlei": "平面设计",
+      "price": 237,
+      "content": "[seed:pixiv] 南栀 Natsu 的平面设计橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材平面设计",
+        "素材宣传海报",
+        "素材简约风",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_05",
+      "artist_name": "南栀 Natsu",
+      "name": "素材橱窗 A05-03 头像 千夏小头像",
+      "photo": "pixivseed_a05_huagao03.jpg",
+      "fenlei": "头像",
+      "price": 156,
+      "content": "[seed:pixiv] 南栀 Natsu 的头像橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材头像",
+        "素材宣传海报",
+        "素材简约风",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_05",
+      "artist_name": "南栀 Natsu",
+      "name": "素材橱窗 A05-04 平面设计 君の最新情報を確かめたい 山形新幹線つばさ",
+      "photo": "pixivseed_a05_huagao04.jpg",
+      "fenlei": "平面设计",
+      "price": 259,
+      "content": "[seed:pixiv] 南栀 Natsu 的平面设计橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材平面设计",
+        "素材宣传海报",
+        "素材简约风",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_06",
+      "artist_name": "青禾 Aoba",
+      "name": "素材橱窗 A06-01 立绘 ロリママ",
+      "photo": "pixivseed_a06_huagao01.jpg",
+      "fenlei": "立绘",
+      "price": 313,
+      "content": "[seed:pixiv] 青禾 Aoba 的立绘橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材立绘",
+        "素材水彩风",
+        "素材治愈",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_06",
+      "artist_name": "青禾 Aoba",
+      "name": "素材橱窗 A06-02 半身像 あたしって ほんとバカ",
+      "photo": "pixivseed_a06_huagao02.jpg",
+      "fenlei": "半身像",
+      "price": 232,
+      "content": "[seed:pixiv] 青禾 Aoba 的半身像橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材半身像",
+        "素材水彩风",
+        "素材治愈",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_06",
+      "artist_name": "青禾 Aoba",
+      "name": "素材橱窗 A06-03 立绘 辣妹的胶衣会不会鼓包",
+      "photo": "pixivseed_a06_huagao03.jpg",
+      "fenlei": "立绘",
+      "price": 335,
+      "content": "[seed:pixiv] 青禾 Aoba 的立绘橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材立绘",
+        "素材水彩风",
+        "素材治愈",
+        "素材可委托"
+      ]
+    },
+    {
+      "artist": "pixiv_artist_06",
+      "artist_name": "青禾 Aoba",
+      "name": "素材橱窗 A06-04 半身像 お願いします",
+      "photo": "pixivseed_a06_huagao04.jpg",
+      "fenlei": "半身像",
+      "price": 254,
+      "content": "[seed:pixiv] 青禾 Aoba 的半身像橱窗样板，已上架且审核通过。用于补齐橱窗购买、收藏、加购、下单等推荐训练链路。",
+      "tags": [
+        "素材半身像",
+        "素材水彩风",
+        "素材治愈",
+        "素材可委托"
+      ]
+    }
+  ],
+  "tags": [
+    "素材Live2D",
+    "素材Q版",
+    "素材Q版全身",
+    "素材元气",
+    "素材半身像",
+    "素材可委托",
+    "素材国风",
+    "素材头像",
+    "素材宣传海报",
+    "素材平面设计",
+    "素材日系",
+    "素材服设",
+    "素材服设参考",
+    "素材柔和配色",
+    "素材水彩风",
+    "素材治愈",
+    "素材洛丽塔",
+    "素材立绘",
+    "素材立绘展示",
+    "素材简约风",
+    "素材组合页",
+    "素材表情包"
+  ],
+  "counts": {
+    "artists": 6,
+    "works": 24,
+    "huagaos": 24,
+    "tags": 22,
+    "copiedFiles": 60
+  }
+}

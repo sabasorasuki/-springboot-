@@ -13,6 +13,7 @@ import com.lf.entity.User;
 import com.lf.entity.UserRole;
 import com.lf.service.EmailService;
 import com.lf.service.MenuService;
+import com.lf.service.SysSiteSettingService;
 import com.lf.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -53,6 +54,9 @@ public class AuthController {
 
     @Resource
     private EmailService emailService;
+
+    @Resource
+    private SysSiteSettingService sysSiteSettingService;
 
     /**
      * 登录：支持用户名或邮箱
@@ -131,6 +135,7 @@ public class AuthController {
         String password = body.get("password");
         String nickname = body.get("nickname");
         String initialRole = body.get("initialRole");
+        boolean requireEmailCode = sysSiteSettingService.isRegisterEmailCodeRequired();
 
         // 基本校验
         if (!StringUtils.hasText(username)) {
@@ -139,7 +144,7 @@ public class AuthController {
         if (!StringUtils.hasText(email)) {
             throw new BusinessException(20006, "邮箱不能为空");
         }
-        if (!StringUtils.hasText(emailCode)) {
+        if (requireEmailCode && !StringUtils.hasText(emailCode)) {
             throw new BusinessException(20006, "验证码不能为空");
         }
         if (!StringUtils.hasText(password)) {
@@ -147,7 +152,7 @@ public class AuthController {
         }
 
         // 验证码校验
-        if (!emailService.verifyCode(email, emailCode)) {
+        if (requireEmailCode && !emailService.verifyCode(email, emailCode)) {
             throw new BusinessException(20007, "验证码错误或已过期");
         }
 
@@ -197,6 +202,12 @@ public class AuthController {
         }
         emailService.sendVerificationCode(email);
         return Result.success("验证码已发送");
+    }
+
+    @ApiOperation("获取注册配置")
+    @GetMapping("/register-options")
+    public Result<Map<String, Object>> getRegisterOptions() {
+        return Result.success(sysSiteSettingService.getRegisterOptions());
     }
 
     /**

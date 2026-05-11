@@ -203,4 +203,29 @@
         </choose>
     </select>
 
+    <select id="selectArtistWorkStats" resultType="map">
+        SELECT
+            ranked.artist_id AS artistId,
+            COUNT(1) AS workCount,
+            GROUP_CONCAT(
+                CASE WHEN ranked.rn &lt;= #{coverLimit} THEN ranked.photo ELSE NULL END
+                ORDER BY ranked.id DESC SEPARATOR '|||'
+            ) AS recentCovers
+        FROM (
+            SELECT
+                CAST(h.shangjiaids AS UNSIGNED) AS artist_id,
+                h.id,
+                h.photo,
+                ROW_NUMBER() OVER (PARTITION BY h.shangjiaids ORDER BY h.id DESC) AS rn
+            FROM sys_huagao h
+            WHERE h.type = '上架'
+              AND h.status = '审核成功'
+              AND h.shangjiaids IN
+              <foreach collection="artistIds" item="artistId" open="(" separator="," close=")">
+                  #{artistId}
+              </foreach>
+        ) ranked
+        GROUP BY ranked.artist_id
+    </select>
+
 </mapper>

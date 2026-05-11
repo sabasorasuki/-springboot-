@@ -20,5 +20,12 @@ export default {
       method: 'post',
       data: payload
     })
+  },
+
+  health() {
+    return request({
+      url: '/rec/debug/health',
+      method: 'get'
+    })
   }
 }

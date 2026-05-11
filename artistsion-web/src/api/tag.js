@@ -30,6 +30,19 @@ export default {
     })
   },
 
+  getFreeOptions() {
+    return request({
+      url: '/sysTag/list',
+      method: 'get',
+      params: {
+        pageNo: 1,
+        pageSize: 50,
+        tagType: 'free',
+        status: 1
+      }
+    })
+  },
+
   add(content) {
     return request({
       url: '/sysTag/add',

@@ -28,6 +28,13 @@ export function sendEmailCode(data) {
   })
 }
 
+export function getRegisterOptions() {
+  return request({
+    url: '/auth/register-options',
+    method: 'get'
+  })
+}
+
 export function getAuthMe() {
   return request({
     url: '/auth/me',

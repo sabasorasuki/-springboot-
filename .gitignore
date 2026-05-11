@@ -59,6 +59,8 @@ recsys/site_recs/artifacts/
 # ===== 前端 =====
 node_modules/
 dist/
+static/pixiv/
+static/photo/
 
 # ===== 系统文件 =====
 .DS_Store

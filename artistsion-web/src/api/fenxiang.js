@@ -9,6 +9,7 @@ export default {
         pageNo: searchModel.pageNo,
         pageSize: searchModel.pageSize,
         title: searchModel.title,
+        keyword: searchModel.keyword,
         userids: searchModel.userids,
         fenlei: searchModel.fenlei,
         id: searchModel.id

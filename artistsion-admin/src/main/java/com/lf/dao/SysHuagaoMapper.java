@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -29,4 +30,7 @@ public interface SysHuagaoMapper extends BaseMapper<SysHuagao> {
                                     @Param("shangjiaids") String shangjiaids,
                                     @Param("status") String status,
                                     @Param("tagId") Long tagId);
+
+    List<Map<String, Object>> selectArtistWorkStats(@Param("artistIds") List<Integer> artistIds,
+                                                    @Param("coverLimit") int coverLimit);
 }

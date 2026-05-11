@@ -11,4 +11,6 @@ public interface RecRecommendationService {
                                            String scene,
                                            Long pageNo,
                                            Long pageSize);
+
+    Map<String, Object> getHealth();
 }

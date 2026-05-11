@@ -24,4 +24,8 @@ public interface RecRecommendationMapper {
     List<Map<String, Object>> selectFallbackItems(@Param("domain") String domain,
                                                   @Param("offset") Long offset,
                                                   @Param("limit") Long limit);
+
+    List<Map<String, Object>> selectModelHealth();
+
+    List<Map<String, Object>> selectLogHealth();
 }

@@ -11,7 +11,7 @@
           <div class="topbar-search">
             <el-input
               v-model="searchQuery"
-              placeholder="搜索橱窗画稿、分类、标签..."
+              :placeholder="searchPlaceholder"
               prefix-icon="el-icon-search"
               clearable
               size="medium"
@@ -119,6 +119,16 @@ export default {
     },
     avatarDropdownItems() {
       return getCenterDropdownItems(this.displayMode)
+    },
+    searchPlaceholder() {
+      const labels = {
+        '/home': '全站搜索作品、橱窗、企划、画师...',
+        '/artists': '搜索画师昵称、简介、风格...',
+        '/projects': '搜索企划标题、需求、风格...',
+        '/works': '搜索作品标题、分类、自由标签...',
+        '/showcase': '搜索橱窗画稿、分类、标签...'
+      }
+      return labels[this.resolveSearchTargetPath()] || '搜索站内内容...'
     }
   },
   watch: {
@@ -143,20 +153,29 @@ export default {
         keyword
       }
       this.$router.push({
-        path: '/showcase',
+        path: this.resolveSearchTargetPath(),
         query
       }).catch(() => {})
     },
     clearSearch() {
-      if (this.$route.path !== '/showcase' || !this.$route.query.keyword) {
+      if (!this.$route.query.keyword) {
         return
       }
       const query = { ...this.$route.query }
       delete query.keyword
       this.$router.replace({
-        path: '/showcase',
+        path: this.$route.path,
         query
       }).catch(() => {})
+    },
+    resolveSearchTargetPath() {
+      const path = this.$route.path || '/home'
+      if (path === '/' || path === '/home') return '/home'
+      if (path.startsWith('/showcase') || path.startsWith('/work/')) return '/showcase'
+      if (path.startsWith('/works') || path.startsWith('/post/')) return '/works'
+      if (path.startsWith('/projects') || path.startsWith('/project/')) return '/projects'
+      if (path.startsWith('/artists') || path.startsWith('/artist/')) return '/artists'
+      return '/home'
     },
     handleMainAction() {
       if (this.displayMode === 'artist') {

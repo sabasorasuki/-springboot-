@@ -35,12 +35,21 @@ public class SysProjectController {
     @GetMapping("/list")
     public Result<Map<String, Object>> getList(
             @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "userId", required = false) Long userId,
             @RequestParam(value = "pageNo", defaultValue = "1") Long pageNo,
             @RequestParam(value = "pageSize", defaultValue = "12") Long pageSize) {
 
         LambdaQueryWrapper<SysProject> wrapper = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(keyword)) {
+            String safeKeyword = keyword.trim();
+            wrapper.and(w -> w.like(SysProject::getTitle, safeKeyword)
+                    .or().like(SysProject::getDescription, safeKeyword)
+                    .or().like(SysProject::getCategory, safeKeyword)
+                    .or().like(SysProject::getStyle, safeKeyword)
+                    .or().like(SysProject::getUsername, safeKeyword));
+        }
         wrapper.eq(StringUtils.hasLength(category), SysProject::getCategory, category);
         wrapper.eq(StringUtils.hasLength(status), SysProject::getStatus, status);
         wrapper.eq(userId != null, SysProject::getUserId, userId);

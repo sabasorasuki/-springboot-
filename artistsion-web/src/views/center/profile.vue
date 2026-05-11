@@ -190,6 +190,17 @@
                   </article>
                 </div>
                 <el-empty v-else description="还没有投稿作品" :image-size="110" />
+                <div v-if="works.total > works.pageSize" class="profile-pagination">
+                  <el-pagination
+                    background
+                    layout="prev, pager, next"
+                    :total="works.total"
+                    :page-size="works.pageSize"
+                    :current-page.sync="works.pageNo"
+                    :disabled="works.loading"
+                    @current-change="handleWorksPageChange"
+                  />
+                </div>
               </div>
 
               <div v-else>
@@ -222,6 +233,17 @@
                   </article>
                 </div>
                 <el-empty v-else description="还没有橱窗投稿" :image-size="110" />
+                <div v-if="showcase.total > showcase.pageSize" class="profile-pagination">
+                  <el-pagination
+                    background
+                    layout="prev, pager, next"
+                    :total="showcase.total"
+                    :page-size="showcase.pageSize"
+                    :current-page.sync="showcase.pageNo"
+                    :disabled="showcase.loading"
+                    @current-change="handleShowcasePageChange"
+                  />
+                </div>
               </div>
             </section>
 
@@ -370,7 +392,7 @@
                     </div>
                   </div>
                   <div class="stack-card__actions">
-                    <el-button size="mini" type="primary" @click="openOrdersTab">去支付</el-button>
+                    <el-button size="mini" type="primary" @click="checkoutCartItem(item)">提交订单</el-button>
                     <el-button size="mini" type="text" @click="removeCartItem(item)">移除</el-button>
                   </div>
                 </article>
@@ -450,6 +472,17 @@
                 </article>
               </div>
               <el-empty v-else description="暂无公开作品" :image-size="110" />
+              <div v-if="works.total > works.pageSize" class="profile-pagination">
+                <el-pagination
+                  background
+                  layout="prev, pager, next"
+                  :total="works.total"
+                  :page-size="works.pageSize"
+                  :current-page.sync="works.pageNo"
+                  :disabled="works.loading"
+                  @current-change="handleWorksPageChange"
+                />
+              </div>
             </section>
 
             <section v-else-if="activePrimaryTab === 'showcase'" class="content-section">
@@ -488,6 +521,17 @@
                 </article>
               </div>
               <el-empty v-else description="暂无公开橱窗" :image-size="110" />
+              <div v-if="showcase.total > showcase.pageSize" class="profile-pagination">
+                <el-pagination
+                  background
+                  layout="prev, pager, next"
+                  :total="showcase.total"
+                  :page-size="showcase.pageSize"
+                  :current-page.sync="showcase.pageNo"
+                  :disabled="showcase.loading"
+                  @current-change="handleShowcasePageChange"
+                />
+              </div>
             </section>
 
             <section v-else class="content-section">
@@ -725,7 +769,7 @@ import {
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
-function createListState(pageSize = 8) {
+function createListState(pageSize = 9) {
   return {
     list: [],
     total: 0,
@@ -1183,6 +1227,16 @@ export default {
         this.showcase.loading = false
       }
     },
+    handleWorksPageChange(page) {
+      if (this.works.loading) return
+      this.works.pageNo = page
+      this.fetchWorks()
+    },
+    handleShowcasePageChange(page) {
+      if (this.showcase.loading) return
+      this.showcase.pageNo = page
+      this.fetchShowcase()
+    },
     async fetchProjects() {
       this.projects.loading = true
       try {
@@ -1574,6 +1628,24 @@ export default {
       this.setPrimaryTab('orders')
       if (wasOrdersTab) {
         this.fetchOrders()
+      }
+    },
+    async checkoutCartItem(item) {
+      if (!item || !item.id) return
+      try {
+        await orderApi.saveOrUpdate({
+          id: item.id,
+          status: '待付款',
+          recScene: item.recScene || 'cart_checkout',
+          recSource: item.recSource || 'cart_checkout'
+        })
+        this.$message.success('订单已提交')
+        this.cart.loaded = false
+        this.orders.loaded = false
+        await this.fetchCart()
+        this.openOrdersTab()
+      } catch (error) {
+        this.$message.error('提交订单失败')
       }
     },
     async removeCartItem(item) {
@@ -2021,6 +2093,12 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(212px, 1fr));
   gap: 14px;
+}
+
+.profile-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
 }
 
 .content-card {

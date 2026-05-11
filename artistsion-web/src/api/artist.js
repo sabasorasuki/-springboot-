@@ -12,6 +12,7 @@ export default {
       params: {
         pageNo: searchModel.pageNo || 1,
         pageSize: searchModel.pageSize || 12,
+        keyword: searchModel.keyword || undefined,
         fenlei: searchModel.fenlei || undefined
       }
     })

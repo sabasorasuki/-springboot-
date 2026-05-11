@@ -44,6 +44,11 @@ public class RecRecommendationController {
         ));
     }
 
+    @GetMapping("/debug/health")
+    public Result<Map<String, Object>> health() {
+        return Result.success(recRecommendationService.getHealth());
+    }
+
     private User resolveOptionalLoginUser(HttpServletRequest request) {
         String token = request.getHeader("X-Token");
         if (!StringUtils.hasText(token)) {

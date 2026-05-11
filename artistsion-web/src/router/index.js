@@ -251,6 +251,20 @@ export const constantRoutes = [
       hidden: true
     },
     {
+      path: '/fenlei/site-setting',
+      name: 'AdminSiteSetting',
+      component: () => import('@/views/fenlei/siteSetting'),
+      meta: { title: '注册配置', requiresAdmin: true },
+      hidden: true
+    },
+    {
+      path: '/recs/health',
+      name: 'AdminRecHealth',
+      component: () => import('@/views/recs/health'),
+      meta: { title: '推荐健康', requiresAdmin: true },
+      hidden: true
+    },
+    {
       path: '/userinfo',
       name: 'AdminProfile',
       component: () => import('@/views/userinfo/index'),

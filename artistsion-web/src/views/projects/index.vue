@@ -90,11 +90,22 @@ export default {
       total: 0,
       pageNo: 1,
       loading: false,
+      keyword: '',
       activeFilter: '全部',
       filterTags: ['全部', '插画', '立绘', '头像']
     }
   },
+  watch: {
+    '$route.query': {
+      handler(query) {
+        if (this.applyRouteQuery(query)) {
+          this.resetAndFetch()
+        }
+      }
+    }
+  },
   created() {
+    this.applyRouteQuery()
     this.fetchProjects()
   },
   methods: {
@@ -102,11 +113,13 @@ export default {
       this.loading = true
       try {
         const category = this.activeFilter === '全部' ? undefined : this.activeFilter
-        const res = category
+        const useList = category || this.keyword
+        const res = useList
           ? await projectApi.getList({
             pageNo: this.pageNo,
             pageSize: 12,
-            category
+            category,
+            keyword: this.keyword || undefined
           })
           : await recApi.recommendations({
             domain: 'project',
@@ -142,7 +155,32 @@ export default {
     },
     onFilterChange(tag) {
       this.activeFilter = tag
+      if (!this.syncRouteQuery()) {
+        this.resetAndFetch()
+      }
+    },
+    applyRouteQuery(query = this.$route.query) {
+      const nextKeyword = query.keyword ? String(query.keyword).trim() : ''
+      const nextFilter = query.category ? String(query.category).trim() : '全部'
+      const changed = this.keyword !== nextKeyword || this.activeFilter !== nextFilter
+      this.keyword = nextKeyword
+      this.activeFilter = nextFilter || '全部'
+      return changed
+    },
+    syncRouteQuery() {
+      const query = {}
+      if (this.keyword) query.keyword = this.keyword
+      if (this.activeFilter && this.activeFilter !== '全部') query.category = this.activeFilter
+      const current = this.$route.query || {}
+      if ((current.keyword || '') === (query.keyword || '') && (current.category || '') === (query.category || '')) {
+        return false
+      }
+      this.$router.replace({ path: '/projects', query }).catch(() => {})
+      return true
+    },
+    resetAndFetch() {
       this.pageNo = 1
+      this.projects = []
       this.fetchProjects()
     },
     loadMore() {

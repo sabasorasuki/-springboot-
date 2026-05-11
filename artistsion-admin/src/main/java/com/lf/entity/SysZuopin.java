@@ -6,7 +6,9 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -77,5 +79,8 @@ public class SysZuopin implements Serializable {
 
     @TableField(exist = false)
     private String dianzan;
+
+    @TableField(exist = false)
+    private List<String> freeTagNames = new ArrayList<>();
 
 }

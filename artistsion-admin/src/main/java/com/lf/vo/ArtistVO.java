@@ -19,6 +19,6 @@ public class ArtistVO {
     private String styleTags;
     /** 该画师已上架画稿数量 */
     private Long workCount;
-    /** 最近作品封面（最多3张） */
+    /** 最近作品封面（列表页最多9张） */
     private List<String> recentCovers;
 }

@@ -22,6 +22,7 @@ public class MyWebConfig implements WebMvcConfigurer {
                         "/user/register",
                         "/auth/login",
                         "/auth/register",
+                        "/auth/register-options",
                         "/auth/send-email-code",
                         "/sysZuopin/list",
                         "/sysZuopin/getById/**",

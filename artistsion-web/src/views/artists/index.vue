@@ -19,11 +19,8 @@
     </section>
 
     <!-- 画师卡片列表 -->
-    <section class="section">
-      <div v-if="loading" class="loading-placeholder">
-        <i class="el-icon-loading" /> 加载中…
-      </div>
-      <div v-else-if="artists.length" class="artist-grid">
+    <section class="section artist-list-section" v-loading="loading">
+      <div v-if="artists.length" class="artist-grid">
         <div
           v-for="artist in artists"
           :key="artist.id"
@@ -49,24 +46,23 @@
               :key="idx"
               class="gallery-thumb"
             >
-              <img :src="cover" alt="" class="thumb-img">
+              <img :src="cover" alt="" class="thumb-img" loading="lazy" decoding="async">
             </div>
-            <!-- 补空位保持 3 列对齐 -->
             <div
-              v-for="n in Math.max(0, 3 - artist.recentCoverUrls.length)"
+              v-for="n in Math.max(0, 9 - artist.recentCoverUrls.length)"
               :key="'empty-' + n"
               class="gallery-thumb gallery-thumb--empty"
             />
           </div>
           <div v-else class="artist-card__gallery">
-            <div v-for="n in 3" :key="n" class="gallery-thumb gallery-thumb--empty" />
+            <div v-for="n in 9" :key="n" class="gallery-thumb gallery-thumb--empty" />
           </div>
           <div class="artist-card__footer">
             <span class="footer-label">{{ artist.bio || '暂无简介' }}</span>
           </div>
         </div>
       </div>
-      <el-empty v-else description="暂无画师" :image-size="120" />
+      <el-empty v-else-if="!loading" description="暂无画师" :image-size="120" />
 
       <!-- 分页 -->
       <div v-if="total > pageSize" class="pagination-wrap">
@@ -76,7 +72,8 @@
           :total="total"
           :page-size="pageSize"
           :current-page.sync="pageNo"
-          @current-change="fetchArtists"
+          :disabled="loading"
+          @current-change="onPageChange"
         />
       </div>
     </section>
@@ -101,14 +98,25 @@ export default {
       artists: [],
       total: 0,
       pageNo: 1,
-      pageSize: 12,
+      pageSize: 9,
       loading: false,
+      keyword: '',
       activeFilter: '',
       filterTags: [{ label: '全部', value: '' }],
       categories: []
     }
   },
+  watch: {
+    '$route.query': {
+      handler(query) {
+        if (this.applyRouteQuery(query)) {
+          this.fetchArtists()
+        }
+      }
+    }
+  },
   created() {
+    this.applyRouteQuery()
     this.fetchCategories()
     this.fetchArtists()
   },
@@ -131,16 +139,18 @@ export default {
       return {
         ...artist,
         avatarUrl: normalizeImageUrl(artist.avatar),
-        recentCoverUrls: recentCovers.map(cover => normalizeImageUrl(cover)).filter(Boolean)
+        recentCoverUrls: recentCovers.map(cover => normalizeImageUrl(cover)).filter(Boolean).slice(0, 9)
       }
     },
 
     fetchArtists() {
       this.loading = true
-      const request = this.activeFilter
+      const useList = this.activeFilter || this.keyword
+      const request = useList
         ? artistApi.getList({
           pageNo: this.pageNo,
           pageSize: this.pageSize,
+          keyword: this.keyword || undefined,
           fenlei: this.activeFilter || undefined
         })
         : recApi.recommendations({
@@ -171,6 +181,37 @@ export default {
     onFilterChange(value) {
       this.activeFilter = value
       this.pageNo = 1
+      if (!this.syncRouteQuery()) {
+        this.fetchArtists()
+      }
+    },
+    applyRouteQuery(query = this.$route.query) {
+      const nextKeyword = query.keyword ? String(query.keyword).trim() : ''
+      const nextFilter = query.fenlei ? String(query.fenlei).trim() : ''
+      const changed = this.keyword !== nextKeyword || this.activeFilter !== nextFilter
+      this.keyword = nextKeyword
+      this.activeFilter = nextFilter || ''
+      if (changed) {
+        this.pageNo = 1
+      }
+      return changed
+    },
+    syncRouteQuery() {
+      const query = {}
+      if (this.keyword) query.keyword = this.keyword
+      if (this.activeFilter) query.fenlei = this.activeFilter
+      const current = this.$route.query || {}
+      if ((current.keyword || '') === (query.keyword || '') && (current.fenlei || '') === (query.fenlei || '')) {
+        return false
+      }
+      this.$router.replace({ path: '/artists', query }).catch(() => {})
+      return true
+    },
+    onPageChange(page) {
+      if (this.loading) {
+        return
+      }
+      this.pageNo = page
       this.fetchArtists()
     },
 
@@ -263,6 +304,10 @@ export default {
 
 .section {
   margin-top: 32px;
+}
+
+.artist-list-section {
+  min-height: 420px;
 }
 
 /* ── 画师网格 ── */

@@ -3,6 +3,8 @@ package com.lf.service;
 import com.lf.entity.SysZuopin;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.List;
+
 /**
  * <p>
  *  服务类
@@ -13,4 +15,11 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface SysZuopinService extends IService<SysZuopin> {
 
+    boolean saveWithTags(SysZuopin zuopin);
+
+    boolean updateWithTags(SysZuopin zuopin);
+
+    SysZuopin getDetailById(Long id);
+
+    void fillTagInfo(List<SysZuopin> zuopinList);
 }

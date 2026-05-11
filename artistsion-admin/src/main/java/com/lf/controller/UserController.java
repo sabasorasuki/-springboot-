@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lf.common.Result;
 import com.lf.dao.RoleMapper;
+import com.lf.dao.SysHuagaoMapper;
 import com.lf.entity.Role;
 import com.lf.entity.SysHuagao;
 import com.lf.entity.User;
@@ -46,10 +47,15 @@ public class UserController {
     private SysHuagaoService sysHuagaoService;
 
     @Resource
+    private SysHuagaoMapper sysHuagaoMapper;
+
+    @Resource
     private PasswordEncoder passwordEncoder;
 
     @Resource
     private RoleMapper roleMapper;
+
+    private static final int ARTIST_RECENT_COVER_LIMIT = 9;
 
     private int artistRoleId;
 
@@ -66,7 +72,10 @@ public class UserController {
     public Result<Map<String, Object>> getArtistList(
             @RequestParam(value = "pageNo", defaultValue = "1") Long pageNo,
             @RequestParam(value = "pageSize", defaultValue = "12") Long pageSize,
+            @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "fenlei", required = false) String fenlei) {
+        long safePageNo = Math.max(1L, pageNo == null ? 1L : pageNo);
+        long safePageSize = Math.max(1L, Math.min(pageSize == null ? 12L : pageSize, 24L));
 
         // 1. 查出所有拥有画师角色的 userId
         LambdaQueryWrapper<UserRole> urWrapper = new LambdaQueryWrapper<>();
@@ -87,25 +96,37 @@ public class UserController {
         LambdaQueryWrapper<User> userWrapper = new LambdaQueryWrapper<>();
         userWrapper.in(User::getId, artistUserIds);
         userWrapper.eq(User::getStatus, 1);
+        userWrapper.eq(User::getDeleted, 0);
+        if (org.springframework.util.StringUtils.hasText(keyword)) {
+            String safeKeyword = keyword.trim();
+            userWrapper.and(w -> w.like(User::getUsername, safeKeyword)
+                    .or().like(User::getName, safeKeyword)
+                    .or().like(User::getBio, safeKeyword)
+                    .or().like(User::getStyleTags, safeKeyword));
+        }
+        if (org.springframework.util.StringUtils.hasText(fenlei)) {
+            userWrapper.like(User::getStyleTags, fenlei.trim());
+        }
         userWrapper.orderByDesc(User::getId);
-        Page<User> page = new Page<>(pageNo, pageSize);
+        Page<User> page = new Page<>(safePageNo, safePageSize);
         userService.page(page, userWrapper);
 
-        // 3. 批量查这些画师的画稿（上架+审核成功）用于缩略图和计数
+        // 3. 批量查这些画师的作品统计和最近封面。封面只取列表展示需要的9张，避免翻页时拼接/传输过多图片。
         List<Integer> pageUserIds = page.getRecords().stream()
                 .map(User::getId).collect(Collectors.toList());
 
-        Map<Integer, List<SysHuagao>> worksMap = new HashMap<>();
+        Map<Integer, Long> workCountMap = new HashMap<>();
+        Map<Integer, List<String>> recentCoverMap = new HashMap<>();
         if (!pageUserIds.isEmpty()) {
-            LambdaQueryWrapper<SysHuagao> hgWrapper = new LambdaQueryWrapper<>();
-            hgWrapper.in(SysHuagao::getShangjiaids, pageUserIds);
-            hgWrapper.eq(SysHuagao::getType, "上架");
-            hgWrapper.eq(SysHuagao::getStatus, "审核成功");
-            hgWrapper.orderByDesc(SysHuagao::getId);
-            List<SysHuagao> allWorks = sysHuagaoService.list(hgWrapper);
-            worksMap = allWorks.stream()
-                    .collect(Collectors.groupingBy(
-                            h -> Integer.parseInt(h.getShangjiaids())));
+            List<Map<String, Object>> statRows = sysHuagaoMapper.selectArtistWorkStats(pageUserIds, ARTIST_RECENT_COVER_LIMIT);
+            for (Map<String, Object> row : statRows) {
+                Integer artistId = toInteger(getMapValue(row, "artistId"));
+                if (artistId == null) {
+                    continue;
+                }
+                workCountMap.put(artistId, toLong(getMapValue(row, "workCount")));
+                recentCoverMap.put(artistId, splitCovers(getMapValue(row, "recentCovers")));
+            }
         }
 
         // 4. 组装 VO
@@ -120,12 +141,8 @@ public class UserController {
             vo.setBio(u.getBio());
             vo.setStyleTags(u.getStyleTags());
 
-            List<SysHuagao> works = worksMap.getOrDefault(u.getId(), Collections.emptyList());
-            vo.setWorkCount((long) works.size());
-            vo.setRecentCovers(works.stream()
-                    .limit(3)
-                    .map(SysHuagao::getPhoto)
-                    .collect(Collectors.toList()));
+            vo.setWorkCount(workCountMap.getOrDefault(u.getId(), 0L));
+            vo.setRecentCovers(recentCoverMap.getOrDefault(u.getId(), Collections.emptyList()));
             voList.add(vo);
         }
 
@@ -166,7 +183,7 @@ public class UserController {
         vo.setStyleTags(u.getStyleTags());
         vo.setWorkCount((long) works.size());
         vo.setRecentCovers(works.stream()
-                .limit(3)
+                .limit(ARTIST_RECENT_COVER_LIMIT)
                 .map(SysHuagao::getPhoto)
                 .collect(Collectors.toList()));
         return Result.success(vo);
@@ -197,10 +214,67 @@ public class UserController {
         vo.setStyleTags(u.getStyleTags());
         vo.setWorkCount((long) works.size());
         vo.setRecentCovers(works.stream()
-                .limit(3)
+                .limit(ARTIST_RECENT_COVER_LIMIT)
                 .map(SysHuagao::getPhoto)
                 .collect(Collectors.toList()));
         return Result.success(vo);
+    }
+
+    private Object getMapValue(Map<String, Object> row, String key) {
+        if (row == null) {
+            return null;
+        }
+        if (row.containsKey(key)) {
+            return row.get(key);
+        }
+        for (Map.Entry<String, Object> entry : row.entrySet()) {
+            if (entry.getKey() != null && entry.getKey().equalsIgnoreCase(key)) {
+                return entry.getValue();
+            }
+        }
+        return null;
+    }
+
+    private Integer toInteger(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+        try {
+            return Integer.parseInt(String.valueOf(value));
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private Long toLong(Object value) {
+        if (value == null) {
+            return 0L;
+        }
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+        try {
+            return Long.parseLong(String.valueOf(value));
+        } catch (NumberFormatException ex) {
+            return 0L;
+        }
+    }
+
+    private List<String> splitCovers(Object value) {
+        if (value == null) {
+            return Collections.emptyList();
+        }
+        String raw = String.valueOf(value);
+        if (!org.springframework.util.StringUtils.hasText(raw)) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(raw.split("\\|\\|\\|"))
+                .filter(org.springframework.util.StringUtils::hasText)
+                .limit(ARTIST_RECENT_COVER_LIMIT)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/all")

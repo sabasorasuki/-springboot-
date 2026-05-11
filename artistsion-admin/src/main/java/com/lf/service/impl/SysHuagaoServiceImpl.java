@@ -15,11 +15,13 @@ import com.lf.dao.SysHuagaoMapper;
 import com.lf.dao.SysHuagaoTagMapper;
 import com.lf.dao.SysTagAliasMapper;
 import com.lf.dao.SysTagMapper;
+import com.lf.dao.SysZuopinTagMapper;
 import com.lf.entity.SysFenlei;
 import com.lf.entity.SysHuagao;
 import com.lf.entity.SysHuagaoTag;
 import com.lf.entity.SysTag;
 import com.lf.entity.SysTagAlias;
+import com.lf.entity.SysZuopinTag;
 import com.lf.entity.User;
 import com.lf.service.SysHuagaoService;
 import org.springframework.stereotype.Service;
@@ -50,6 +52,9 @@ public class SysHuagaoServiceImpl extends ServiceImpl<SysHuagaoMapper, SysHuagao
 
     @Resource
     private SysHuagaoTagMapper sysHuagaoTagMapper;
+
+    @Resource
+    private SysZuopinTagMapper sysZuopinTagMapper;
 
     @Resource
     private SysFenleiMapper sysFenleiMapper;
@@ -404,10 +409,16 @@ public class SysHuagaoServiceImpl extends ServiceImpl<SysHuagaoMapper, SysHuagao
             }
             LambdaQueryWrapper<SysHuagaoTag> countWrapper = new LambdaQueryWrapper<>();
             countWrapper.eq(SysHuagaoTag::getTagId, tagId);
-            Long count = sysHuagaoTagMapper.selectCount(countWrapper);
+            Long huagaoCount = sysHuagaoTagMapper.selectCount(countWrapper);
+
+            LambdaQueryWrapper<SysZuopinTag> zuopinCountWrapper = new LambdaQueryWrapper<>();
+            zuopinCountWrapper.eq(SysZuopinTag::getTagId, tagId);
+            Long zuopinCount = sysZuopinTagMapper.selectCount(zuopinCountWrapper);
+
             SysTag tag = sysTagMapper.selectById(tagId);
             if (tag != null && Objects.equals(tag.getDeleted(), 0)) {
-                tag.setUseCount(count == null ? 0 : count.intValue());
+                tag.setUseCount((huagaoCount == null ? 0 : huagaoCount.intValue())
+                        + (zuopinCount == null ? 0 : zuopinCount.intValue()));
                 sysTagMapper.updateById(tag);
             }
         }

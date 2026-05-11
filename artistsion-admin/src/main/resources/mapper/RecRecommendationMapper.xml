@@ -160,21 +160,47 @@
                     u.status AS status,
                     u.bio AS bio,
                     u.style_tags AS styleTags,
-                    COUNT(DISTINCT h.id) AS workCount,
-                    GROUP_CONCAT(DISTINCT h.photo ORDER BY h.id DESC SEPARATOR '|||') AS recentCovers,
+                    COALESCE(hw.workCount, 0) AS workCount,
+                    hc.recentCovers AS recentCovers,
                     r.score AS recScore,
                     r.reason AS recReason
                 FROM rec_user_recommendation r
                 INNER JOIN x_user u ON u.id = r.item_id
-                LEFT JOIN sys_huagao h ON h.shangjiaids = CAST(u.id AS CHAR)
-                    AND h.type = '上架'
-                    AND h.status = '审核成功'
+                LEFT JOIN (
+                    SELECT
+                        CAST(h.shangjiaids AS UNSIGNED) AS artist_id,
+                        COUNT(1) AS workCount
+                    FROM sys_huagao h
+                    WHERE h.type = '上架'
+                      AND h.status = '审核成功'
+                      AND h.shangjiaids REGEXP '^[0-9]+$'
+                    GROUP BY CAST(h.shangjiaids AS UNSIGNED)
+                ) hw ON hw.artist_id = u.id
+                LEFT JOIN (
+                    SELECT
+                        ranked.artist_id,
+                        GROUP_CONCAT(ranked.photo ORDER BY ranked.id DESC SEPARATOR '|||') AS recentCovers
+                    FROM (
+                        SELECT
+                            CAST(h.shangjiaids AS UNSIGNED) AS artist_id,
+                            h.id,
+                            h.photo,
+                            ROW_NUMBER() OVER (PARTITION BY h.shangjiaids ORDER BY h.id DESC) AS rn
+                        FROM sys_huagao h
+                        WHERE h.type = '上架'
+                          AND h.status = '审核成功'
+                          AND h.shangjiaids REGEXP '^[0-9]+$'
+                          AND h.photo IS NOT NULL
+                          AND h.photo &lt;&gt; ''
+                    ) ranked
+                    WHERE ranked.rn &lt;= 9
+                    GROUP BY ranked.artist_id
+                ) hc ON hc.artist_id = u.id
                 WHERE r.domain = #{domain}
                   AND r.model_version = #{modelVersion}
                   AND r.actor_key = #{actorKey}
                   AND u.status = 1
                   AND COALESCE(u.deleted, 0) = 0
-                GROUP BY u.id, u.username, u.name, u.avatar, u.status, u.bio, u.style_tags, r.score, r.reason, r.rank_no
                 ORDER BY r.rank_no ASC
                 LIMIT #{limit} OFFSET #{offset}
             </otherwise>
@@ -298,22 +324,91 @@
                     u.status AS status,
                     u.bio AS bio,
                     u.style_tags AS styleTags,
-                    COUNT(DISTINCT h.id) AS workCount,
-                    GROUP_CONCAT(DISTINCT h.photo ORDER BY h.id DESC SEPARATOR '|||') AS recentCovers
+                    COALESCE(hw.workCount, 0) AS workCount,
+                    hc.recentCovers AS recentCovers
                 FROM x_user u
                 INNER JOIN x_user_role ur ON ur.user_id = u.id
                 INNER JOIN x_role r ON r.role_id = ur.role_id
-                LEFT JOIN sys_huagao h ON h.shangjiaids = CAST(u.id AS CHAR)
-                    AND h.type = '上架'
-                    AND h.status = '审核成功'
+                LEFT JOIN (
+                    SELECT
+                        CAST(h.shangjiaids AS UNSIGNED) AS artist_id,
+                        COUNT(1) AS workCount
+                    FROM sys_huagao h
+                    WHERE h.type = '上架'
+                      AND h.status = '审核成功'
+                      AND h.shangjiaids REGEXP '^[0-9]+$'
+                    GROUP BY CAST(h.shangjiaids AS UNSIGNED)
+                ) hw ON hw.artist_id = u.id
+                LEFT JOIN (
+                    SELECT
+                        ranked.artist_id,
+                        GROUP_CONCAT(ranked.photo ORDER BY ranked.id DESC SEPARATOR '|||') AS recentCovers
+                    FROM (
+                        SELECT
+                            CAST(h.shangjiaids AS UNSIGNED) AS artist_id,
+                            h.id,
+                            h.photo,
+                            ROW_NUMBER() OVER (PARTITION BY h.shangjiaids ORDER BY h.id DESC) AS rn
+                        FROM sys_huagao h
+                        WHERE h.type = '上架'
+                          AND h.status = '审核成功'
+                          AND h.shangjiaids REGEXP '^[0-9]+$'
+                          AND h.photo IS NOT NULL
+                          AND h.photo &lt;&gt; ''
+                    ) ranked
+                    WHERE ranked.rn &lt;= 9
+                    GROUP BY ranked.artist_id
+                ) hc ON hc.artist_id = u.id
                 WHERE u.status = 1
                   AND COALESCE(u.deleted, 0) = 0
                   AND r.role_name = '画师角色'
-                GROUP BY u.id, u.username, u.name, u.avatar, u.status, u.bio, u.style_tags
+                GROUP BY u.id, u.username, u.name, u.avatar, u.status, u.bio, u.style_tags, hw.workCount, hc.recentCovers
                 ORDER BY u.id DESC
                 LIMIT #{limit} OFFSET #{offset}
             </otherwise>
         </choose>
+    </select>
+
+    <select id="selectModelHealth" resultType="map">
+        SELECT
+            m.domain,
+            m.model_version AS modelVersion,
+            m.algorithm,
+            m.train_source AS trainSource,
+            m.status,
+            m.sample_count AS sampleCount,
+            m.positive_sample_count AS positiveSampleCount,
+            m.actor_count AS actorCount,
+            m.item_count AS itemCount,
+            m.metrics_json AS metricsJson,
+            m.activated_at AS activatedAt,
+            COUNT(r.id) AS recommendationRows,
+            COUNT(DISTINCT r.actor_key) AS recommendationActors,
+            COUNT(DISTINCT r.item_id) AS recommendationItems,
+            SUM(CASE WHEN r.actor_key = 'global' THEN 1 ELSE 0 END) AS globalRows
+        FROM rec_model_version m
+        LEFT JOIN rec_user_recommendation r ON r.model_version = m.model_version
+            AND r.domain = m.domain
+        WHERE m.status = 'active'
+        GROUP BY m.domain, m.model_version, m.algorithm, m.train_source, m.status,
+                 m.sample_count, m.positive_sample_count, m.actor_count, m.item_count,
+                 m.metrics_json, m.activated_at
+        ORDER BY m.domain
+    </select>
+
+    <select id="selectLogHealth" resultType="map">
+        SELECT domain, 'request' AS logType, COUNT(1) AS rowCount
+        FROM rec_request_log
+        GROUP BY domain
+        UNION ALL
+        SELECT domain, 'impression' AS logType, COUNT(1) AS rowCount
+        FROM rec_impression_log
+        GROUP BY domain
+        UNION ALL
+        SELECT domain, 'action' AS logType, COUNT(1) AS rowCount
+        FROM rec_action_log
+        GROUP BY domain
+        ORDER BY domain, logType
     </select>
 
 </mapper>

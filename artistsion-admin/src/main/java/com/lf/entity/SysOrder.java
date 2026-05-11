@@ -89,6 +89,16 @@ public class SysOrder implements Serializable {
     private String ryfs;
     private String fujin;
 
+    private String recRequestId;
+
+    private Integer recPosition;
+
+    private String recScene;
+
+    private String recSource;
+
+    private String recModelVersion;
+
 
 
     /**

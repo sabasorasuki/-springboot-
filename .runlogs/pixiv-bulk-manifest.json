@@ -1,0 +1,142 @@
+{
+  "segments": [
+    {
+      "srcCategory": "头像",
+      "code": "touxiang",
+      "fenlei": "头像",
+      "ext": ".jpg",
+      "count": 225,
+      "shift": 0
+    },
+    {
+      "srcCategory": "头像",
+      "code": "touxiang",
+      "fenlei": "头像",
+      "ext": ".png",
+      "count": 138,
+      "shift": 7
+    },
+    {
+      "srcCategory": "Q版",
+      "code": "qban",
+      "fenlei": "Q版全身",
+      "ext": ".jpg",
+      "count": 109,
+      "shift": 14
+    },
+    {
+      "srcCategory": "Q版",
+      "code": "qban",
+      "fenlei": "Q版全身",
+      "ext": ".png",
+      "count": 229,
+      "shift": 21
+    },
+    {
+      "srcCategory": "半身像",
+      "code": "banshen",
+      "fenlei": "半身像",
+      "ext": ".jpg",
+      "count": 44,
+      "shift": 28
+    },
+    {
+      "srcCategory": "半身像",
+      "code": "banshen",
+      "fenlei": "半身像",
+      "ext": ".png",
+      "count": 6,
+      "shift": 35
+    },
+    {
+      "srcCategory": "立绘",
+      "code": "lihui",
+      "fenlei": "立绘",
+      "ext": ".jpg",
+      "count": 158,
+      "shift": 42
+    },
+    {
+      "srcCategory": "立绘",
+      "code": "lihui",
+      "fenlei": "立绘",
+      "ext": ".png",
+      "count": 43,
+      "shift": 49
+    },
+    {
+      "srcCategory": "live2d",
+      "code": "live2d",
+      "fenlei": "Live2D",
+      "ext": ".jpg",
+      "count": 50,
+      "shift": 56
+    },
+    {
+      "srcCategory": "live2d",
+      "code": "live2d",
+      "fenlei": "Live2D",
+      "ext": ".png",
+      "count": 25,
+      "shift": 63
+    },
+    {
+      "srcCategory": "服饰",
+      "code": "fushi",
+      "fenlei": "服设",
+      "ext": ".jpg",
+      "count": 185,
+      "shift": 70
+    },
+    {
+      "srcCategory": "服饰",
+      "code": "fushi",
+      "fenlei": "服设",
+      "ext": ".png",
+      "count": 110,
+      "shift": 77
+    },
+    {
+      "srcCategory": "平面设计",
+      "code": "pingmian",
+      "fenlei": "平面设计",
+      "ext": ".jpg",
+      "count": 109,
+      "shift": 84
+    },
+    {
+      "srcCategory": "平面设计",
+      "code": "pingmian",
+      "fenlei": "平面设计",
+      "ext": ".png",
+      "count": 54,
+      "shift": 91
+    },
+    {
+      "srcCategory": "表情包",
+      "code": "biaoqing",
+      "fenlei": "表情包",
+      "ext": ".jpg",
+      "count": 20,
+      "shift": 98
+    },
+    {
+      "srcCategory": "表情包",
+      "code": "biaoqing",
+      "fenlei": "表情包",
+      "ext": ".png",
+      "count": 16,
+      "shift": 105
+    },
+    {
+      "srcCategory": "组合页",
+      "code": "zuhe",
+      "fenlei": "组合页",
+      "ext": ".jpg",
+      "count": 17,
+      "shift": 112
+    }
+  ],
+  "createdLinks": 1538,
+  "totalImages": 1538
+}

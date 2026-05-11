@@ -122,13 +122,24 @@ export default {
       total: 0,
       pageNo: 1,
       loading: false,
+      keyword: '',
       filterTags: ['全部'],
       activeFilter: '全部',
       previewVisible: false,
       previewItem: null
     }
   },
+  watch: {
+    '$route.query': {
+      handler(query) {
+        if (this.applyRouteQuery(query)) {
+          this.resetAndFetch()
+        }
+      }
+    }
+  },
   created() {
+    this.applyRouteQuery()
     this.fetchCategories()
     this.fetchWorks()
   },
@@ -154,10 +165,13 @@ export default {
         pageNo: this.pageNo,
         pageSize: 16
       }
+      if (this.keyword) {
+        params.keyword = this.keyword
+      }
       if (this.activeFilter !== '全部') {
         params.fenlei = this.activeFilter
       }
-      const request = this.activeFilter === '全部'
+      const request = this.activeFilter === '全部' && !this.keyword
         ? recApi.recommendations({
           domain: 'zuopin',
           pageNo: this.pageNo,
@@ -182,11 +196,35 @@ export default {
         this.loading = false
       })
     },
-    onFilterChange(tag) {
-      this.activeFilter = tag
+    applyRouteQuery(query = this.$route.query) {
+      const nextKeyword = query.keyword ? String(query.keyword).trim() : ''
+      const nextFilter = query.fenlei ? String(query.fenlei).trim() : '全部'
+      const changed = this.keyword !== nextKeyword || this.activeFilter !== nextFilter
+      this.keyword = nextKeyword
+      this.activeFilter = nextFilter || '全部'
+      return changed
+    },
+    syncRouteQuery() {
+      const query = {}
+      if (this.keyword) query.keyword = this.keyword
+      if (this.activeFilter && this.activeFilter !== '全部') query.fenlei = this.activeFilter
+      const current = this.$route.query || {}
+      if ((current.keyword || '') === (query.keyword || '') && (current.fenlei || '') === (query.fenlei || '')) {
+        return false
+      }
+      this.$router.replace({ path: '/works', query }).catch(() => {})
+      return true
+    },
+    resetAndFetch() {
       this.pageNo = 1
       this.works = []
       this.fetchWorks()
+    },
+    onFilterChange(tag) {
+      this.activeFilter = tag
+      if (!this.syncRouteQuery()) {
+        this.resetAndFetch()
+      }
     },
     loadMore() {
       this.pageNo++

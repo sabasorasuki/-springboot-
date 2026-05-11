@@ -9,6 +9,7 @@ export const ADMIN_MENU_PATH_ALLOWLIST = new Set([
   '/liuyan',
   '/report',
   '/fenlei',
+  '/recs',
   '/tongji',
   '/rizhi',
   '/lunbo'
@@ -25,6 +26,8 @@ export const ADMIN_MENU_COMPONENT_ALLOWLIST = new Set([
   'report/index',
   'fenlei/fenlei',
   'fenlei/tag',
+  'fenlei/siteSetting',
+  'recs/health',
   'tongji/tongji',
   'rizhi/rizhi',
   'lunbo/lunbo'
@@ -48,6 +51,9 @@ export const ADMIN_MENU_OVERRIDES = {
   '/fenlei': { title: '分类与配置', redirect: '/fenlei/fenlei' },
   'fenlei/fenlei': { title: '分类管理' },
   'fenlei/tag': { title: '标签管理' },
+  'fenlei/siteSetting': { title: '注册配置' },
+  '/recs': { title: '推荐运营', redirect: '/recs/health' },
+  'recs/health': { title: '推荐健康' },
   '/tongji': { title: '统计与审计', redirect: '/tongji/tongji' },
   'tongji/tongji': { title: '交易统计' },
   '/rizhi': { title: '日志与审计', redirect: '/rizhi/rizhi' },
@@ -70,6 +76,7 @@ const ADMIN_ONLY_PREFIXES = [
   '/sys',
   '/report',
   '/fenlei',
+  '/recs',
   '/tongji',
   '/rizhi',
   '/lunbo'

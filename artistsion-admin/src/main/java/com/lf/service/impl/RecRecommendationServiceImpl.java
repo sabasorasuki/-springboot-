@@ -105,6 +105,14 @@ public class RecRecommendationServiceImpl implements RecRecommendationService {
         return data;
     }
 
+    @Override
+    public Map<String, Object> getHealth() {
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("models", recRecommendationMapper.selectModelHealth());
+        data.put("logs", recRecommendationMapper.selectLogHealth());
+        return data;
+    }
+
     private List<String> buildActorCandidates(Integer userId, String visitorId) {
         List<String> actorKeys = new ArrayList<>();
         if (userId != null && userId > 0) {

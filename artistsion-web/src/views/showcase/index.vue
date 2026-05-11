@@ -8,17 +8,6 @@
     <!-- 筛选区 -->
     <section class="section filter-section">
       <div class="filter-panel">
-        <div class="search-row">
-          <el-input
-            v-model.trim="keyword"
-            clearable
-            placeholder="搜索标题、角色名、自由标签或标签别名"
-            @clear="onSearch"
-            @keyup.enter.native="onSearch"
-          >
-            <el-button slot="append" icon="el-icon-search" @click="onSearch">搜索</el-button>
-          </el-input>
-        </div>
         <div class="filter-group">
           <span class="filter-label">分类</span>
           <div class="filter-bar">
@@ -271,10 +260,6 @@ export default {
       this.items = []
       this.fetchItems()
     },
-    onSearch() {
-      this.syncRouteQuery()
-      this.resetAndFetch()
-    },
     onFilterChange(tag) {
       this.activeFilter = tag
       this.syncRouteQuery()
@@ -371,10 +356,6 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 16px;
-}
-
-.search-row {
-  max-width: 560px;
 }
 
 .filter-group {
@@ -537,7 +518,6 @@ export default {
 }
 
 @media (max-width: 768px) {
-  .search-row,
   .tag-select {
     max-width: none;
   }

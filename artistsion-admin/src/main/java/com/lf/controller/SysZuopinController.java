@@ -41,6 +41,7 @@ public class SysZuopinController {
     @GetMapping("/list")
     public Result<Map<String,Object>> getList(
             @RequestParam(value = "title",required = false) String title,
+            @RequestParam(value = "keyword",required = false) String keyword,
             @RequestParam(value = "fenlei",required = false) String fenlei,
             @RequestParam(value = "userids",required = false) String userids,
             @RequestParam(value = "id",required = false) String id,
@@ -48,6 +49,13 @@ public class SysZuopinController {
             @RequestParam(value = "pageSize") Long pageSize){
         LambdaQueryWrapper<SysZuopin> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StringUtils.hasLength(title),SysZuopin::getTitle,title);
+        if (StringUtils.hasText(keyword)) {
+            String likeKeyword = "%" + keyword.trim() + "%";
+            wrapper.and(w -> w.like(SysZuopin::getTitle, keyword.trim())
+                    .or().like(SysZuopin::getContent, keyword.trim())
+                    .or().like(SysZuopin::getFenlei, keyword.trim())
+                    .or().apply("EXISTS (SELECT 1 FROM sys_zuopin_tag zt INNER JOIN sys_tag st ON st.id = zt.tag_id WHERE zt.zuopin_id = sys_zuopin.id AND st.deleted = 0 AND (st.name LIKE {0} OR st.normalized_name LIKE {0}))", likeKeyword));
+        }
         wrapper.like(StringUtils.hasLength(fenlei),SysZuopin::getFenlei,fenlei);
         wrapper.eq(StringUtils.hasLength(userids),SysZuopin::getUserids,userids);
         wrapper.eq(StringUtils.hasLength(id),SysZuopin::getId,id);
@@ -55,6 +63,7 @@ public class SysZuopinController {
 
         Page<SysZuopin> page = new Page<>(pageNo,pageSize);
         service.page(page, wrapper);
+        service.fillTagInfo(page.getRecords());
 
         Map<String,Object> data = new HashMap<>();
         data.put("total",page.getTotal());
@@ -69,7 +78,7 @@ public class SysZuopinController {
     public Result<?> add(@RequestBody SysZuopin shetuan){
         Date date = new Date();
         shetuan.setFbdate(date);
-        service.save(shetuan);
+        service.saveWithTags(shetuan);
         return Result.success("添加成功");
     }
 
@@ -77,12 +86,14 @@ public class SysZuopinController {
     @PutMapping("/update")
     public Result<?> update(@RequestBody SysZuopin shetuan){
 
-        if(shetuan.getDianzan().equals("点赞")){
+        if("点赞".equals(shetuan.getDianzan())){
             SysZuopin zuopin = service.getById(shetuan.getId());
             shetuan.setDznum( zuopin.getDznum()+1);
+            service.updateById(shetuan);
+            return Result.success("修改成功");
         }
 
-        service.updateById(shetuan);
+        service.updateWithTags(shetuan);
         return Result.success("修改成功");
     }
 
@@ -90,7 +101,7 @@ public class SysZuopinController {
 
     @GetMapping("/getById/{id}")
     public Result<SysZuopin> getById(@PathVariable("id") Integer id){
-        SysZuopin shetuan = service.getById(id);
+        SysZuopin shetuan = service.getDetailById(id.longValue());
         return Result.success(shetuan);
     }
 

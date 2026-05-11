@@ -1,6 +1,6 @@
 # Docs Index
 
-更新时间：`2026-05-07`
+更新时间：`2026-05-08`
 
 ## 当前主线
 
@@ -13,14 +13,16 @@
 
 请先读：
 
-- `HUAGAO_RECS_HANDOFF_2026-04-28.md`
+- `SITE_RECS_HANDOFF_2026-05-07.md`
 - `PROJECT_MAP.md`
 
 ## 当前状态
 
-- 新接口：`GET /rec/recommendations`、`POST /recTrack/action`。
+- 新接口：`GET /rec/recommendations`、`POST /recTrack/action`、`GET /rec/debug/health`。
 - 新训练入口：`python recsys/site_recs/run_pipeline.py --domains huagao,zuopin,project,artist --source real --top-k 50`。
 - 新通用表：`rec_request_log`、`rec_impression_log`、`rec_action_log`、`rec_actor_profile`、`rec_model_version`、`rec_user_recommendation`。
+- 橱窗订单已补 `rec_*` 推荐归因字段，购物车提交订单会回写 `create_order` 行为日志。
+- 后台推荐健康页：`/recs/health`。
 - 旧 `rec_huagao_*` 暂留为历史兼容和回填来源。
 - 旧 Mahout / `user_article_operation` 已下线，不再作为推荐入口。
 
@@ -28,6 +30,14 @@
 
 当前 `docs` 只保留：
 
-- `README.md`：文档索引
-- `HUAGAO_RECS_HANDOFF_2026-04-28.md`：推荐任务交接，现已记录全站推荐升级
+- `README.md`：文档索引和当前主线
+- `SITE_RECS_HANDOFF_2026-05-07.md`：全站推荐交接
 - `PROJECT_MAP.md`：项目结构与关键文件地图
+
+## 常用验证
+
+```powershell
+mvn -q -DskipTests compile
+npm run build:prod
+python recsys/site_recs/run_pipeline.py --domains huagao,zuopin,project,artist --source real --top-k 50
+```

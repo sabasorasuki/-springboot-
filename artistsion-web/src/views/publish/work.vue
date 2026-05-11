@@ -20,7 +20,7 @@
 
       <el-form ref="form" :model="form" :rules="rules" label-width="100px">
         <div class="type-hint">
-          {{ publishType === 'zuopin' ? '作品投稿无需标签配置。' : '橱窗发布需选择固定分类、系统标签与可选自由标签。' }}
+          {{ publishType === 'zuopin' ? '作品投稿可添加自由标签，方便后续搜索、推荐和兴趣画像归类。' : '橱窗发布需选择固定分类、系统标签与可选自由标签。' }}
         </div>
 
         <el-form-item label="封面图" prop="photo">
@@ -111,29 +111,6 @@
             <div class="field-hint">已选 {{ form.systemTagIds.length }} 个，发布时必须选择 3~8 个系统标签。</div>
           </el-form-item>
 
-          <el-form-item label="自由标签" prop="freeTagNames">
-            <el-select
-              v-model="form.freeTagNames"
-              multiple
-              filterable
-              allow-create
-              default-first-option
-              reserve-keyword
-              clearable
-              style="width: 100%;"
-              placeholder="输入后按回车，可填写角色名、IP 名、OC 名、CP 名等"
-              @change="handleFreeTagsChange"
-            >
-              <el-option
-                v-for="item in freeTagSuggestions"
-                :key="item"
-                :label="item"
-                :value="item"
-              />
-            </el-select>
-            <div class="field-hint">最多 10 个，每个标签 2~20 个字符；保存时会自动 trim、去重并做归一化。</div>
-          </el-form-item>
-
           <el-form-item label="备注">
             <el-input v-model="form.fujin" type="textarea" :rows="2" placeholder="备注信息（可选）" />
           </el-form-item>
@@ -142,6 +119,29 @@
             <div ref="editorContainer" style="z-index: 0; line-height: normal;" />
           </el-form-item>
         </template>
+
+        <el-form-item label="自由标签" prop="freeTagNames">
+          <el-select
+            v-model="form.freeTagNames"
+            multiple
+            filterable
+            allow-create
+            default-first-option
+            reserve-keyword
+            clearable
+            style="width: 100%;"
+            placeholder="输入后按回车，可填写角色名、IP 名、OC 名、CP 名等"
+            @change="handleFreeTagsChange"
+          >
+            <el-option
+              v-for="item in freeTagSuggestions"
+              :key="item"
+              :label="item"
+              :value="item"
+            />
+          </el-select>
+          <div class="field-hint">作品和橱窗共用同一套自由标签；最多 10 个，每个 2~20 个字符，保存时自动 trim、去重并归一化。</div>
+        </el-form-item>
 
         <el-form-item>
           <el-button type="primary" :loading="submitting" @click="handleSubmit">
@@ -189,10 +189,6 @@ export default {
       callback()
     }
     const validateFreeTags = (rule, value, callback) => {
-      if (this.publishType !== 'huagao') {
-        callback()
-        return
-      }
       const next = this.normalizeFreeTagNames(value)
       if (next.length > 10) {
         callback(new Error('自由标签最多 10 个'))
@@ -258,7 +254,7 @@ export default {
         return '在这里修改橱窗内容，分类和标签会自动回填。'
       }
       return this.publishType === 'zuopin'
-        ? '在这里发布作品内容，页面内直接切换投稿类型。'
+        ? '在这里发布作品内容，并补充能描述角色、风格或主题的自由标签。'
         : '在这里上架橱窗商品，并补充分类、系统标签和自由标签。'
     },
     publishButtonText() {
@@ -304,16 +300,15 @@ export default {
     async loadPublishOptions() {
       this.loadingOptions = true
       try {
-        const tasks = [fenleiApi.getFixedList()]
-        if (this.publishType === 'huagao' || this.editingHuagaoId) {
-          tasks.push(tagApi.getSystemOptions())
-        }
-        const responses = await Promise.all(tasks)
+        const responses = await Promise.all([
+          fenleiApi.getFixedList(),
+          tagApi.getFreeOptions(),
+          (this.publishType === 'huagao' || this.editingHuagaoId) ? tagApi.getSystemOptions() : Promise.resolve({ data: [] })
+        ])
         const categoryRows = responses[0].data.rows || []
         this.categoryOptions = categoryRows.map(row => ({ id: row.id, name: row.fenlei }))
-        if (responses[1]) {
-          this.systemTagOptions = responses[1].data || []
-        }
+        this.freeTagSuggestions = (responses[1].data.rows || []).map(row => row.name).filter(Boolean)
+        this.systemTagOptions = responses[2].data || []
         if (this.editingHuagaoId) {
           await this.loadHuagaoDetail(this.editingHuagaoId)
         }
@@ -475,7 +470,8 @@ export default {
         fenlei: this.form.fenlei || '',
         content: this.form.content || '',
         userids: this.userInfo.id,
-        username: this.userInfo.name
+        username: this.userInfo.name,
+        freeTagNames: this.normalizeFreeTagNames(this.form.freeTagNames)
       }
       fenxiangApi.add(data).then(res => {
         this.$message.success(res.message || '发布成功')

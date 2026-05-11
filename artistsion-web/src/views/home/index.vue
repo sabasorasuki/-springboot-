@@ -14,6 +14,108 @@
       </el-carousel>
     </section>
 
+    <section v-if="searchKeyword" class="section site-search-section">
+      <div class="section-header">
+        <h2 class="section-title">全站搜索：{{ searchKeyword }}</h2>
+      </div>
+      <div v-if="siteSearchLoading" class="loading-placeholder">
+        <i class="el-icon-loading" /> 搜索中…
+      </div>
+      <template v-else>
+        <div class="section-header sub-section-header">
+          <h3 class="sub-section-title">橱窗</h3>
+          <el-button type="text" class="section-link" @click="$router.push({ path: '/showcase', query: { keyword: searchKeyword } })">查看更多</el-button>
+        </div>
+        <div v-if="siteSearch.huagao.length" class="card-grid">
+          <div
+            v-for="work in siteSearch.huagao"
+            :key="'search-huagao-' + work.id"
+            class="work-card"
+            @click="goWorkDetail(work)"
+          >
+            <div class="card-cover">
+              <img v-if="work.photo" :src="work.photo" alt="" class="cover-img">
+              <div v-else class="cover-placeholder" />
+            </div>
+            <div class="card-body">
+              <div class="card-title">{{ work.name }}</div>
+              <div class="card-meta">
+                <span v-if="work.fenlei" class="card-tag">{{ work.fenlei }}</span>
+                <span v-if="work.price" class="card-price">¥{{ work.price }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <el-empty v-else description="没有匹配橱窗" :image-size="100" />
+
+        <div class="section-header sub-section-header">
+          <h3 class="sub-section-title">作品</h3>
+          <el-button type="text" class="section-link" @click="$router.push({ path: '/works', query: { keyword: searchKeyword } })">查看更多</el-button>
+        </div>
+        <div v-if="siteSearch.zuopin.length" class="community-grid">
+          <div
+            v-for="post in siteSearch.zuopin"
+            :key="'search-zuopin-' + post.id"
+            class="community-card"
+            @click="goPostDetail(post)"
+          >
+            <div class="community-cover">
+              <img v-if="post.photo" :src="post.photo" alt="" class="cover-img">
+              <div v-else class="cover-placeholder" />
+            </div>
+            <div class="community-body">
+              <div class="community-title">{{ post.title || post.name }}</div>
+              <div class="community-meta">
+                <span v-if="post.fenlei" class="card-tag">{{ post.fenlei }}</span>
+                <span class="community-author">{{ post.username || '匿名用户' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <el-empty v-else description="没有匹配作品" :image-size="100" />
+
+        <div class="section-header sub-section-header">
+          <h3 class="sub-section-title">企划</h3>
+          <el-button type="text" class="section-link" @click="$router.push({ path: '/projects', query: { keyword: searchKeyword } })">查看更多</el-button>
+        </div>
+        <div v-if="siteSearch.project.length" class="project-mini-list">
+          <div
+            v-for="project in siteSearch.project"
+            :key="'search-project-' + project.id"
+            class="project-mini-card"
+            @click="goProjectDetail(project)"
+          >
+            <div class="project-mini-title">{{ project.title || project.name }}</div>
+            <div class="project-mini-desc">{{ project.description || '暂无需求描述' }}</div>
+            <div class="project-mini-meta">
+              <span v-if="project.category" class="card-tag">{{ project.category }}</span>
+              <span v-if="project.style" class="card-tag">{{ project.style }}</span>
+              <span class="card-price">¥{{ project.budgetMin || 0 }}–{{ project.budgetMax || 0 }}</span>
+            </div>
+          </div>
+        </div>
+        <el-empty v-else description="没有匹配企划" :image-size="100" />
+
+        <div class="section-header sub-section-header">
+          <h3 class="sub-section-title">画师</h3>
+          <el-button type="text" class="section-link" @click="$router.push({ path: '/artists', query: { keyword: searchKeyword } })">查看更多</el-button>
+        </div>
+        <div v-if="siteSearch.artist.length" class="artist-mini-grid">
+          <div
+            v-for="artist in siteSearch.artist"
+            :key="'search-artist-' + artist.id"
+            class="artist-mini-card"
+            @click="goArtistDetail(artist)"
+          >
+            <img :src="artist.avatar || defaultAvatar" class="artist-mini-avatar" alt="">
+            <div class="artist-mini-name">{{ artist.name || artist.username }}</div>
+            <div class="artist-mini-stat">{{ artist.workCount || 0 }} 件橱窗</div>
+          </div>
+        </div>
+        <el-empty v-else description="没有匹配画师" :image-size="100" />
+      </template>
+    </section>
+
     <!-- 个性化推荐 -->
     <section class="section">
       <div class="section-header">
@@ -210,6 +312,9 @@ import recApi from '@/api/rec'
 import fenleiApi from '@/api/fenlei'
 import lunboApi from '@/api/lunbo'
 import fenxiangApi from '@/api/fenxiang'
+import projectApi from '@/api/project'
+import artistApi from '@/api/artist'
+import { normalizeImageUrl } from '@/utils/oss'
 import { createClientEventId } from '@/utils/visitor'
 import { buildOtherArtistProfileRoute } from '@/utils/centerProfile'
 
@@ -234,7 +339,32 @@ export default {
       allWorks: [],
       allWorksTotal: 0,
       allWorksPage: 1,
-      allWorksLoading: false
+      allWorksLoading: false,
+      searchKeyword: '',
+      siteSearchLoading: false,
+      siteSearch: {
+        huagao: [],
+        zuopin: [],
+        project: [],
+        artist: []
+      }
+    }
+  },
+  watch: {
+    '$route.query.keyword': {
+      immediate: true,
+      handler(keyword) {
+        const nextKeyword = keyword ? String(keyword).trim() : ''
+        if (this.searchKeyword === nextKeyword) {
+          return
+        }
+        this.searchKeyword = nextKeyword
+        if (this.searchKeyword) {
+          this.fetchSiteSearch()
+        } else {
+          this.resetSiteSearch()
+        }
+      }
     }
   },
   created() {
@@ -251,7 +381,7 @@ export default {
     /** 轮播图 */
     fetchCarousel() {
       lunboApi.getList1().then(res => {
-        this.carouselItems = res.data.rows || []
+        this.carouselItems = (res.data.rows || []).map(this.normalizeImageRow)
       }).catch(() => {})
     },
 
@@ -262,12 +392,65 @@ export default {
       }).catch(() => {})
     },
 
+    resetSiteSearch() {
+      this.siteSearch = {
+        huagao: [],
+        zuopin: [],
+        project: [],
+        artist: []
+      }
+    },
+
+    fetchSiteSearch() {
+      if (!this.searchKeyword) return
+      this.siteSearchLoading = true
+      const keyword = this.searchKeyword
+      Promise.all([
+        huagaoApi.getList({
+          pageNo: 1,
+          pageSize: 8,
+          keyword,
+          type: '上架',
+          status: '审核成功'
+        }),
+        fenxiangApi.getList({
+          pageNo: 1,
+          pageSize: 8,
+          keyword
+        }),
+        projectApi.getList({
+          pageNo: 1,
+          pageSize: 6,
+          keyword
+        }),
+        artistApi.getList({
+          pageNo: 1,
+          pageSize: 6,
+          keyword
+        })
+      ]).then(([huagaoRes, zuopinRes, projectRes, artistRes]) => {
+        if (this.searchKeyword !== keyword) return
+        this.siteSearch = {
+          huagao: ((huagaoRes.data && huagaoRes.data.rows) || []).map(this.normalizeImageRow),
+          zuopin: ((zuopinRes.data && zuopinRes.data.rows) || []).map(this.normalizeImageRow),
+          project: (projectRes.data && projectRes.data.rows) || [],
+          artist: ((artistRes.data && artistRes.data.rows) || []).map(this.normalizeImageRow)
+        }
+      }).catch(() => {
+        this.resetSiteSearch()
+      }).finally(() => {
+        if (this.searchKeyword === keyword) {
+          this.siteSearchLoading = false
+        }
+      })
+    },
+
     fetchCommunityPosts() {
       fenxiangApi.getList({
         pageNo: 1,
         pageSize: 4
       }).then(res => {
-        this.communityPosts = res.data.rows || []
+        this.communityPosts = (res.data.rows || []).map(this.normalizeImageRow)
       }).catch(() => {})
     },
 
@@ -283,7 +466,7 @@ export default {
         const requestId = res.data.requestId || ''
         const rows = res.data.rows || []
         this.recommendWorks = rows.map((item, index) => {
-          return Object.assign({}, item, {
+          return Object.assign({}, this.normalizeImageRow(item), {
             trackingRequestId: requestId,
             trackingPosition: index + 1,
             trackingScene: 'home',
@@ -310,7 +493,7 @@ export default {
         const requestId = res.data.requestId || ''
         const modelVersion = res.data.modelVersion || ''
         const rows = res.data.rows || []
-        this[targetKey] = rows.map((item, index) => Object.assign({}, item, {
+        this[targetKey] = rows.map((item, index) => Object.assign({}, this.normalizeImageRow(item), {
           trackingRequestId: requestId,
           trackingPosition: index + 1,
           trackingScene: scene,
@@ -327,7 +510,7 @@ export default {
 
     fetchLatest() {
       return huagaoApi.getzuixin({ pageNo: 1, pageSize: 12 }).then(res => {
-        this.recommendWorks = res.data.rows || []
+        this.recommendWorks = (res.data.rows || []).map(this.normalizeImageRow)
       })
     },
 
@@ -340,7 +523,7 @@ export default {
         type: '上架',
         status: '审核成功'
       }).then(res => {
-        const rows = res.data.rows || []
+        const rows = (res.data.rows || []).map(this.normalizeImageRow)
         this.allWorks = this.allWorksPage === 1 ? rows : this.allWorks.concat(rows)
         this.allWorksTotal = res.data.total || 0
       }).catch(() => {}).finally(() => {
@@ -351,6 +534,17 @@ export default {
     loadMoreWorks() {
       this.allWorksPage++
       this.fetchAllWorks()
+    },
+
+    normalizeImageRow(row) {
+      if (!row) return row
+      return Object.assign({}, row, {
+        photo: normalizeImageUrl(row.photo),
+        lunbo: normalizeImageUrl(row.lunbo),
+        avatar: normalizeImageUrl(row.avatar),
+        userAvatar: normalizeImageUrl(row.userAvatar),
+        coverImage: normalizeImageUrl(row.coverImage)
+      })
     },
 
     goWorkDetail(work) {
@@ -516,8 +710,24 @@ export default {
   margin-bottom: 20px;
 }
 
+.site-search-section {
+  padding-bottom: 12px;
+}
+
+.sub-section-header {
+  margin-top: 28px;
+  margin-bottom: 14px;
+}
+
 .section-title {
   font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.sub-section-title {
+  font-size: 16px;
   font-weight: 600;
   color: #333;
   margin: 0;

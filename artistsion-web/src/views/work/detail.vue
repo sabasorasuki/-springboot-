@@ -405,7 +405,8 @@ export default {
           spids: String(this.work.id),
           shangjiaids: this.work.shangjiaids,
           userids: String(this.userId),
-          status: '购物车'
+          status: '购物车',
+          ...this.buildOrderAttribution()
         })
         this.$message.success((res && res.message) || '已加入购物车')
         if (!res || res.message !== '该橱窗已在购物车中') {
@@ -428,7 +429,8 @@ export default {
           spids: String(this.work.id),
           shangjiaids: this.work.shangjiaids,
           userids: String(this.userId),
-          status: '待付款'
+          status: '待付款',
+          ...this.buildOrderAttribution()
         })
         this.$message.success('订单已创建')
         this.trackCreateOrderAction()
@@ -467,6 +469,15 @@ export default {
         scene: this.$route.query.scene || 'work_detail',
         source: extra.source || this.$route.query.source || 'detail_direct',
         modelVersion: this.$route.query.modelVersion || ''
+      }
+    },
+    buildOrderAttribution() {
+      return {
+        recRequestId: this.$route.query.requestId || '',
+        recPosition: this.$route.query.position ? Number(this.$route.query.position) : null,
+        recScene: this.$route.query.scene || '',
+        recSource: this.$route.query.source || '',
+        recModelVersion: this.$route.query.modelVersion || ''
       }
     },
     trackDetailView() {

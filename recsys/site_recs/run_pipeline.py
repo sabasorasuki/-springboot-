@@ -294,11 +294,20 @@ def load_items(conn, domains):
         items["zuopin"] = fetch_all(
             conn,
             """
-            SELECT 'zuopin' AS domain, id AS item_id, title, fenlei AS category,
-                   CAST(userids AS UNSIGNED) AS author_id, 0 AS price,
-                   id AS freshness_id
-            FROM sys_zuopin
-            ORDER BY id
+            SELECT 'zuopin' AS domain,
+                   z.id AS item_id,
+                   z.title,
+                   TRIM(BOTH ',' FROM CONCAT_WS(',', z.fenlei, GROUP_CONCAT(st.name ORDER BY zt.id SEPARATOR ','))) AS category,
+                   CAST(z.userids AS UNSIGNED) AS author_id,
+                   0 AS price,
+                   z.id AS freshness_id
+            FROM sys_zuopin z
+            LEFT JOIN sys_zuopin_tag zt ON zt.zuopin_id = z.id
+            LEFT JOIN sys_tag st ON st.id = zt.tag_id
+                AND st.deleted = 0
+                AND st.status = 1
+            GROUP BY z.id, z.title, z.fenlei, z.userids
+            ORDER BY z.id
             """,
         )
     if "project" in domains:
